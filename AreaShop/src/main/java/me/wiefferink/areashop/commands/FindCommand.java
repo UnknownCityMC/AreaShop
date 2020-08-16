@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class FindCommand extends CommandAreaShop {
 
@@ -82,7 +83,7 @@ public class FindCommand extends CommandAreaShop {
 			}
 			if(!results.isEmpty()) {
 				// Draw a random one
-				BuyRegion region = results.get(new Random().nextInt(results.size()));
+				BuyRegion region = results.get(ThreadLocalRandom.current().nextInt(results.size()));
 				Message onlyInGroup = Message.empty();
 				if(group != null) {
 					onlyInGroup = Message.fromKey("find-onlyInGroup").replacements(args[3]);
@@ -122,7 +123,7 @@ public class FindCommand extends CommandAreaShop {
 			}
 			if(!results.isEmpty()) {
 				// Draw a random one
-				RentRegion region = results.get(new Random().nextInt(results.size()));
+				RentRegion region = results.get(ThreadLocalRandom.current().nextInt(results.size()));
 				Message onlyInGroup = Message.empty();
 				if(group != null) {
 					onlyInGroup = Message.fromKey("find-onlyInGroup").replacements(args[3]);

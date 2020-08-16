@@ -1,13 +1,17 @@
 package me.wiefferink.areashop.features;
 
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
+import me.wiefferink.bukkitdo.Do;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -16,6 +20,7 @@ import org.bukkit.util.Vector;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class TeleportFeature extends RegionFeature {
 
@@ -53,7 +58,6 @@ public class TeleportFeature extends RegionFeature {
 			getRegion().setSetting("general.teleportLocation", Utils.locationToConfig(location, true));
 		}
 	}
-
 	/**
 	 * Teleport a player to the region or sign.
 	 * @param player            Player that should be teleported
@@ -61,23 +65,23 @@ public class TeleportFeature extends RegionFeature {
 	 * @param checkRestrictions Set to true if teleport permissions should be checked, false otherwise, also toggles cross-world check
 	 * @return true if the teleport succeeded, otherwise false
 	 */
-	public boolean teleportPlayer(Player player, boolean toSign, boolean checkRestrictions) {
+	public CompletableFuture<Boolean> teleportPlayer(Player player, boolean toSign, boolean checkRestrictions) {
 
 		// Check basics
 		if(getRegion().getWorld() == null) {
 			getRegion().message(player, "general-noWorld");
-			return false;
+			return CompletableFuture.completedFuture(false);
 		}
 		if(getRegion().getRegion() == null) {
 			getRegion().message(player, "general-noRegion");
-			return false;
+			return CompletableFuture.completedFuture(false);
 		}
 
 		if(checkRestrictions) {
 			// Check correct world
 			if(!getRegion().getBooleanSetting("general.teleportCrossWorld") && !player.getWorld().equals(getRegion().getWorld())) {
 				getRegion().message(player, "teleport-wrongWorld", player.getWorld().getName());
-				return false;
+				return CompletableFuture.completedFuture(false);
 			}
 
 			boolean owner = player.getUniqueId().equals(getRegion().getOwner());
@@ -94,28 +98,28 @@ public class TeleportFeature extends RegionFeature {
 			// Check permissions
 			if(owner && !available && !player.hasPermission("areashop.teleport") && !toSign) {
 				getRegion().message(player, "teleport-noPermission");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(!owner && !available && !player.hasPermission("areashop.teleportall") && !toSign && !friend) {
 				getRegion().message(player, "teleport-noPermissionOther");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(!owner && !available && !player.hasPermission("areashop.teleportfriend") && !toSign && friend) {
 				getRegion().message(player, "teleport-noPermissionFriend");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(available && !player.hasPermission("areashop.teleportavailable") && !toSign) {
 				getRegion().message(player, "teleport-noPermissionAvailable");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(owner && !available && !player.hasPermission("areashop.teleportsign") && toSign) {
 				getRegion().message(player, "teleport-noPermissionSign");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(!owner && !available && !player.hasPermission("areashop.teleportsignall") && toSign && !friend) {
 				getRegion().message(player, "teleport-noPermissionOtherSign");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(!owner && !available && !player.hasPermission("areashop.teleportfriendsign") && toSign && friend) {
 				getRegion().message(player, "teleport-noPermissionFriendSign");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			} else if(available && !player.hasPermission("areashop.teleportavailablesign") && toSign) {
 				getRegion().message(player, "teleport-noPermissionAvailableSign");
-				return false;
+				return CompletableFuture.completedFuture(false);
 			}
 		}
 
@@ -133,243 +137,259 @@ public class TeleportFeature extends RegionFeature {
 
 		// Check locations starting from startLocation and then a cube that increases
 		// radius around that (until no block in the region is found at all cube sides)
-		Location safeLocation = startLocation;
 		ProtectedRegion worldguardRegion = getRegion().getRegion();
 		boolean blocksInRegion = worldguardRegion.contains(startLocation.getBlockX(), startLocation.getBlockY(), startLocation.getBlockZ());
 		if(!blocksInRegion && insideRegion) {
 			getRegion().message(player, "teleport-blocked");
-			return false;
+			return CompletableFuture.completedFuture(false);
 		}
-
-		// Tries limit tracking
-		int radius = 1;
-		int checked = 1;
-		int maxTries = plugin.getConfig().getInt("maximumTries");
 
 		// Tracking of which sides to continue the search
-		boolean done = isSafe(safeLocation);
-		boolean northDone = false, eastDone = false, southDone = false, westDone = false, topDone = false, bottomDone = false;
-		boolean continueThisDirection;
+		final World world = getRegion().getWorld();
+		BlockVector3 min = worldguardRegion.getMinimumPoint();
+		BlockVector3 max = worldguardRegion.getMaximumPoint();
 
-		while((blocksInRegion || !insideRegion) && !done) {
-			blocksInRegion = false;
-
-			// North side
-			continueThisDirection = false;
-			for(int x = -radius + 1; x <= radius && !done && !northDone; x++) {
-				for(int y = -radius + 1; y < radius && !done; y++) {
-					safeLocation = startLocation.clone().add(x, y, -radius);
-					if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
-						continue;
-					}
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
+		for (int x = min.getX(); x < max.getX(); x += 16) {
+			for (int z = min.getZ(); z < max.getZ(); z += 16) {
+				PaperLib.getChunkAtAsync(world, x >> 4, z >> 4);
 			}
-			northDone = northDone || !continueThisDirection;
-
-			// East side
-			continueThisDirection = false;
-			for(int z = -radius + 1; z <= radius && !done && !eastDone; z++) {
-				for(int y = -radius + 1; y < radius && !done; y++) {
-					safeLocation = startLocation.clone().add(radius, y, z);
-					if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
-						continue;
-					}
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-			}
-			eastDone = eastDone || !continueThisDirection;
-
-			// South side
-			continueThisDirection = false;
-			for(int x = radius - 1; x >= -radius && !done && !southDone; x--) {
-				for(int y = -radius + 1; y < radius && !done; y++) {
-					safeLocation = startLocation.clone().add(x, y, radius);
-					if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
-						continue;
-					}
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-			}
-			southDone = southDone || !continueThisDirection;
-
-			// West side
-			continueThisDirection = false;
-			for(int z = radius - 1; z >= -radius && !done && !westDone; z--) {
-				for(int y = -radius + 1; y < radius && !done; y++) {
-					safeLocation = startLocation.clone().add(-radius, y, z);
-					if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
-						continue;
-					}
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-			}
-			westDone = westDone || !continueThisDirection;
-
-			// Top side
-			continueThisDirection = false;
-			// Middle block of the top
-			if((startLocation.getBlockY() + radius) > 256) {
-				topDone = true;
-			}
-			if(!done && !topDone) {
-				safeLocation = startLocation.clone().add(0, radius, 0);
-				if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-					checked++;
-					done = isSafe(safeLocation) || checked > maxTries;
-					blocksInRegion = true;
-					continueThisDirection = true;
-				}
-			}
-			for(int r = 1; r <= radius && !done && !topDone; r++) {
-				// North
-				for(int x = -r + 1; x <= r && !done; x++) {
-					safeLocation = startLocation.clone().add(x, radius, -r);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// East
-				for(int z = -r + 1; z <= r && !done; z++) {
-					safeLocation = startLocation.clone().add(r, radius, z);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// South side
-				for(int x = r - 1; x >= -r && !done; x--) {
-					safeLocation = startLocation.clone().add(x, radius, r);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// West side
-				for(int z = r - 1; z >= -r && !done; z--) {
-					safeLocation = startLocation.clone().add(-r, radius, z);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-			}
-			topDone = topDone || !continueThisDirection;
-
-			// Bottom side
-			continueThisDirection = false;
-			// Middle block of the bottom
-			if(startLocation.getBlockY() - radius < 0) {
-				bottomDone = true;
-			}
-			if(!done && !bottomDone) {
-				safeLocation = startLocation.clone().add(0, -radius, 0);
-				if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-					checked++;
-					done = isSafe(safeLocation) || checked > maxTries;
-					blocksInRegion = true;
-					continueThisDirection = true;
-				}
-			}
-			for(int r = 1; r <= radius && !done && !bottomDone; r++) {
-				// North
-				for(int x = -r + 1; x <= r && !done; x++) {
-					safeLocation = startLocation.clone().add(x, -radius, -r);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// East
-				for(int z = -r + 1; z <= r && !done; z++) {
-					safeLocation = startLocation.clone().add(r, -radius, z);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// South side
-				for(int x = r - 1; x >= -r && !done; x--) {
-					safeLocation = startLocation.clone().add(x, -radius, r);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-				// West side
-				for(int z = r - 1; z >= -r && !done; z--) {
-					safeLocation = startLocation.clone().add(-r, -radius, z);
-					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
-						checked++;
-						done = isSafe(safeLocation) || checked > maxTries;
-						blocksInRegion = true;
-						continueThisDirection = true;
-					}
-				}
-			}
-			bottomDone = bottomDone || !continueThisDirection;
-
-			// Increase cube radius
-			radius++;
 		}
-		if(done && isSafe(safeLocation)) {
-			if(toSign) {
-				getRegion().message(player, "teleport-successSign");
+		CompletableFuture<Boolean> future = new CompletableFuture<>();
+		final  boolean finalToSign = toSign;
+		Do.syncLater(1, () -> {
+			boolean blocksInRegionCopy = blocksInRegion;
+			Location safeLocation = startLocation;
+			// Tries limit tracking
+			int radius = 1;
+			int checked = 1;
+			int maxTries = plugin.getConfig().getInt("maximumTries");
 
-				// Let the player look at the sign
-				Vector playerVector = safeLocation.toVector();
-				playerVector.setY(playerVector.getY() + player.getEyeHeight(true));
-				Vector signVector = getRegion().getSignsFeature().getSigns().get(0).getLocation().toVector().add(new Vector(0.5, 0.5, 0.5));
-				Vector direction = playerVector.clone().subtract(signVector).normalize();
-				safeLocation.setYaw(180 - (float)Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())));
-				safeLocation.setPitch(90 - (float)Math.toDegrees(Math.acos(direction.getY())));
+			// Tracking of which sides to continue the search
+			boolean done = isSafe(safeLocation);
+			boolean northDone = false, eastDone = false, southDone = false, westDone = false, topDone = false, bottomDone = false;
+			boolean continueThisDirection;
+
+			while((blocksInRegionCopy || !insideRegion) && !done) {
+				blocksInRegionCopy = false;
+
+				// North side
+				continueThisDirection = false;
+				for(int x = -radius + 1; x <= radius && !done && !northDone; x++) {
+					for(int y = -radius + 1; y < radius && !done; y++) {
+						safeLocation = startLocation.clone().add(x, y, -radius);
+						if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+							continue;
+						}
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				northDone = northDone || !continueThisDirection;
+
+				// East side
+				continueThisDirection = false;
+				for(int z = -radius + 1; z <= radius && !done && !eastDone; z++) {
+					for(int y = -radius + 1; y < radius && !done; y++) {
+						safeLocation = startLocation.clone().add(radius, y, z);
+						if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+							continue;
+						}
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				eastDone = eastDone || !continueThisDirection;
+
+				// South side
+				continueThisDirection = false;
+				for(int x = radius - 1; x >= -radius && !done && !southDone; x--) {
+					for(int y = -radius + 1; y < radius && !done; y++) {
+						safeLocation = startLocation.clone().add(x, y, radius);
+						if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+							continue;
+						}
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				southDone = southDone || !continueThisDirection;
+
+				// West side
+				continueThisDirection = false;
+				for(int z = radius - 1; z >= -radius && !done && !westDone; z--) {
+					for(int y = -radius + 1; y < radius && !done; y++) {
+						safeLocation = startLocation.clone().add(-radius, y, z);
+						if(safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+							continue;
+						}
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				westDone = westDone || !continueThisDirection;
+
+				// Top side
+				continueThisDirection = false;
+				// Middle block of the top
+				if((startLocation.getBlockY() + radius) > 256) {
+					topDone = true;
+				}
+				if(!done && !topDone) {
+					safeLocation = startLocation.clone().add(0, radius, 0);
+					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+						checked++;
+						done = isSafe(safeLocation) || checked > maxTries;
+						blocksInRegionCopy = true;
+						continueThisDirection = true;
+					}
+				}
+				for(int r = 1; r <= radius && !done && !topDone; r++) {
+					// North
+					for(int x = -r + 1; x <= r && !done; x++) {
+						safeLocation = startLocation.clone().add(x, radius, -r);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// East
+					for(int z = -r + 1; z <= r && !done; z++) {
+						safeLocation = startLocation.clone().add(r, radius, z);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// South side
+					for(int x = r - 1; x >= -r && !done; x--) {
+						safeLocation = startLocation.clone().add(x, radius, r);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// West side
+					for(int z = r - 1; z >= -r && !done; z--) {
+						safeLocation = startLocation.clone().add(-r, radius, z);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				topDone = topDone || !continueThisDirection;
+
+				// Bottom side
+				continueThisDirection = false;
+				// Middle block of the bottom
+				if(startLocation.getBlockY() - radius < 0) {
+					bottomDone = true;
+				}
+				if(!done && !bottomDone) {
+					safeLocation = startLocation.clone().add(0, -radius, 0);
+					if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+						checked++;
+						done = isSafe(safeLocation) || checked > maxTries;
+						blocksInRegionCopy = true;
+						continueThisDirection = true;
+					}
+				}
+				for(int r = 1; r <= radius && !done && !bottomDone; r++) {
+					// North
+					for(int x = -r + 1; x <= r && !done; x++) {
+						safeLocation = startLocation.clone().add(x, -radius, -r);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// East
+					for(int z = -r + 1; z <= r && !done; z++) {
+						safeLocation = startLocation.clone().add(r, -radius, z);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// South side
+					for(int x = r - 1; x >= -r && !done; x--) {
+						safeLocation = startLocation.clone().add(x, -radius, r);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+					// West side
+					for(int z = r - 1; z >= -r && !done; z--) {
+						safeLocation = startLocation.clone().add(-r, -radius, z);
+						if(worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+							checked++;
+							done = isSafe(safeLocation) || checked > maxTries;
+							blocksInRegionCopy = true;
+							continueThisDirection = true;
+						}
+					}
+				}
+				bottomDone = bottomDone || !continueThisDirection;
+
+				// Increase cube radius
+				radius++;
+			}
+
+			if(done && isSafe(safeLocation)) {
+				if(finalToSign) {
+					getRegion().message(player, "teleport-successSign");
+
+					// Let the player look at the sign
+					Vector playerVector = safeLocation.toVector();
+					playerVector.setY(playerVector.getY() + player.getEyeHeight(true));
+					Vector signVector = getRegion().getSignsFeature().getSigns().get(0).getLocation().toVector().add(new Vector(0.5, 0.5, 0.5));
+					Vector direction = playerVector.clone().subtract(signVector).normalize();
+					safeLocation.setYaw(180 - (float)Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())));
+					safeLocation.setPitch(90 - (float)Math.toDegrees(Math.acos(direction.getY())));
+				} else {
+					getRegion().message(player, "teleport-success");
+				}
+
+				AreaShop.debug("Found location: " + safeLocation.toString() + " Tries: " + checked);
+				PaperLib.teleportAsync(player, safeLocation).thenAccept(future::complete);
 			} else {
-				getRegion().message(player, "teleport-success");
+				getRegion().message(player, "teleport-noSafe", checked, maxTries);
+				AreaShop.debug("No location found, checked " + checked + " spots of max " + maxTries);
+				future.complete(false);
 			}
-
-			player.teleport(safeLocation);
-			AreaShop.debug("Found location: " + safeLocation.toString() + " Tries: " + (checked - 1));
-			return true;
-		} else {
-			getRegion().message(player, "teleport-noSafe", checked - 1, maxTries);
-			AreaShop.debug("No location found, checked " + (checked - 1) + " spots of max " + maxTries);
-			return false;
-		}
+		});
+		return future;
 	}
 
 	/**
@@ -378,7 +398,7 @@ public class TeleportFeature extends RegionFeature {
 	 * @param toSign true to teleport to the first sign of the region, false for teleporting to the region itself
 	 * @return true if the teleport succeeded, otherwise false
 	 */
-	public boolean teleportPlayer(Player player, boolean toSign) {
+	public CompletableFuture<Boolean> teleportPlayer(Player player, boolean toSign) {
 		return teleportPlayer(player, toSign, true);
 	}
 
@@ -387,7 +407,7 @@ public class TeleportFeature extends RegionFeature {
 	 * @param player Player that should be teleported
 	 * @return true if the teleport succeeded, otherwise false
 	 */
-	public boolean teleportPlayer(Player player) {
+	public CompletableFuture<Boolean> teleportPlayer(Player player) {
 		return teleportPlayer(player, false, true);
 	}
 
@@ -396,7 +416,7 @@ public class TeleportFeature extends RegionFeature {
 	 * @param location The location to check
 	 * @return true if it is safe, otherwise false
 	 */
-	private boolean isSafe(Location location) {
+	private static boolean isSafe(Location location) {
 		Block feet = location.getBlock();
 		Block head = feet.getRelative(BlockFace.UP);
 		Block below = feet.getRelative(BlockFace.DOWN);

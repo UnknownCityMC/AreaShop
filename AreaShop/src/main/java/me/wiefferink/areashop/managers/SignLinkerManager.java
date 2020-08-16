@@ -10,6 +10,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -130,7 +133,16 @@ public class SignLinkerManager extends Manager implements Listener {
 					plugin.message(player, "linksigns-alreadyRegistered", regionSign.getRegion());
 					return;
 				}
-				linker.setSign(block.getLocation(), block.getType(), plugin.getBukkitHandler().getSignFacing(block));
+				final BlockData blockData = block.getBlockData();
+				final BlockFace rotation;
+				if (blockData instanceof Sign) {
+					rotation = ((Sign) blockData).getRotation();
+				} else if (blockData instanceof WallSign) {
+					rotation = ((WallSign) blockData).getFacing();
+				} else {
+					rotation = null;
+				}
+				linker.setSign(block.getLocation(), block.getType(), rotation);
 			}
 		}
 	}

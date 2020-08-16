@@ -4,7 +4,7 @@
   <groupId>me.wiefferink</groupId>
   <artifactId>areashop-parent</artifactId>
   <packaging>pom</packaging>
-  <version>parent</version>
+  <version>1.0</version>
   <name>AreaShop Parent</name>
   <url>https://github.com/NLthijs48/AreaShop</url>
 
@@ -39,6 +39,14 @@
       <id>bstats-repo</id>
       <url>http://repo.bstats.org/content/repositories/releases/</url>
     </repository>
+    <repository>
+      <id>mvn-repo</id>
+      <url>https://mvnrepository.com/artifact/org.bstats/bstats-bukkit</url>
+    </repository>
+      <repository>
+        <id>sk89q-repo</id>
+        <url>https://maven.enginehub.org/repo/</url>
+      </repository>
   </repositories>
 
   <properties>
@@ -49,24 +57,24 @@
   </properties>
 
   <modules>
-    <module>areashop-interface</module>
-    <module>areashop-bukkit-1_12</module>
-    <module>areashop-bukkit-1_13</module>
-    <module>areashop-worldguard-5</module>
-    <module>areashop-worldguard-6</module>
-    <module>areashop-worldguard-6_1_3</module>
-    <module>areashop-worldguard-7_beta_1</module>
-    <module>areashop-worldguard-7_beta_2</module>
-    <module>areashop-worldedit-5</module>
-    <module>areashop-worldedit-6</module>
-    <module>areashop-worldedit-7_beta_1</module>
-    <module>areashop-worldedit-7_beta_4</module>
-    <module>areashop-fastasyncworldedit</module>
+    <module>hooks/areashop-interface</module>
+
+    <!-- FAWE Compat -->
+    <module>hooks/areashop-fawe-1-15</module>
+
+    <!-- World Edit Compat -->
+    <module>hooks/areashop-worldedit-7</module>
+
+
+    <!-- World Guard Compat -->
+    <module>hooks/areashop-worldguard-7</module>
+
     <module>AreaShop</module>
   </modules>
 
   <build>
-    <plugins>
+    <defaultGoal>clean package</defaultGoal>
+    <!--plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -85,7 +93,8 @@
             <configuration>
               <configLocation>config/checkstyle.xml</configLocation>
               <suppressionsLocation>config/checkstyle-suppressions.xml</suppressionsLocation>
-              <suppressionsFileExpression>config/checkstyle.suppressions.file</suppressionsFileExpression>
+              <suppressionsFileExpression>config/checkstyle.suppressions.file
+              </suppressionsFileExpression>
               <encoding>UTF-8</encoding>
               <consoleOutput>true</consoleOutput>
               <failsOnError>true</failsOnError>
@@ -97,7 +106,7 @@
           </execution>
         </executions>
       </plugin>
-    </plugins>
+    </plugins-->
   </build>
 
 </project>

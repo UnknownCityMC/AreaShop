@@ -65,7 +65,7 @@ public class TeleportCommand extends CommandAreaShop {
 						|| args[2].equalsIgnoreCase("yes")
 						|| args[2].equalsIgnoreCase("true")
 		);
-		region.getTeleportFeature().teleportPlayer(player, toSign);
+		region.getTeleportFeature().teleportPlayer(player, toSign, true);
 	}
 
 	@Override
