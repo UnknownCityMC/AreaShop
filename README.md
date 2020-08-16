@@ -64,11 +64,11 @@ For a preview join 'mc.go-craft.com' and go to the Survival server, the shops ar
 Old video for AreaShop v1.0: [Tutorial by VariationVault](https://www.youtube.com/watch?v=k2HMCxCCOYo)
 
 ### Required dependencies
-* Java 7 or higher (latest recommended)
-* Bukkit/Spigot 1.7.9 or higher (modded servers often include Bukkit/Spigot support, so it should also work on that, but it is not specifically tested for it)
-* [WorldGuard](http://dev.bukkit.org/bukkit-plugins/worldguard/): 5.9 or higher (6.0+ recommended)
-* [WorldEdit](http://dev.bukkit.org/bukkit-plugins/worldedit/): 5.6.3 or higher (6.0+ recommended)
-* [Vault](http://dev.bukkit.org/bukkit-plugins/vault/): 1.4.1 or higher
+* Java 8 or higher (latest recommended)
+* Bukkit/Spigot 1.13.2 or higher (modded servers often include Bukkit/Spigot support, so it should also work on that, but it is not specifically tested for it)
+* [WorldGuard](http://dev.bukkit.org/bukkit-plugins/worldguard/): 7.0.3 or higher
+* [WorldEdit](http://dev.bukkit.org/bukkit-plugins/worldedit/): 7.0.1 or higher 
+* [Vault](http://dev.bukkit.org/bukkit-plugins/vault/): 1.7 or higher
 * An economy plugin supported by Vault (check the [Vault page](http://dev.bukkit.org/bukkit-plugins/vault/) for a list of these)
 
 ### Metrics
