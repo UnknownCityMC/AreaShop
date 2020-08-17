@@ -1,0 +1,25 @@
+# Maven stuff
+target
+
+.project
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# IntelliJ IDEA
+*.iml
+.idea
+dependency-reduced-pom.xml
+
+desktop.ini
