@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.regions;
 
+import co.aikar.taskchain.TaskChain;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
@@ -12,7 +13,6 @@ import me.wiefferink.areashop.features.signs.SignsFeature;
 import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
 import me.wiefferink.areashop.managers.FileManager;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.processing.Message;
 import me.wiefferink.interactivemessenger.processing.ReplacementProvider;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -23,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class GeneralRegion implements GeneralRegionInterface, Comparable<GeneralRegion>, ReplacementProvider {
 	static final AreaShop plugin = AreaShop.getInstance();
@@ -796,7 +798,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 			AreaShop.debug("Restored schematic for region " + getName());
 
 			// Workaround for signs inside the region in combination with async restore of plugins like AsyncWorldEdit and FastAsyncWorldEdit
-			Do.syncLater(10, getSignsFeature()::update);
+			Bukkit.getScheduler().runTaskLater(plugin, getSignsFeature()::update, 10);
 		}
 		return result;
 	}
@@ -843,6 +845,48 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		} catch(IOException e) {
 			return false;
 		}
+	}
+
+	public CompletableFuture<Boolean> saveNowAsync() {
+		final YamlConfiguration clone = new YamlConfiguration();
+		final String fileName = plugin.getFileManager().getRegionFolder() + File.separator + getName().toLowerCase() + ".yml";
+		try {
+			clone.loadFromString(config.saveToString());
+		} catch (InvalidConfigurationException ex) {
+			ex.printStackTrace();
+			return CompletableFuture.completedFuture(false);
+		}
+		final CompletableFuture<Boolean> future = new CompletableFuture<>();
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+			try {
+				clone.save(new File(fileName));
+				future.complete(true);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				future.complete(false);
+			}
+		});
+		return future;
+	}
+
+	public TaskChain<Boolean> saveNowAsync(final TaskChain<?> chain) {
+		final YamlConfiguration clone = new YamlConfiguration();
+		final String fileName = plugin.getFileManager().getRegionFolder() + File.separator + getName().toLowerCase() + ".yml";
+		try {
+			clone.loadFromString(config.saveToString());
+		} catch (InvalidConfigurationException ex) {
+			ex.printStackTrace();
+			return chain.sync((unused) -> false);
+		}
+		return chain.async((unused) -> {
+			try {
+				clone.save(new File(fileName));
+				return true;
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				return false;
+			}
+		});
 	}
 
 

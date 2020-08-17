@@ -12,7 +12,7 @@ import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.bukkitdo.Do;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -174,10 +174,10 @@ public class SignsFeature extends RegionFeature {
         final Block block = event.getBlock();
         final BlockData blockData = block.getBlockData();
         final Block attachedBlock;
-        if(blockData instanceof WallSign) {
+        if (blockData instanceof WallSign) {
             attachedBlock = block.getRelative(((WallSign) blockData).getFacing().getOppositeFace());
-        } else if(blockData instanceof Sign) {
-            attachedBlock =  block.getRelative(BlockFace.DOWN);
+        } else if (blockData instanceof Sign) {
+            attachedBlock = block.getRelative(BlockFace.DOWN);
         } else {
             attachedBlock = null;
         }
@@ -384,7 +384,7 @@ public class SignsFeature extends RegionFeature {
                     rent.handleSchematicEvent(GeneralRegion.RegionEvent.CREATED);
                     plugin.message(player, "setup-rentSuccess", rent);
                     // Update the region after the event has written its lines
-                    Do.sync(rent::update);
+                    Bukkit.getScheduler().runTask(plugin, rent::update);
 
             }
         } else if (line0.contains(plugin.getConfig().getString("signTags.buy"))) {
@@ -416,7 +416,7 @@ public class SignsFeature extends RegionFeature {
                                 candidate = pr;
                             } else if (pr.getParent() != null && pr.getParent().equals(candidate)) {
                                 candidate = pr;
-                            }  else {
+                            } else {
                                 plugin.message(player, "setup-couldNotDetect", candidate.getId(), pr.getId());
                                 return;
                             }
@@ -485,7 +485,7 @@ public class SignsFeature extends RegionFeature {
                 buy.handleSchematicEvent(GeneralRegion.RegionEvent.CREATED);
                 plugin.message(player, "setup-buySuccess", buy);
                 // Update the region after the event has written its lines
-                Do.sync(buy::update);
+                Bukkit.getScheduler().runTask(plugin, buy::update);
             }
         } else if (event.getLine(0).contains(plugin.getConfig().getString("signTags.add"))) {
             // Check for permission
@@ -527,7 +527,7 @@ public class SignsFeature extends RegionFeature {
             }
 
             // Update the region later because this event will do it first
-            Do.sync(region::update);
+            Bukkit.getScheduler().runTask(plugin, region::update);
         }
     }
 
@@ -542,8 +542,8 @@ public class SignsFeature extends RegionFeature {
         if (chunkSigns == null) {
             return;
         }
-
-        Do.forAll(chunkSigns, RegionSign::update);
+        int batchSize = Math.max(chunkSigns.size() / 10, 10);
+        Utils.runAsBatches(chunkSigns, batchSize, RegionSign::update, false);
     }
 
     /**
@@ -565,11 +565,12 @@ public class SignsFeature extends RegionFeature {
      * @return true if one or more of the signs need periodic updating, otherwise false
      */
     public boolean needsPeriodicUpdate() {
-        boolean result = false;
         for (RegionSign sign : signs.values()) {
-            result |= sign.needsPeriodicUpdate();
+            if (sign.needsPeriodicUpdate()) {
+                return true;
+            }
         }
-        return result;
+        return false;
     }
 
     /**

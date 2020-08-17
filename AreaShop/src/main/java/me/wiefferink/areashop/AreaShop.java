@@ -1,5 +1,6 @@
 package me.wiefferink.areashop;
 
+import co.aikar.taskchain.BukkitTaskChainFactory;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -11,7 +12,6 @@ import me.wiefferink.areashop.managers.*;
 import me.wiefferink.areashop.tools.Analytics;
 import me.wiefferink.areashop.tools.GithubUpdateCheck;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.processing.Message;
 import me.wiefferink.interactivemessenger.source.LanguageManager;
 import net.milkbowl.vault.economy.Economy;
@@ -111,7 +111,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String tagTeleportWorld = "tpworld";
     // REGEX Matcher for Versions which follow a x.x.x format.
     private static final Pattern VERSION_MATCHER_3 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
-    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+\\.([0-9]+)\\.([0-9]+)");
+    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
     // Statically available instance
     private static AreaShop instance = null;
     // General variables
@@ -424,21 +424,21 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                 Utils.millisToTicks(Utils.getDurationFromSecondsOrString("expiration.delay"));
         final AreaShop finalPlugin = this;
         if (expirationCheck > 0) {
-            Do.syncTimer(expirationCheck, () -> {
+            Bukkit.getScheduler().runTaskTimer(this, () -> {
                 if (isReady()) {
                     finalPlugin.getFileManager().checkRents();
                     AreaShop.debugTask("Checking rent expirations...");
                 } else {
                     AreaShop.debugTask("Skipped checking rent expirations, plugin not ready");
                 }
-            });
+            }, 1, expirationCheck);
         }
 
         // Inactive unrenting/selling timer
         long inactiveCheck =
                 Utils.millisToTicks(Utils.getDurationFromMinutesOrString("inactive.delay"));
         if (inactiveCheck > 0) {
-            Do.syncTimer(inactiveCheck, () -> {
+            Bukkit.getScheduler().runTaskTimer(this,  () -> {
                 if (isReady()) {
                     finalPlugin.getFileManager().checkForInactiveRegions();
                     AreaShop.debugTask(
@@ -447,56 +447,56 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                     AreaShop.debugTask(
                             "Skipped checking for regions of inactive players, plugin not ready");
                 }
-            });
+            }, 1, inactiveCheck);
         }
 
         // Periodic updating of signs for timeleft tags
         long periodicUpdate =
                 Utils.millisToTicks(Utils.getDurationFromSecondsOrString("signs.delay"));
         if (periodicUpdate > 0) {
-            Do.syncTimer(periodicUpdate, () -> {
+            Bukkit.getScheduler().runTaskTimer(this, () -> {
                 if (isReady()) {
                     finalPlugin.getFileManager().performPeriodicSignUpdate();
                     AreaShop.debugTask("Performing periodic sign update...");
                 } else {
                     AreaShop.debugTask("Skipped performing periodic sign update, plugin not ready");
                 }
-            });
+            },1, periodicUpdate);
         }
 
         // Saving regions and group settings
         long saveFiles = Utils.millisToTicks(Utils.getDurationFromMinutesOrString("saving.delay"));
         if (saveFiles > 0) {
-            Do.syncTimer(saveFiles, () -> {
+            Bukkit.getScheduler().runTaskTimer(this, () -> {
                 if (isReady()) {
                     finalPlugin.getFileManager().saveRequiredFiles();
                     AreaShop.debugTask("Saving required files...");
                 } else {
                     AreaShop.debugTask("Skipped saving required files, plugin not ready");
                 }
-            });
+            }, saveFiles, saveFiles);
         }
 
         // Sending warnings about rent regions to online players
         long expireWarning =
                 Utils.millisToTicks(Utils.getDurationFromMinutesOrString("expireWarning.delay"));
         if (expireWarning > 0) {
-            Do.syncTimer(expireWarning, () -> {
+            Bukkit.getScheduler().runTaskLater(finalPlugin, () -> {
                 if (isReady()) {
                     finalPlugin.getFileManager().sendRentExpireWarnings();
                     AreaShop.debugTask("Sending rent expire warnings...");
                 } else {
                     AreaShop.debugTask("Skipped sending rent expire warnings, plugin not ready");
                 }
-            });
+            }, expireWarning);
         }
 
         // Update all regions on startup
         if (getConfig().getBoolean("updateRegionsOnStartup")) {
-            Do.syncLater(20, () -> {
+            Bukkit.getScheduler().runTaskLater(this, () -> {
                 finalPlugin.getFileManager().updateAllRegions();
                 AreaShop.debugTask("Updating all regions at startup...");
-            });
+            }, 20);
         }
     }
 
@@ -569,7 +569,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     @Override
     public void onEnable() {
         AreaShop.instance = this;
-        Do.init(this);
+        Utils.factory = BukkitTaskChainFactory.create(this);
         managers = new HashSet<>();
         boolean error = !loadHooks();
 

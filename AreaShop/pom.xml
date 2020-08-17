@@ -18,6 +18,10 @@
             <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/content/groups/aikar/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -36,11 +40,11 @@
             <version>1.1-SNAPSHOT</version>
         </dependency>
 
-        <!-- BukkitDo library -->
+        <!-- TaskChain library -->
         <dependency>
-            <groupId>me.wiefferink</groupId>
-            <artifactId>bukkitdo</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>co.aikar</groupId>
+            <artifactId>taskchain-bukkit</artifactId>
+            <version>3.7.2</version>
         </dependency>
 
         <dependency>
@@ -244,15 +248,15 @@
                         </goals>
                         <configuration>
                             <relocations>
+                                <!-- Relocate TaskChain -->
+                                <relocation>
+                                    <pattern>co.aikar.taskchain</pattern>
+                                    <shadedPattern>me.wiefferink.areashop.shaded.taskchain</shadedPattern>
+                                </relocation>
                                 <!-- Relocate messaging framework -->
                                 <relocation>
                                     <pattern>me.wiefferink.interactivemessenger</pattern>
                                     <shadedPattern>me.wiefferink.areashop.shaded.interactivemessenger</shadedPattern>
-                                </relocation>
-                                <!-- Relocate BukkitDo -->
-                                <relocation>
-                                    <pattern>me.wiefferink.bukkitdo</pattern>
-                                    <shadedPattern>me.wiefferink.areashop.shaded.bukkitdo</shadedPattern>
                                 </relocation>
                                 <!-- Relocate bstats -->
                                 <relocation>

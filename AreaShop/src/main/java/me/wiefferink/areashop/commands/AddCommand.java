@@ -13,20 +13,13 @@ import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.bukkitdo.Do;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AddCommand extends CommandAreaShop {
@@ -131,10 +124,9 @@ public class AddCommand extends CommandAreaShop {
 		TreeSet<String> namesBlacklisted = new TreeSet<>();
 		TreeSet<String> namesNoPermission = new TreeSet<>();
 		TreeSet<String> namesAddCancelled = new TreeSet<>(); // Denied by an event listener
-		Do.forAll(
+		Utils.runAsBatches(regions.entrySet(),
 			plugin.getConfig().getInt("adding.regionsPerTick"),
-			regions.entrySet(),
-			regionEntry -> {
+				(regionEntry) -> {
 				String regionName = regionEntry.getKey();
 				ProtectedRegion region = regionEntry.getValue();
 				// Determine if the player is an owner or member of the region
@@ -261,8 +253,8 @@ public class AddCommand extends CommandAreaShop {
 						regionsSuccess.add(buy);
 					}
 				}
-			},
-			() -> {
+			}, false).thenAccept(
+			(success) -> {
 				if(!regionsSuccess.isEmpty()) {
 					plugin.message(sender, "add-success", args[1], Utils.combinedMessage(regionsSuccess, "region"));
 				}
@@ -288,13 +280,12 @@ public class AddCommand extends CommandAreaShop {
 				if(!namesAddCancelled.isEmpty()) {
 					plugin.message(sender, "add-rentCancelled", Utils.createCommaSeparatedList(namesAddCancelled));
 				}
-			}
-		);
+			});
 	}
 
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		List<String> result = new ArrayList<>();
+		List<String> result = new LinkedList<>();
 		if(toComplete == 2) {
 			if(sender.hasPermission("areashop.createrent")) {
 				result.add("rent");

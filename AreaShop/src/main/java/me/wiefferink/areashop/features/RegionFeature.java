@@ -30,7 +30,7 @@ Possible future feature classes:
 public abstract class RegionFeature implements Listener {
 	public static final AreaShop plugin = AreaShop.getInstance();
 
-	public YamlConfiguration config = plugin.getConfig();
+	protected YamlConfiguration config = plugin.getConfig();
 	private GeneralRegion region;
 
 	/**
