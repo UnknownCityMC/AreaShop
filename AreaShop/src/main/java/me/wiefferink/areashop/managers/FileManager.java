@@ -4,6 +4,7 @@ import co.aikar.taskchain.TaskChain;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
@@ -605,12 +606,9 @@ public class FileManager extends Manager {
                 RegionManager manager = plugin.getRegionManager(bukkitWorld);
                 if (manager != null) {
                     try {
-                        if (plugin.getWorldGuard().getDescription().getVersion().startsWith("5.")) {
-                            manager.save();
-                        } else {
-                            manager.saveChanges();
-                        }
-                    } catch (Exception e) {
+                        manager.saveChanges();
+                    } catch (StorageException e) {
+                        e.printStackTrace();
                         AreaShop.warn("WorldGuard regions in world " + world + " could not be saved");
                     }
                 }
@@ -660,7 +658,17 @@ public class FileManager extends Manager {
         if (checksPerTick < 1) {
             checksPerTick = Math.min(getRegions().size() / 10, 10);
         }
-        Utils.runAsBatches(getRegions(), checksPerTick, GeneralRegion::checkInactive, false);
+        // Run x amount of checks per tick. Will query for offline player async.
+        Utils.runAsBatches(getRegions(), checksPerTick, (region) -> {
+            CompletableFuture<OfflinePlayer> future = new CompletableFuture<>();
+            final String name = region.getLandlordName();
+            if (Bukkit.getPlayer(name) != null) {
+                future.complete(Bukkit.getPlayer(name));
+            } else {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> future.complete(Bukkit.getOfflinePlayer(name)));
+            }
+            future.thenAccept(player -> Bukkit.getScheduler().callSyncMethod(plugin, () -> region.checkInactivity(player)));
+        }, false);
     }
 
     /**

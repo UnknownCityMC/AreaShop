@@ -828,15 +828,29 @@ public class Utils {
      * @return the name of the player
      */
     public static String toName(UUID uuid) {
-        if (uuid == null) {
-            return "";
-        } else {
+        if (uuid != null) {
             String name = Bukkit.getOfflinePlayer(uuid).getName();
             if (name != null) {
                 return name;
             }
-            return "";
         }
+        return "";
+    }
+
+    public static CompletableFuture<String> toNameAsync(UUID uuid) {
+        if (uuid == null) {
+            return CompletableFuture.completedFuture("");
+        }
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        Bukkit.getScheduler().runTaskAsynchronously(AreaShop.getInstance(), () -> {
+            final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            if (!offlinePlayer.hasPlayedBefore()) {
+                completableFuture.complete("");
+            } else {
+                completableFuture.complete(offlinePlayer.getName());
+            }
+        });
+        return completableFuture;
     }
 
     /**

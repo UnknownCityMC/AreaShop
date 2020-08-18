@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 public class LinksignsCommand extends CommandAreaShop {
 
@@ -47,14 +48,11 @@ public class LinksignsCommand extends CommandAreaShop {
 				if(signProfilesSection != null) {
 					Set<String> profiles = signProfilesSection.getKeys(false);
 					if(!profiles.contains(profile)) {
-						ArrayList<String> message = new ArrayList<>();
+						StringJoiner joiner = new StringJoiner(", ");
 						for(String p : profiles) {
-							if(!message.isEmpty()) {
-								message.add(", ");
-							}
-							message.addAll(Message.fromKey("addsign-profile").replacements(p).get());
+							Message.fromKey("addsign-profile").replacements(p).get().forEach(joiner::add);
 						}
-						plugin.message(sender, "addsign-wrongProfile", Message.fromList(message));
+						plugin.message(sender, "addsign-wrongProfile", joiner.toString());
 						return;
 					}
 				}

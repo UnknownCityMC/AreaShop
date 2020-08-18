@@ -259,7 +259,7 @@ public class ImportJob {
 				if(owner != null) {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(owner);
-					if(offlinePlayer != null) {
+					if(offlinePlayer.hasPlayedBefore()) {
 						existing.add(offlinePlayer.getUniqueId());
 					}
 				}
@@ -338,9 +338,7 @@ public class ImportJob {
 
 		// Determine unit and add that to the price
 		String unitSuffix = "";
-		if("region".equalsIgnoreCase(unit)) {
-			// add nothing
-		} else if("m3".equalsIgnoreCase(unit)) {
+		if("m3".equalsIgnoreCase(unit)) {
 			unitSuffix = "*%volume%";
 		} else { // m2 or nothing (in case not set, we should actually look in parent files to correctly set this...)
 			unitSuffix = "*(%volume%/%height%)"; // This is better than width*depth because of polygon regions

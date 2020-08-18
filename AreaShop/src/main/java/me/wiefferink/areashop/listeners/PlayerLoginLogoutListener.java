@@ -4,6 +4,7 @@ import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.TransactionalRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,7 @@ import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -54,8 +56,12 @@ public final class PlayerLoginLogoutListener implements Listener {
                 return false;
             }
             // Notify for rents that almost run out
-            for (RentRegion region : plugin.getFileManager().getRents()) {
-                if (region.isRenter(player)) {
+            for (GeneralRegion generalRegion : plugin.getFileManager().getRegions()) {
+                if (!(generalRegion instanceof RentRegion)) {
+                    continue;
+                }
+                final RentRegion region = (RentRegion) generalRegion;
+                if (region.isTransactionHolder(player)) {
                     String warningSetting = region.getStringSetting("rent.warningOnLoginTime");
                     if (warningSetting == null || warningSetting.isEmpty()) {
                         continue;
@@ -79,9 +85,9 @@ public final class PlayerLoginLogoutListener implements Listener {
                 return true;
             }
 
-            List<GeneralRegion> regions = new ArrayList<>();
+            List<GeneralRegion> regions = new LinkedList<>();
             for (GeneralRegion region : plugin.getFileManager().getRegions()) {
-                if (region.isOwner(player)) {
+                if (region instanceof TransactionalRegion && ((TransactionalRegion) region).isTransactionHolder(player)) {
                     regions.add(region);
                 }
             }
@@ -119,7 +125,7 @@ public final class PlayerLoginLogoutListener implements Listener {
      */
     private void updateLastActive(Player player) {
         for (GeneralRegion region : plugin.getFileManager().getRegions()) {
-            if (region.isOwner(player)) {
+            if (region instanceof TransactionalRegion && ((TransactionalRegion) region).isTransactionHolder(player)) {
                 region.updateLastActiveTime();
             }
         }

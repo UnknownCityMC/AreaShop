@@ -85,7 +85,7 @@ public class ResellCommand extends CommandAreaShop {
 			buy.update();
 			plugin.message(sender, "resell-success", buy);
 		} else if(sender.hasPermission("areashop.resell") && sender instanceof Player) {
-			if(!buy.isOwner((Player)sender)) {
+			if(!buy.isTransactionHolder((Player)sender)) {
 				plugin.message(sender, "resell-noPermissionOther", buy);
 				return;
 			}

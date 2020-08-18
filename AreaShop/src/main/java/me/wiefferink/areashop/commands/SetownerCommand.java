@@ -3,6 +3,7 @@ package me.wiefferink.areashop.commands;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.TransactionalRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -77,7 +78,7 @@ public class SetownerCommand extends CommandAreaShop {
 		UUID uuid = null;
 		@SuppressWarnings("deprecation")
 		OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
-		if(player != null) {
+		if(player.hasPlayedBefore()) {
 			uuid = player.getUniqueId();
 		}
 		if(uuid == null) {
@@ -87,26 +88,27 @@ public class SetownerCommand extends CommandAreaShop {
 
 		if(region instanceof RentRegion) {
 			RentRegion rent = (RentRegion)region;
-			if(rent.isRenter(uuid)) {
+			if(rent.isTransactionHolder(uuid)) {
 				// extend
 				rent.setRentedUntil(rent.getRentedUntil() + rent.getDuration());
-				rent.setRenter(uuid);
 				plugin.message(sender, "setowner-succesRentExtend", region);
 			} else {
 				// change
 				if(!rent.isRented()) {
-					rent.setRentedUntil(Calendar.getInstance().getTimeInMillis() + rent.getDuration());
+					rent.setRentedUntil(System.currentTimeMillis()  + rent.getDuration());
 				}
-				rent.setRenter(uuid);
 				plugin.message(sender, "setowner-succesRent", region);
 			}
+			rent.setTransactionHolder(uuid);
 		}
 		if(region instanceof BuyRegion) {
 			BuyRegion buy = (BuyRegion)region;
-			buy.setBuyer(uuid);
+			buy.setTransactionHolder(uuid);
 			plugin.message(sender, "setowner-succesBuy", region);
 		}
-		region.getFriendsFeature().deleteFriend(region.getOwner(), null);
+		if (region instanceof TransactionalRegion) {
+			region.getFriendsFeature().deleteFriend(((TransactionalRegion) region).getTransactionHolder(), null);
+		}
 		region.update();
 		region.saveRequired();
 	}

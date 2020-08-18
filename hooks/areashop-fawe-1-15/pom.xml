@@ -16,7 +16,7 @@
     <repositories>
         <repository>
             <id>IS-Repo</id>
-            <url>https://mvn.intellectualsites.com/</url>
+            <url>https://mvn.intellectualsites.com/content/repositories/releases/</url>
         </repository>
     </repositories>
 
@@ -46,6 +46,7 @@
             <groupId>me.wiefferink</groupId>
             <artifactId>areashop-interface</artifactId>
             <version>latest</version>
+            <scope>provided</scope>
             <type>jar</type>
         </dependency>
 
