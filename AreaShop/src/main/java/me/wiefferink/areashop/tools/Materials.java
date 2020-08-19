@@ -126,7 +126,7 @@ public class Materials {
 	 * @return true if the given material is a sign
 	 */
 	public static boolean isSign(String name) {
-		return name != null && (FLOOR_SIGN_TYPES.contains(name) || WALL_SIGN_TYPES.contains(name));
+		return name != null && name.toUpperCase().contains("SIGN");
 	}
 
 }

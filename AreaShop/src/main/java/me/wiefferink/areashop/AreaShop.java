@@ -338,7 +338,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public Economy getEconomy() {
         RegisteredServiceProvider<Economy> economy = getServer().getServicesManager()
                 .getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economy == null || economy.getProvider() == null) {
+        if (economy == null) {
             error(
                     "There is no economy provider to support Vault, make sure you installed an economy plugin");
             return null;

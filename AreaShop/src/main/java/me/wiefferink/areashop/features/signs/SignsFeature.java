@@ -33,11 +33,12 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SignsFeature extends RegionFeature {
 
-    private static final Map<String, RegionSign> allSigns = Collections.synchronizedMap(new HashMap<>());
-    private static final Map<String, List<RegionSign>> signsByChunk = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, RegionSign> allSigns = new ConcurrentHashMap<>();
+    private static final Map<String, List<RegionSign>> signsByChunk = new ConcurrentHashMap<>();
 
     private Map<String, RegionSign> signs;
 
@@ -578,8 +579,8 @@ public class SignsFeature extends RegionFeature {
      *
      * @return List of signs
      */
-    public List<RegionSign> getSigns() {
-        return Collections.unmodifiableList(new ArrayList<>(signs.values()));
+    public Collection<RegionSign> getSigns() {
+        return new HashSet<>(signs.values());
     }
 
     /**

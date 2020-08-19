@@ -56,13 +56,12 @@ public class FriendsFeature extends RegionFeature {
 			return false;
 		}
 
-		Set<String> friends = new HashSet<>(getRegion().getConfig().getStringList("general.friends"));
+		List<String> friends = getRegion().getConfig().getStringList("general.friends");
 		friends.remove(player.toString());
-		List<String> list = new ArrayList<>(friends);
-		if(list.isEmpty()) {
+		if(friends.isEmpty()) {
 			getRegion().setSetting("general.friends", null);
 		} else {
-			getRegion().setSetting("general.friends", list);
+			getRegion().setSetting("general.friends", friends);
 		}
 		return true;
 	}

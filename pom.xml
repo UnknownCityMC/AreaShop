@@ -1,116 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>me.wiefferink</groupId>
-  <artifactId>areashop-parent</artifactId>
-  <packaging>pom</packaging>
-  <version>1.0</version>
-  <name>AreaShop Parent</name>
-  <url>https://github.com/NLthijs48/AreaShop</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>me.wiefferink</groupId>
+    <artifactId>areashop-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0</version>
+    <name>AreaShop Parent</name>
+    <url>https://github.com/NLthijs48/AreaShop</url>
 
-  <licenses>
-    <license>
-      <name>GNU General Public License v3.0</name>
-      <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-  <issueManagement>
-    <url>https://github.com/NLthijs48/AreaShop/issues</url>
-    <system>GitHub Issues</system>
-  </issueManagement>
+    <issueManagement>
+        <url>https://github.com/md5sha256/AreaShop/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
 
-  <ciManagement>
-    <system>Jenkins</system>
-    <url>http://jenkins.wiefferink.me/job/AreaShop</url>
-  </ciManagement>
+    <!--ciManagement>
+        <system>Jenkins</system>
+        <url>http://jenkins.wiefferink.me/job/AreaShop</url>
+    </ciManagement-->
 
-  <repositories>
-    <repository>
-      <id>vault-repo</id>
-      <url>http://nexus.hc.to/content/repositories/pub_releases</url>
-    </repository>
-    <repository>
-      <id>wiefferink-repo</id>
-      <url>http://maven.wiefferink.me</url>
-    </repository>
-    <repository>
-      <id>bstats-repo</id>
-      <url>http://repo.bstats.org/content/repositories/releases/</url>
-    </repository>
-    <repository>
-      <id>mvn-repo</id>
-      <url>https://mvnrepository.com/artifact/org.bstats/bstats-bukkit</url>
-    </repository>
-      <repository>
-        <id>sk89q-repo</id>
-        <url>https://maven.enginehub.org/repo/</url>
-      </repository>
-    <repository>
-      <id>spigot-repo</id>
-      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-    </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>vault-repo</id>
+            <url>http://nexus.hc.to/content/repositories/pub_releases</url>
+        </repository>
+        <repository>
+            <id>wiefferink-repo</id>
+            <url>http://maven.wiefferink.me</url>
+        </repository>
+        <repository>
+            <id>bstats-repo</id>
+            <url>http://repo.bstats.org/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>mvn-repo</id>
+            <url>https://mvnrepository.com/artifact/org.bstats/bstats-bukkit</url>
+        </repository>
+        <repository>
+            <id>sk89q-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <!--build.number>#CUSTOM</build.number-->
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <!--build.number>#CUSTOM</build.number-->
+    </properties>
 
-  <modules>
-    <module>hooks/areashop-interface</module>
+    <modules>
+        <module>hooks/areashop-interface</module>
 
-    <!-- FAWE Compat -->
-    <module>hooks/areashop-fawe-1-15</module>
+        <!-- FAWE Compat -->
+        <module>hooks/areashop-fawe-1-15</module>
 
-    <!-- World Edit Compat -->
-    <module>hooks/areashop-worldedit-7</module>
+        <!-- World Edit Compat -->
+        <module>hooks/areashop-worldedit-7</module>
 
 
-    <!-- World Guard Compat -->
-    <module>hooks/areashop-worldguard-7</module>
+        <!-- World Guard Compat -->
+        <module>hooks/areashop-worldguard-7</module>
 
-    <module>AreaShop</module>
-  </modules>
+        <module>AreaShop</module>
+    </modules>
 
-  <build>
-    <defaultGoal>clean package</defaultGoal>
-    <!--plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.0</version>
-        <dependencies>
-          <dependency>
-            <groupId>com.puppycrawl.tools</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>8.29</version>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <id>validate</id>
-            <phase>validate</phase>
-            <configuration>
-              <configLocation>config/checkstyle.xml</configLocation>
-              <suppressionsLocation>config/checkstyle-suppressions.xml</suppressionsLocation>
-              <suppressionsFileExpression>config/checkstyle.suppressions.file
-              </suppressionsFileExpression>
-              <encoding>UTF-8</encoding>
-              <consoleOutput>true</consoleOutput>
-              <failsOnError>true</failsOnError>
-              <violationSeverity>error</violationSeverity>
-            </configuration>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins-->
-  </build>
+    <build>
+        <defaultGoal>clean package</defaultGoal>
+    </build>
 
 </project>

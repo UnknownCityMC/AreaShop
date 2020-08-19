@@ -89,7 +89,7 @@ public abstract class CommandAreaShop {
 		return false;
 	}
 
-	private class CommandTime {
+	private static class CommandTime {
 		public final String command;
 		public final long time;
 

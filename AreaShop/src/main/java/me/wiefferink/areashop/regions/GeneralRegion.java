@@ -1241,9 +1241,9 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             typePath = "buys";
         }
         // Check all limitgroups the player has
-        List<String> groups = new ArrayList<>(plugin.getConfig().getConfigurationSection("limitGroups").getKeys(false));
+        Collection<String> groups = plugin.getConfig().getConfigurationSection("limitGroups").getKeys(false);
         while (!groups.isEmpty()) {
-            String group = groups.get(0);
+            String group = groups.iterator().next();
             if (plugin.hasPermission(offlinePlayer, "areashop.limits." + group) && this.matchesLimitGroup(group)) {
                 String pathPrefix = "limitGroups." + group + ".";
                 if (!plugin.getConfig().isInt(pathPrefix + "total")) {
@@ -1272,8 +1272,9 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
                 String typeHighestGroup = group;
                 groups.remove(group);
                 // Get the highest number from the groups of the same category
-                List<String> groupsCopy = new ArrayList<>(groups);
-                for (String checkGroup : groupsCopy) {
+                Iterator<String> iterator = groups.iterator();
+                while (iterator.hasNext()) {
+                    String checkGroup = iterator.next();
                     if (plugin.hasPermission(offlinePlayer, "areashop.limits." + checkGroup) && this.matchesLimitGroup(checkGroup)) {
                         if (limitGroupsOfSameCategory(group, checkGroup)) {
                             groups.remove(checkGroup);
@@ -1293,7 +1294,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
                             }
                         }
                     } else {
-                        groups.remove(checkGroup);
+                        iterator.remove();;
                     }
                 }
                 // Check if the limits stop the player from buying the region
@@ -1631,7 +1632,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     /**
      * Class to store the result of a limits check.
      */
-    public class LimitResult {
+    public static class LimitResult {
         private final boolean actionAllowed;
         private final LimitType limitingFactor;
         private final int maximum;

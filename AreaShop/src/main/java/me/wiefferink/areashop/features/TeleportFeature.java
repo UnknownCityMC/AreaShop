@@ -5,6 +5,9 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.features.signs.RegionSign;
+import me.wiefferink.areashop.features.signs.SignsFeature;
+import me.wiefferink.areashop.handlers.worldguard.v7.WorldGuardHandler;
+import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
@@ -17,6 +20,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -467,13 +471,16 @@ public class TeleportFeature extends RegionFeature {
             }
 
             if (done && isSafe(safeLocation)) {
+                final SignsFeature feature = getRegion().getSignsFeature();
+                Collection<RegionSign> signs = feature.getSigns();
                 if (finalToSign) {
                     getRegion().message(player, "teleport-successSign");
 
                     // Let the player look at the sign
                     Vector playerVector = safeLocation.toVector();
                     playerVector.setY(playerVector.getY() + player.getEyeHeight(true));
-                    Vector signVector = getRegion().getSignsFeature().getSigns().get(0).getLocation().toVector().add(new Vector(0.5, 0.5, 0.5));
+                    final RegionSign first = signs.iterator().next();
+                    Vector signVector = first.getLocation().add(0.5, 0.5, 0.5).toVector();
                     Vector direction = playerVector.clone().subtract(signVector).normalize();
                     safeLocation.setYaw(180 - (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())));
                     safeLocation.setPitch(90 - (float) Math.toDegrees(Math.acos(direction.getY())));
@@ -525,19 +532,20 @@ public class TeleportFeature extends RegionFeature {
         ProtectedRegion worldguardRegion = getRegion().getRegion();
 
         // Try to get sign location
-        List<RegionSign> signs = getRegion().getSignsFeature().getSigns();
+        Collection<RegionSign> signs = getRegion().getSignsFeature().getSigns();
         boolean signAvailable = !signs.isEmpty();
         if (toSign.get()) {
+            RegionSign sign = signs.iterator().next();
             if (signAvailable) {
                 // Use the location 1 below the sign to prevent weird spawing above the sign
-                startLocation = signs.get(0).getLocation(); //.subtract(0.0, 1.0, 0.0);
+                startLocation = sign.getLocation(); //.subtract(0.0, 1.0, 0.0);
                 startLocation.setPitch(player.getLocation().getPitch());
                 startLocation.setYaw(player.getLocation().getYaw());
 
                 // Move player x blocks away from the sign
                 double distance = getRegion().getDoubleSetting("general.teleportSignDistance");
                 if (distance > 0) {
-                    BlockFace facing = getRegion().getSignsFeature().getSigns().get(0).getFacing();
+                    BlockFace facing = sign.getFacing();
                     Vector facingVector = new Vector(facing.getModX(), facing.getModY(), facing.getModZ())
                             .normalize()
                             .multiply(distance);
@@ -559,9 +567,10 @@ public class TeleportFeature extends RegionFeature {
 
         // Calculate a default location
         if (startLocation == null) {
+            final WorldGuardInterface handler = AreaShop.getInstance().getWorldGuardHandler();
             // Set to block in the middle, y configured in the config
-            Vector regionMin = AreaShop.getInstance().getWorldGuardHandler().getMinimumPoint(worldguardRegion);
-            Vector regionMax = AreaShop.getInstance().getWorldGuardHandler().getMaximumPoint(worldguardRegion);
+            Vector regionMin =  handler.getMinimumPoint(worldguardRegion);
+            Vector regionMax = handler.getMaximumPoint(worldguardRegion);
             Vector middle = regionMin.clone().midpoint(regionMax);
             String configSetting = getRegion().getStringSetting("general.teleportLocationY");
             if ("bottom".equalsIgnoreCase(configSetting)) {
@@ -578,7 +587,8 @@ public class TeleportFeature extends RegionFeature {
                     AreaShop.warn("Could not parse general.teleportLocationY: '" + configSetting + "'");
                 }
             }
-            startLocation = new Location(getRegion().getWorld(), middle.getX(), middle.getY(), middle.getZ(), player.getLocation().getYaw(), player.getLocation().getPitch());
+            final Location location = player.getLocation();
+            startLocation = new Location(getRegion().getWorld(), middle.getX(), middle.getY(), middle.getZ(), location.getYaw(), location.getPitch());
         }
 
         // Set location in the center of the block

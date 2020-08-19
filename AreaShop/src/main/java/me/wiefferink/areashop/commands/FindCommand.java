@@ -112,7 +112,7 @@ public class FindCommand extends CommandAreaShop {
 		// Find rental regions
 		else {
 			List<RentRegion> regions = plugin.getFileManager().getRents();
-			List<RentRegion> results = new ArrayList<>();
+			List<RentRegion> results = new ArrayList<>(regions.size());
 			for(RentRegion region : regions) {
 				if(!region.isRented()
 						&& ((region.getPrice() <= balance && !maxPriceSet) || (region.getPrice() <= maxPrice && maxPriceSet))
