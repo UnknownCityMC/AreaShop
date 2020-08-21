@@ -888,12 +888,12 @@ public class Utils {
 
             @Override
             public void run() {
-                if (lastIndex >= cloned.size()) {
+                if (lastIndex >= cloned.size() - 1) {
                     future.complete(true);
                     cancel();
                     return;
                 }
-                int index = Math.max(batchSize, objects.size() - 1);
+                int index = Math.min(batchSize, objects.size() - 1);
                 cloned.subList(lastIndex, index).forEach(task);
             }
         };
