@@ -662,12 +662,21 @@ public class FileManager extends Manager {
         Utils.runAsBatches(getRegions(), checksPerTick, (region) -> {
             CompletableFuture<OfflinePlayer> future = new CompletableFuture<>();
             final String name = region.getLandlordName();
+            if (name == null) {
+                future.complete(null);
+                return;
+            }
             if (Bukkit.getPlayer(name) != null) {
                 future.complete(Bukkit.getPlayer(name));
             } else {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> future.complete(Bukkit.getOfflinePlayer(name)));
             }
-            future.thenAccept(player -> Bukkit.getScheduler().callSyncMethod(plugin, () -> region.checkInactivity(player)));
+            future.thenAccept(player -> Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+                if (player != null) {
+                    return region.checkInactivity(player);
+                }
+                return null;
+            } ));
         }, false);
     }
 
@@ -880,7 +889,7 @@ public class FileManager extends Manager {
     private void loadRegionFilesNow() {
         File file = new File(regionsPath);
         File[] regionFiles = file.listFiles();
-        if (regionFiles == null) {
+        if (regionFiles == null || regionFiles.length == 0) {
             plugin.setReady(true);
             return;
         }

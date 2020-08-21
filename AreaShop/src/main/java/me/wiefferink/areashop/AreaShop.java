@@ -4,6 +4,7 @@ import co.aikar.taskchain.BukkitTaskChainFactory;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import me.wiefferink.areashop.commands.TestCommand;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
@@ -570,6 +571,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public void onEnable() {
         AreaShop.instance = this;
         Utils.factory = BukkitTaskChainFactory.create(this);
+        getCommand("test").setExecutor(new TestCommand());
         managers = new HashSet<>();
         boolean error = !loadHooks();
 

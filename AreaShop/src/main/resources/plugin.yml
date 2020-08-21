@@ -11,9 +11,12 @@ commands:
     description: 'For all commands use /as help.'
     usage: 'AreaShop has not started correctly, check the log file (or console) and correct any errors.'
     aliases: [as]
+  test:
+
 awareness:
   - !@UTF8
 api-version: 1.13
+
 permissions:
   areashop.*:
     description: Give access to all commands of AreaShop

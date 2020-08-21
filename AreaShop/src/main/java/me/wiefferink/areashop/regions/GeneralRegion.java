@@ -44,8 +44,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     private transient boolean deleted = false;
     private transient long volume = -1;
 
-    private String name;
-    private String worldName;
+    private final String name;
+    private final String worldName;
 
     private Map<Class<? extends RegionFeature>, RegionFeature> features;
 
@@ -57,6 +57,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     public GeneralRegion(YamlConfiguration config) {
         this.config = config;
         setup();
+        this.name = config.getString("general.name");
+        this.worldName = config.getString("general.world");
     }
 
     /**

@@ -82,6 +82,10 @@ public class RentRegion extends TransactionalRegion {
 
     @Override
     public void setTransactionHolder(UUID renter) {
+        if (renter == null) {
+            setTransactionHolder((UUID) null);
+            return;
+        }
         if (Bukkit.getPlayer(renter) != null) {
             setTransactionHolder(Bukkit.getPlayer(renter));
             return;

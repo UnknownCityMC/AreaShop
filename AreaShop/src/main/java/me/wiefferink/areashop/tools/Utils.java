@@ -893,7 +893,7 @@ public class Utils {
                     cancel();
                     return;
                 }
-                int index = Math.max(batchSize, objects.size());
+                int index = Math.max(batchSize, objects.size() - 1);
                 cloned.subList(lastIndex, index).forEach(task);
             }
         };
