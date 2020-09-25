@@ -17,6 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -249,14 +250,18 @@ public class TeleportFeature extends RegionFeature {
         BlockVector3 min = worldguardRegion.getMinimumPoint();
         BlockVector3 max = worldguardRegion.getMaximumPoint();
 
+        final Collection<int[]> collection = new HashSet<>();
         for (int x = min.getX(); x < max.getX(); x += 16) {
             for (int z = min.getZ(); z < max.getZ(); z += 16) {
-                PaperLib.getChunkAtAsync(world, x >> 4, z >> 4);
+                collection.add(new int[]{x, z});
             }
         }
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        final CompletableFuture<Boolean> future = new CompletableFuture<>();
         final boolean finalToSign = toSign;
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Utils.newChain().future(Utils.runAsBatches(collection, 10, (arr) -> PaperLib.getChunkAtAsync(world, arr[0], arr[1]), false))
+                .delay(3)
+                .syncLast((unused) -> {
             boolean blocksInRegionCopy = blocksInRegion;
             Location safeLocation = startLocation;
             // Tries limit tracking
@@ -488,7 +493,7 @@ public class TeleportFeature extends RegionFeature {
                 AreaShop.debug("No location found, checked " + checked + " spots of max " + maxTries);
                 future.complete(false);
             }
-        }, 1);
+        });
         return future;
     }
 
