@@ -210,7 +210,7 @@ public class RegionSign {
             signLines[i] = Utils.applyColors(signLines[i]);
             signState.setLine(i, signLines[i]);
         }
-        signState.update();
+        signState.update(false, false);
         return true;
     }
 

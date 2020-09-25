@@ -16,7 +16,7 @@
     <repositories>
         <repository>
             <id>IS-Repo</id>
-            <url>https://mvn.intellectualsites.com/</url>
+            <url>https://mvn.intellectualsites.com/content/repositories/releases/</url>
         </repository>
     </repositories>
 
@@ -32,7 +32,7 @@
         <dependency>
             <groupId>com.intellectualsites.fawe</groupId>
             <artifactId>FAWE-Bukkit</artifactId>
-            <version>1.16-313</version> <!-- Equivalent to WE 7.0.2? -->
+            <version>1.16-343</version> <!-- Equivalent to WE 7.0.2? -->
             <scope>provided</scope>
         </dependency>
         <dependency>

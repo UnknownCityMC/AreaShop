@@ -23,10 +23,12 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -550,24 +552,24 @@ public class FileManager extends Manager {
         }
         this.saveWorldGuardRegions();
 
-        TaskChain<?> chain = Utils.newChain();
-        int num = 0;
+        final AtomicInteger processed = new AtomicInteger();
         for (GeneralRegion region : getRegions()) {
             if (region.isSaveRequired()) {
-                chain = region.saveNowAsync(chain);
-                num++;
+                region.saveNowAsync().thenAccept((unused) -> processed.getAndIncrement());
             }
         }
-        int processed = num;
+        final int finalCount = getRegions().size();
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
-        chain.execute((result) -> {
-            if (result) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (processed.get() != finalCount) {
+                    return;
+                }
+                this.cancel();
                 AreaShop.debug("Region save complete! Processed " + processed + " regions.");
-            } else {
-                AreaShop.warn("Failed to save region data!");
             }
-            future.complete(result);
-        });
+        }.runTaskTimer(plugin, 1, 1);
         return future;
     }
 
