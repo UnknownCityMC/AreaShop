@@ -8,10 +8,7 @@ import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -250,16 +247,18 @@ public class TeleportFeature extends RegionFeature {
         BlockVector3 min = worldguardRegion.getMinimumPoint();
         BlockVector3 max = worldguardRegion.getMaximumPoint();
 
-        final Collection<int[]> collection = new HashSet<>();
+        final Collection<Chunk> collection = new HashSet<>();
         for (int x = min.getX(); x < max.getX(); x += 16) {
             for (int z = min.getZ(); z < max.getZ(); z += 16) {
-                collection.add(new int[]{x, z});
+                final Chunk chunk = world.getChunkAt(x, z);
+                collection.add(chunk);
+                chunk.setForceLoaded(true);
             }
         }
 
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
         final boolean finalToSign = toSign;
-        Utils.newChain().future(Utils.runAsBatches(collection, 10, (arr) -> PaperLib.getChunkAtAsync(world, arr[0], arr[1]), false))
+        Utils.newChain().future(Utils.runAsBatches(collection, 10, (chunk) -> PaperLib.getChunkAtAsync(world, chunk.getX(), chunk.getZ()), false))
                 .delay(3)
                 .syncLast((unused) -> {
             boolean blocksInRegionCopy = blocksInRegion;
@@ -494,7 +493,12 @@ public class TeleportFeature extends RegionFeature {
                 future.complete(false);
             }
         });
-        return future;
+        return future.thenApply(unused -> {
+            for (final Chunk chunk : collection) {
+                chunk.setForceLoaded(false);
+            }
+            return unused;
+        });
     }
 
     /**
