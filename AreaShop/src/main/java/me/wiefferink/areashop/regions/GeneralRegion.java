@@ -782,6 +782,36 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	}
 
 	/**
+	 * Save all blocks in a region for restoring later.
+	 * @param fileName The name of the file to save to (extension and folder will be added)
+	 * @return true if the region has been saved properly, otherwise false
+	 */
+	public CompletableFuture<Boolean> saveRegionBlocksAsync(String fileName) {
+		// Check if the region is correct
+		ProtectedRegion region = getRegion();
+		if(region == null) {
+			AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, save failed");
+			return CompletableFuture.completedFuture(false);
+		}
+		// The path to save the schematic
+		File saveFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
+		// Create parent directories
+		File parent = saveFile.getParentFile();
+		if(parent != null && !parent.exists()) {
+			if(!parent.mkdirs()) {
+				AreaShop.warn("Did not save region " + getName() + ", schematic directory could not be created: " + saveFile.getAbsolutePath());
+				return CompletableFuture.completedFuture(false);
+			}
+		}
+		return plugin.getWorldEditHandler().saveRegionBlocksAsync(saveFile, this).thenApply(result -> {
+			if(result) {
+				AreaShop.debug("Saved schematic for region " + getName());
+			}
+			return result;
+		});
+	}
+
+	/**
 	 * Restore all blocks in a region for restoring later.
 	 * @param fileName The name of the file to save to (extension and folder will be added)
 	 * @return true if the region has been restored properly, otherwise false
@@ -801,6 +831,29 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 			Bukkit.getScheduler().runTaskLater(plugin, getSignsFeature()::update, 10);
 		}
 		return result;
+	}
+
+	/**
+	 * Restore all blocks in a region for restoring later.
+	 * @param fileName The name of the file to save to (extension and folder will be added)
+	 * @return true if the region has been restored properly, otherwise false
+	 */
+	public CompletableFuture<Boolean> restoreRegionBlocksAsync(String fileName) {
+		if(getRegion() == null) {
+			AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, restore failed");
+			return CompletableFuture.completedFuture(false);
+		}
+		// The path to save the schematic
+		File restoreFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
+		return plugin.getWorldEditHandler().restoreRegionBlocksAsync(restoreFile, this).thenApply(result -> {
+			if(result) {
+				AreaShop.debug("Restored schematic for region " + getName());
+
+				// Workaround for signs inside the region in combination with async restore of plugins like AsyncWorldEdit and FastAsyncWorldEdit
+				Bukkit.getScheduler().runTaskLater(plugin, getSignsFeature()::update, 10);
+			}
+			return result;
+		});
 	}
 
 	/**
@@ -1468,12 +1521,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		// Save the region if needed
 		if(save != null && !save.isEmpty()) {
 			save = Message.fromString(save).replacements(this).getSingle();
-			saveRegionBlocks(save);
+			saveRegionBlocksAsync(save);
 		}
 		// Restore the region if needed
 		if(restore != null && !restore.isEmpty()) {
 			restore = Message.fromString(restore).replacements(this).getSingle();
-			restoreRegionBlocks(restore);
+			restoreRegionBlocksAsync(restore);
 		}
 	}
 
