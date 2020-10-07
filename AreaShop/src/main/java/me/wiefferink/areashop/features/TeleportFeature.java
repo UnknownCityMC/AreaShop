@@ -262,14 +262,17 @@ public class TeleportFeature extends RegionFeature {
                 .delay(3)
                 .syncLast((unused) -> {
             boolean blocksInRegionCopy = blocksInRegion;
-            Location safeLocation = startLocation;
+            int safeY = startLocation.getBlockY();
+            int safeX = startLocation.getBlockX();
+            int safeZ = startLocation.getBlockZ();
+            final Location temp = new Location(world, 0, 0, 0);
             // Tries limit tracking
             int radius = 1;
             int checked = 1;
             int maxTries = plugin.getConfig().getInt("maximumTries");
 
             // Tracking of which sides to continue the search
-            boolean done = isSafe(safeLocation);
+            boolean done = isSafe(startLocation);
             boolean northDone = false, eastDone = false, southDone = false, westDone = false, topDone = false, bottomDone = false;
             boolean continueThisDirection;
 
@@ -278,131 +281,158 @@ public class TeleportFeature extends RegionFeature {
 
                 // North side
                 continueThisDirection = false;
+                temp.setX(-radius + 1);
+                temp.setY(-radius + 1);
+                temp.setZ(-radius);
                 for (int x = -radius + 1; x <= radius && !done && !northDone; x++) {
                     for (int y = -radius + 1; y < radius && !done; y++) {
-                        safeLocation = startLocation.clone().add(x, y, -radius);
-                        if (safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+                        if (y + safeY > 256 || y + safeY < 0) {
                             continue;
                         }
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(x + safeX, y + safeY, safeZ - radius)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 1, 0);
                     }
+                    temp.add(1, 0, 0);
                 }
                 northDone = northDone || !continueThisDirection;
 
                 // East side
                 continueThisDirection = false;
+                temp.setX(-radius + 1);
+                temp.setY(-radius + 1);
+                temp.setZ(0);
                 for (int z = -radius + 1; z <= radius && !done && !eastDone; z++) {
                     for (int y = -radius + 1; y < radius && !done; y++) {
-                        safeLocation = startLocation.clone().add(radius, y, z);
-                        if (safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+                        if (y + safeY > 256 || y + safeY < 0) {
                             continue;
                         }
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX + radius, y + safeY, z + safeZ)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 1, 0);
                     }
+                    temp.add(0, 0, 1);
                 }
                 eastDone = eastDone || !continueThisDirection;
 
                 // South side
                 continueThisDirection = false;
+                temp.setX(radius - 1);
+                temp.setY(-radius + 1);
+                temp.setZ(-radius);
                 for (int x = radius - 1; x >= -radius && !done && !southDone; x--) {
                     for (int y = -radius + 1; y < radius && !done; y++) {
-                        safeLocation = startLocation.clone().add(x, y, radius);
-                        if (safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+                        if (y + safeY > 256 || y + safeY < 0) {
                             continue;
                         }
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX + x, safeY + y, safeZ - radius)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 1, 0);
                     }
+                    temp.add(-1, 0, 0);
                 }
                 southDone = southDone || !continueThisDirection;
 
                 // West side
                 continueThisDirection = false;
+                temp.setX(-radius);
+                temp.setY(-radius);
+                temp.setZ(radius - 1);
                 for (int z = radius - 1; z >= -radius && !done && !westDone; z--) {
                     for (int y = -radius + 1; y < radius && !done; y++) {
-                        safeLocation = startLocation.clone().add(-radius, y, z);
-                        if (safeLocation.getBlockY() > 256 || safeLocation.getBlockY() < 0) {
+                        if (y + safeY > 256 || y + safeY < 0) {
                             continue;
                         }
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX - radius, safeY + y, safeZ + z)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 1, 0);
                     }
+                    temp.add(0, 0, -1);
                 }
                 westDone = westDone || !continueThisDirection;
 
                 // Top side
                 continueThisDirection = false;
                 // Middle block of the top
-                if ((startLocation.getBlockY() + radius) > 256) {
+                if ((safeY + radius) > 256) {
                     topDone = true;
                 }
                 if (!done && !topDone) {
-                    safeLocation = startLocation.clone().add(0, radius, 0);
-                    if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                    temp.setX(0);
+                    temp.setY(radius);
+                    temp.setZ(0);
+                    if (!insideRegion || worldguardRegion.contains(safeX, safeY + radius, safeZ)) {
                         checked++;
-                        done = isSafe(safeLocation) || checked > maxTries;
+                        done = isSafe(temp) || checked > maxTries;
                         blocksInRegionCopy = true;
                         continueThisDirection = true;
                     }
                 }
+
+                temp.setY(radius);
                 for (int r = 1; r <= radius && !done && !topDone; r++) {
-                    // North
+                    temp.setX(-r + 1);
+                    temp.setZ(-r);
                     for (int x = -r + 1; x <= r && !done; x++) {
-                        safeLocation = startLocation.clone().add(x, radius, -r);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (worldguardRegion.contains(safeX + x, safeY + radius, safeZ - r) || !insideRegion) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(1, 0, 0);
                     }
                     // East
+                    temp.setX(r);
+                    temp.setZ(-r + 1);
                     for (int z = -r + 1; z <= r && !done; z++) {
-                        safeLocation = startLocation.clone().add(r, radius, z);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (worldguardRegion.contains(safeX + r, safeY + radius, safeZ + z) || !insideRegion) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 0, z);
                     }
                     // South side
+                    temp.setX(r - 1);
+                    temp.setZ(r);
                     for (int x = r - 1; x >= -r && !done; x--) {
-                        safeLocation = startLocation.clone().add(x, radius, r);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (worldguardRegion.contains(safeX + x, safeY + radius, safeZ + r) || !insideRegion) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(-1, 0, 0);
                     }
                     // West side
+                    temp.setX(-r);
+                    temp.setZ(r - 1);
                     for (int z = r - 1; z >= -r && !done; z--) {
-                        safeLocation = startLocation.clone().add(-r, radius, z);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (worldguardRegion.contains(safeX - r, safeY + radius, safeZ + z) || !insideRegion) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 0, -1);
                     }
                 }
                 topDone = topDone || !continueThisDirection;
@@ -410,58 +440,69 @@ public class TeleportFeature extends RegionFeature {
                 // Bottom side
                 continueThisDirection = false;
                 // Middle block of the bottom
-                if (startLocation.getBlockY() - radius < 0) {
+                if (safeY - radius < 0) {
                     bottomDone = true;
                 }
                 if (!done && !bottomDone) {
-                    safeLocation = startLocation.clone().add(0, -radius, 0);
-                    if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                    temp.setX(0);
+                    temp.setY(-radius);
+                    temp.setZ(0);
+                    if (worldguardRegion.contains(safeX, safeY - radius, safeZ) || !insideRegion) {
                         checked++;
-                        done = isSafe(safeLocation) || checked > maxTries;
+                        done = isSafe(temp) || checked > maxTries;
                         blocksInRegionCopy = true;
                         continueThisDirection = true;
                     }
                 }
+                temp.setY(-radius);
                 for (int r = 1; r <= radius && !done && !bottomDone; r++) {
                     // North
+                    temp.setX(-r + 1);
+                    temp.setZ(-r);
                     for (int x = -r + 1; x <= r && !done; x++) {
-                        safeLocation = startLocation.clone().add(x, -radius, -r);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (worldguardRegion.contains(safeX + x, safeY - radius, safeZ - r) || !insideRegion) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(1, 0, 0);
                     }
                     // East
+                    temp.setX(0);
+                    temp.setZ(-r + 1);
                     for (int z = -r + 1; z <= r && !done; z++) {
-                        safeLocation = startLocation.clone().add(r, -radius, z);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX + r, safeY - radius, safeZ + z)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 0, 1);
                     }
                     // South side
+                    temp.setX(r - 1);
+                    temp.setZ(r);
                     for (int x = r - 1; x >= -r && !done; x--) {
-                        safeLocation = startLocation.clone().add(x, -radius, r);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX + x, safeY - radius, safeZ + r)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(-1, 0, 0);
                     }
                     // West side
+                    temp.setX(-r);
+                    temp.setZ(r - 1);
                     for (int z = r - 1; z >= -r && !done; z--) {
-                        safeLocation = startLocation.clone().add(-r, -radius, z);
-                        if (worldguardRegion.contains(safeLocation.getBlockX(), safeLocation.getBlockY(), safeLocation.getBlockZ()) || !insideRegion) {
+                        if (!insideRegion || worldguardRegion.contains(safeX - r, safeY - radius, safeZ + z)) {
                             checked++;
-                            done = isSafe(safeLocation) || checked > maxTries;
+                            done = isSafe(temp) || checked > maxTries;
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
                         }
+                        temp.add(0, 0, -1);
                     }
                 }
                 bottomDone = bottomDone || !continueThisDirection;
@@ -469,24 +510,25 @@ public class TeleportFeature extends RegionFeature {
                 // Increase cube radius
                 radius++;
             }
+            startLocation.add(temp);
 
-            if (done && isSafe(safeLocation)) {
+            if (done && isSafe(startLocation)) {
                 if (finalToSign) {
                     getRegion().message(player, "teleport-successSign");
 
                     // Let the player look at the sign
-                    Vector playerVector = safeLocation.toVector();
+                    Vector playerVector = startLocation.toVector();
                     playerVector.setY(playerVector.getY() + player.getEyeHeight(true));
                     Vector signVector = getRegion().getSignsFeature().getSigns().get(0).getLocation().toVector().add(new Vector(0.5, 0.5, 0.5));
                     Vector direction = playerVector.clone().subtract(signVector).normalize();
-                    safeLocation.setYaw(180 - (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())));
-                    safeLocation.setPitch(90 - (float) Math.toDegrees(Math.acos(direction.getY())));
+                    startLocation.setYaw(180 - (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())));
+                    startLocation.setPitch(90 - (float) Math.toDegrees(Math.acos(direction.getY())));
                 } else {
                     getRegion().message(player, "teleport-success");
                 }
 
-                AreaShop.debug("Found location: " + safeLocation.toString() + " Tries: " + checked);
-                PaperLib.teleportAsync(player, safeLocation).thenAccept(future::complete);
+                AreaShop.debug("Found location: " + startLocation.toString() + " Tries: " + checked);
+                PaperLib.teleportAsync(player, startLocation).thenAccept(future::complete);
             } else {
                 getRegion().message(player, "teleport-noSafe", checked, maxTries);
                 AreaShop.debug("No location found, checked " + checked + " spots of max " + maxTries);
