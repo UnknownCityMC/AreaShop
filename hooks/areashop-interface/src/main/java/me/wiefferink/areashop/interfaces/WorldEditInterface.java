@@ -3,6 +3,7 @@ package me.wiefferink.areashop.interfaces;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class WorldEditInterface {
 	protected final AreaShopInterface pluginInterface;
@@ -20,6 +21,10 @@ public abstract class WorldEditInterface {
 	 */
 	public abstract boolean restoreRegionBlocks(File file, GeneralRegionInterface regionInterface);
 
+	public CompletableFuture<Boolean> restoreRegionBlocksAsync(File file, GeneralRegionInterface regionInterface) {
+		return CompletableFuture.completedFuture(restoreRegionBlocks(file, regionInterface));
+	}
+
 	/**
 	 * Different way to save blocks per implementation, newer ones support entities as well.
 	 * Why: the schematic api has changed between WorldEdit 5 and 6, and the schematic format changed between 6 and 7
@@ -28,6 +33,10 @@ public abstract class WorldEditInterface {
 	 * @return true when successful, otherwise false
 	 */
 	public abstract boolean saveRegionBlocks(File file, GeneralRegionInterface regionInterface);
+
+	public CompletableFuture<Boolean> saveRegionBlocksAsync(File file, GeneralRegionInterface regionInterface) {
+		return CompletableFuture.completedFuture(saveRegionBlocks(file, regionInterface));
+	}
 
 	/**
 	 * Get the selection of the player.
