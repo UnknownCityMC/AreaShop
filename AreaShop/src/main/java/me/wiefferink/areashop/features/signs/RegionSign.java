@@ -166,7 +166,7 @@ public class RegionSign {
                 } else if (data instanceof Sign) {
                     ((org.bukkit.block.data.type.Sign) data).setRotation(getFacing());
                 }
-                block.setBlockData(data, true);
+                block.setBlockData(data);
 
                 // Check if the sign has popped
                 if (!Materials.isSign(block.getType())) {
@@ -210,8 +210,7 @@ public class RegionSign {
             signLines[i] = Utils.applyColors(signLines[i]);
             signState.setLine(i, signLines[i]);
         }
-        signState.update(false, false);
-        return true;
+        return signState.update(true, false);
     }
 
     /**

@@ -111,7 +111,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String tagTeleportWorld = "tpworld";
     // REGEX Matcher for Versions which follow a x.x.x format.
     private static final Pattern VERSION_MATCHER_3 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
-    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+)\\.([0-9]+)");
     // Statically available instance
     private static AreaShop instance = null;
     // General variables
@@ -622,7 +622,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                     Matcher matcher0 = VERSION_MATCHER_3.matcher(latestVersion);
                     boolean dual0 = false;
                     if (!matcher0.find()) {
-                        matcher0 = VERSION_MATCHER_3.matcher(latestVersion);
+                        matcher0 = VERSION_MATCHER_2.matcher(latestVersion);
                         if (!matcher0.find()) {
                             throw new IllegalArgumentException("Invalid Versions Detected!");
                         }

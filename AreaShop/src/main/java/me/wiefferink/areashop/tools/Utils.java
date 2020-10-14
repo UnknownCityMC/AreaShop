@@ -865,7 +865,7 @@ public class Utils {
 
     public static <E> CompletableFuture<?> runAsBatches(final Collection<E> objects, final int batchSize, final Consumer<E> task, final boolean async) {
         if (batchSize < 1) {
-            throw new IllegalArgumentException("Invalid batch size!");
+            throw new IllegalArgumentException("Invalid batch size: " + batchSize);
         }
         final List<E> cloned = new ArrayList<>(objects);
         final CompletableFuture<Object> future = new CompletableFuture<>();
@@ -875,12 +875,14 @@ public class Utils {
             @Override
             public void run() {
                 if (lastIndex >= cloned.size() - 1) {
-                    future.complete(true);
                     cancel();
+                    future.complete(true);
                     return;
                 }
-                int index = Math.min(batchSize, objects.size() - 1);
-                cloned.subList(lastIndex, index).forEach(task);
+                int index = Math.min(lastIndex + batchSize, cloned.size() - 1);
+                for (; lastIndex < index; lastIndex++) {
+                    task.accept(cloned.get(lastIndex));
+                }
             }
         };
         if (async) {
