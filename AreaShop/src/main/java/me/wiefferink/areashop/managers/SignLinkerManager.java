@@ -42,7 +42,7 @@ public class SignLinkerManager extends Manager implements Listener {
 	@Override
 	public void shutdown() {
 		for(UUID uuid : signLinkers.keySet()) {
-			exitSignLinkMode(Bukkit.getPlayer(uuid));
+			exitSignLinkMode(uuid);
 		}
 	}
 
@@ -72,6 +72,18 @@ public class SignLinkerManager extends Manager implements Listener {
 			HandlerList.unregisterAll(this);
 		}
 		plugin.message(player, "linksigns-stopped");
+	}
+
+	private void exitSignLinkMode(UUID player) {
+		signLinkers.remove(player);
+		if(eventsRegistered && signLinkers.isEmpty()) {
+			eventsRegistered = false;
+			HandlerList.unregisterAll(this);
+		}
+		final Player online = Bukkit.getPlayer(player);
+		if (online != null) {
+			plugin.message(player, "linksigns-stopped");
+		}
 	}
 
 	/**

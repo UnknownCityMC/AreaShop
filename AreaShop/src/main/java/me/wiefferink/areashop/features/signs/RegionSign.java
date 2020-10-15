@@ -1,16 +1,21 @@
 package me.wiefferink.areashop.features.signs;
 
 import com.google.common.base.Objects;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import io.papermc.lib.PaperLib;
+import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
+import me.wiefferink.areashop.tools.Value;
 import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.WallSign;
@@ -120,6 +125,7 @@ public class RegionSign {
      * @return true if the update was successful, otherwise false
      */
     public boolean update() {
+
         // Ignore updates of signs in chunks that are not loaded
         Location signLocation = getLocation();
         if (signLocation == null
@@ -128,19 +134,22 @@ public class RegionSign {
             return false;
         }
 
-        if (getRegion().isDeleted()) {
+        final GeneralRegion region = getRegion();
+
+        if (region.isDeleted()) {
             return false;
         }
 
-        YamlConfiguration regionConfig = getRegion().getConfig();
+        YamlConfiguration regionConfig = region.getConfig();
         ConfigurationSection signConfig = getProfile();
         Block block = signLocation.getBlock();
-        if (signConfig == null || !signConfig.isSet(getRegion().getState().getValue())) {
+        final String value = region.getState().getValue();
+        if (signConfig == null || !signConfig.isSet(value)) {
             block.setType(Material.AIR);
             return true;
         }
 
-        ConfigurationSection stateConfig = signConfig.getConfigurationSection(getRegion().getState().getValue());
+        ConfigurationSection stateConfig = signConfig.getConfigurationSection(value);
 
         // Get the lines
         String[] signLines = new String[4];
@@ -154,53 +163,54 @@ public class RegionSign {
             return true;
         }
 
+        final BlockStateSnapshotResult snapshot = PaperLib.getBlockState(block, true);
+        final BlockState blockState = snapshot.getState();
+        final BlockData blockData = blockState.getBlockData();
+
         // Place the sign back (with proper rotation and type) after it has been hidden or (indirectly) destroyed
         if (!Materials.isSign(block.getType())) {
             Material signType = getMaterial();
             if (signType.name().contains("SIGN")) {
                 // Don't do physics here, we first need to update the direction
-                block.setType(signType, false);
-                BlockData data = block.getBlockData();
-                if (data instanceof WallSign) {
-                    ((WallSign) data).setFacing(getFacing());
-                } else if (data instanceof Sign) {
-                    ((org.bukkit.block.data.type.Sign) data).setRotation(getFacing());
+                blockState.setType(signType);
+                if (blockData instanceof WallSign) {
+                    ((WallSign) blockData).setFacing(getFacing());
+                } else if (blockData instanceof Sign) {
+                    ((org.bukkit.block.data.type.Sign) blockData).setRotation(getFacing());
                 }
-                block.setBlockData(data);
-
+                blockState.setBlockData(blockData);
                 // Check if the sign has popped
                 if (!Materials.isSign(block.getType())) {
-                    AreaShop.warn("Setting sign", key, "of region", getRegion().getName(), "failed, could not set sign block back");
+                    AreaShop.warn("Setting sign", key, "of region", region.getName(), "failed, could not set sign block back");
                     return false;
                 }
             } else {
-                AreaShop.warn("Setting sign", key, "of region", getRegion().getName(), "failed, RegionSign material was: " + signType.name());
+                AreaShop.warn("Setting sign", key, "of region", region.getName(), "failed, RegionSign material was: " + signType.name());
             }
         }
 
         // Save current rotation and type
         if (!regionConfig.isString("general.signs." + key + ".signType")) {
-            getRegion().setSetting("general.signs." + key + ".signType", block.getType().name());
+            region.setSetting("general.signs." + key + ".signType", blockState.getType().name());
         }
         if (!regionConfig.isString("general.signs." + key + ".facing")) {
             final BlockFace rotation;
             if (Materials.isSign(block.getType())) {
-                BlockData data = block.getBlockData();
-                if (data instanceof org.bukkit.block.data.type.Sign) {
-                    rotation = ((org.bukkit.block.data.type.Sign) block.getBlockData()).getRotation();
-                } else if (data instanceof WallSign) {
-                    rotation = ((WallSign) data).getFacing();
+                if (blockData instanceof org.bukkit.block.data.type.Sign) {
+                    rotation = ((org.bukkit.block.data.type.Sign) blockData).getRotation();
+                } else if (blockData instanceof WallSign) {
+                    rotation = ((WallSign) blockData).getFacing();
                 } else {
                     rotation = null;
                 }
             } else {
                 rotation = null;
             }
-            getRegion().setSetting("general.signs." + key + ".facing", rotation == null ? null : rotation.toString());
+            region.setSetting("general.signs." + key + ".facing", rotation == null ? null : rotation.toString());
         }
 
         // Apply replacements and color and then set it on the sign
-        Sign signState = (Sign) block.getState();
+        Sign signState = (Sign) blockState;
         for (int i = 0; i < signLines.length; i++) {
             if (signLines[i] == null) {
                 signState.setLine(i, "");
@@ -210,7 +220,9 @@ public class RegionSign {
             signLines[i] = Utils.applyColors(signLines[i]);
             signState.setLine(i, signLines[i]);
         }
-        return signState.update(true, false);
+        // BlockState#update *should* return true here.
+        blockState.update(false, false);
+        return true;
     }
 
     /**
@@ -251,7 +263,8 @@ public class RegionSign {
         if (signConfig == null) {
             return false;
         }
-        ConfigurationSection stateConfig = signConfig.getConfigurationSection(getRegion().getState().getValue().toLowerCase());
+        final GeneralRegion region = getRegion();
+        ConfigurationSection stateConfig = signConfig.getConfigurationSection(region.getState().getValue().toLowerCase());
 
         // Run player commands if specified
         List<String> playerCommands = new ArrayList<>();
@@ -259,14 +272,14 @@ public class RegionSign {
             // TODO move variable checking code to InteractiveMessenger?
             playerCommands.add(command.replace(Message.VARIABLE_START + AreaShop.tagClicker + Message.VARIABLE_END, clicker.getName()));
         }
-        getRegion().runCommands(clicker, playerCommands);
+        region.runCommands(clicker, playerCommands);
 
         // Run console commands if specified
         List<String> consoleCommands = new ArrayList<>();
         for (String command : stateConfig.getStringList(clickType.getValue() + "Console")) {
             consoleCommands.add(command.replace(Message.VARIABLE_START + AreaShop.tagClicker + Message.VARIABLE_END, clicker.getName()));
         }
-        getRegion().runCommands(Bukkit.getConsoleSender(), consoleCommands);
+        region.runCommands(Bukkit.getConsoleSender(), consoleCommands);
 
         return !playerCommands.isEmpty() || !consoleCommands.isEmpty();
     }

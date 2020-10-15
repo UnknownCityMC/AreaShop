@@ -39,19 +39,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public class CommandManager extends Manager implements CommandExecutor, TabCompleter {
-	private final ArrayList<CommandAreaShop> commands;
+	private final List<CommandAreaShop> commands = new ArrayList<>();
 
 	/**
 	 * Constructor.
 	 */
 	public CommandManager() {
-		commands = new ArrayList<>();
 		commands.add(new HelpCommand());
 		commands.add(new RentCommand());
 		commands.add(new UnrentCommand());
@@ -96,7 +92,8 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 	 * @return The list with AreaShop commands
 	 */
 	public List<CommandAreaShop> getCommands() {
-		return commands;
+		// Return a cloned array
+		return new ArrayList<>(commands);
 	}
 
 	/**
@@ -109,7 +106,7 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 			return;
 		}
 		// Add all messages to a list
-		ArrayList<String> messages = new ArrayList<>();
+		List<String> messages = new ArrayList<>(commands.size());
 		plugin.message(target, "help-header");
 		plugin.message(target, "help-alias");
 		for(CommandAreaShop command : commands) {
@@ -132,18 +129,21 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 		}
 
 		// Redirect `/as info player <player>` to `/as me <player>`
-		if(args.length == 3 && "info".equals(args[0]) && "player".equals(args[1])) {
+		if(args.length == 3 && "info".equalsIgnoreCase(args[0]) && "player".equalsIgnoreCase(args[1])) {
 			args[0] = "me";
 			args[1] = args[2];
 		}
 
 		// Execute command
 		boolean executed = false;
-		for(int i = 0; i < commands.size() && !executed; i++) {
-			if(commands.get(i).canExecute(command, args)) {
-				commands.get(i).execute(sender, args);
+		for (final CommandAreaShop cmd : commands) {
+			if (cmd.canExecute(command, args)) {
+				cmd.execute(sender, args);
 				executed = true;
+				// Can't have two commands with same label
+				break;
 			}
+
 		}
 
 		// Show help
@@ -165,10 +165,10 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-		List<String> result = new ArrayList<>();
 		if(!sender.hasPermission("areashop.tabcomplete")) {
-			return result;
+			return Collections.emptyList();
 		}
+		List<String> result = new ArrayList<>();
 		int toCompleteNumber = args.length;
 		String toCompletePrefix = args[args.length - 1].toLowerCase();
 		//AreaShop.debug("toCompleteNumber=" + toCompleteNumber + ", toCompletePrefix=" + toCompletePrefix + ", length=" + toCompletePrefix.length());
@@ -184,6 +184,7 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 			for(CommandAreaShop c : commands) {
 				if(c.canExecute(command, args)) {
 					result = c.getTabCompleteList(toCompleteNumber, start, sender);
+					break;
 				}
 			}
 		}
@@ -195,8 +196,7 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 					set.add(suggestion);
 				}
 			}
-			result.clear();
-			result.addAll(set);
+			return new ArrayList<>(set);
 		}
 		//AreaShop.debug("Tabcomplete #" + toCompleteNumber + ", prefix="+ toCompletePrefix + ", result=" + result.toString());
 		return result;

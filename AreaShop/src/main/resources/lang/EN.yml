@@ -343,7 +343,7 @@ destroy-successRent: "%lang:region% successfully deregistered as rental region."
 destroy-successBuy: "%lang:region% successfully deregistered as buy region."
 
 teleport-help: "/as tp <region> [sign]."
-teleport-calculation-progess: "Teleport in progress, finding safe location %done%/%max% scans complete."
+teleport-calculation-progress: "Teleport in progress, finding safe location %done%/%max% scans complete."
 teleport-noRentOrBuy: "The specified region is not registered: %0%."
 teleport-noPermission: "You don't have permission to teleport to your region."
 teleport-noPermissionOther: "You don't have permission to teleport to regions you do not own."

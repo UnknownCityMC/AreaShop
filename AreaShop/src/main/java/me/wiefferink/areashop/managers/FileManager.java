@@ -212,7 +212,7 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getBuyNames() {
-        return getBuys().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        return new ArrayList<>(buyRegions.keySet());
     }
 
     /**
@@ -221,7 +221,7 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getRentNames() {
-        return getRents().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        return new ArrayList<>(rentRegions.keySet());
     }
 
     /**
@@ -230,7 +230,9 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getRegionNames() {
-        return getRegions().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        final List<String> list = getRentNames();
+        list.addAll(getBuyNames());
+        return list;
     }
 
     /**
@@ -239,7 +241,11 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getGroupNames() {
-      return getGroups().stream().map(RegionGroup::getName).collect(Collectors.toList());
+        final List<String> list = new ArrayList<>(groups.size());
+        for (final RegionGroup group : groups.values()) {
+            list.add(group.getName());
+        }
+      return list;
     }
 
     /**

@@ -579,7 +579,7 @@ public class SignsFeature extends RegionFeature {
      * @return List of signs
      */
     public List<RegionSign> getSigns() {
-        return Collections.unmodifiableList(new ArrayList<>(signs.values()));
+        return new ArrayList<>(signs.values());
     }
 
     /**
@@ -618,14 +618,15 @@ public class SignsFeature extends RegionFeature {
             i++;
         }
         String signPath = "general.signs." + i + ".";
-        getRegion().setSetting(signPath + "location", Utils.locationToConfig(location));
-        getRegion().setSetting(signPath + "facing", facing != null ? facing.name() : null);
-        getRegion().setSetting(signPath + "signType", signType != null ? signType.name() : null);
+        final GeneralRegion region = getRegion();
+        region.setSetting(signPath + "location", Utils.locationToConfig(location));
+        region.setSetting(signPath + "facing", facing != null ? facing.name() : null);
+        region.setSetting(signPath + "signType", signType != null ? signType.name() : null);
         if (profile != null && !profile.isEmpty()) {
-            getRegion().setSetting(signPath + "profile", profile);
+            region.setSetting(signPath + "profile", profile);
         }
         // Add to the map
-        RegionSign sign = new RegionSign(this, i + "");
+        RegionSign sign = new RegionSign(this, String.valueOf(i));
         signs.put(sign.getStringLocation(), sign);
         allSigns.put(sign.getStringLocation(), sign);
         signsByChunk.computeIfAbsent(sign.getStringChunk(), key -> new ArrayList<>())

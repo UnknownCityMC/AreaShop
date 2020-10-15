@@ -6,10 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Abstract class for generalising command classes.
@@ -31,11 +28,12 @@ public abstract class CommandAreaShop {
 	 * @return true if it can execute the command, false otherwise
 	 */
 	public boolean canExecute(Command command, String[] args) {
-		String commandString = command.getName() + " " + StringUtils.join(args, " ");
-		if(commandString.length() > getCommandStart().length()) {
-			return commandString.toLowerCase().startsWith(getCommandStart().toLowerCase() + " ");
+		String commandString = command.getName() + " " + StringUtils.join(args, " ").toLowerCase();
+		final String start = getCommandStart().toLowerCase();
+		if(commandString.length() > start.length()) {
+			return commandString.startsWith(start + " ");
 		}
-		return commandString.toLowerCase().startsWith(getCommandStart().toLowerCase());
+		return commandString.startsWith(start);
 	}
 
 	/**
@@ -46,7 +44,7 @@ public abstract class CommandAreaShop {
 	 * @return A collection with all the possibilities for argument to complete
 	 */
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		return new ArrayList<>();
+		return Collections.emptyList();
 	}
 
 	/**
@@ -89,7 +87,7 @@ public abstract class CommandAreaShop {
 		return false;
 	}
 
-	private class CommandTime {
+	private static class CommandTime {
 		public final String command;
 		public final long time;
 

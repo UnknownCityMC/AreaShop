@@ -591,7 +591,7 @@ class TeleportJob {
                 }
             }));
         };
-        // Start notifying the player, the one issue is that checked/max is 0 is if chunk loading takes up >= ~5s
+        // Start notifying the player, the one issue is that checked/max is 0 is if chunk loading takes up >= ~3s
         doNotifications(player.getUniqueId());
         TaskChain<?> chain = Utils.newChain();
         if (schedulingFuture != null) {
@@ -634,6 +634,6 @@ class TeleportJob {
                 region.message(player, "teleport-calculation-progress", "%done%", String.valueOf(checked), "%max%", String.valueOf(maxTries));
             }
 
-        }.runTaskTimer(plugin, Utils.millisToTicks(5000), Utils.millisToTicks(5000));
+        }.runTaskTimer(plugin, Utils.millisToTicks(3000), Utils.millisToTicks(3000));
     }
 }

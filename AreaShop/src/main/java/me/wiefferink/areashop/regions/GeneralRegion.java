@@ -189,12 +189,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	 * @return The feature (either just instantiated or cached)
 	 */
 	public <T extends RegionFeature> T getFeature(Class<T> clazz) {
-		RegionFeature result = features.get(clazz);
-		if(result == null) {
-			result = plugin.getFeatureManager().getRegionFeature(this, clazz);
-			features.put(clazz, result);
-		}
-		return clazz.cast(result);
+		return clazz.cast(features.computeIfAbsent(clazz, (unused) -> plugin.getFeatureManager().getRegionFeature(this, clazz)));
 	}
 
 	/**
@@ -450,7 +445,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		if(landlordName != null && !landlordName.isEmpty()) {
 			@SuppressWarnings("deprecation")
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(landlordName);
-			if(offlinePlayer != null) {
+			if(offlinePlayer.hasPlayedBefore()) {
 				return offlinePlayer.getUniqueId();
 			}
 		}
@@ -463,7 +458,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	 */
 	public String getLandlordName() {
 		String result = Utils.toName(getLandlord());
-		if(result == null || result.isEmpty()) {
+		if(result.isEmpty()) {
 			result = config.getString("general.landlordName");
 			if(result == null || result.isEmpty()) {
 				result = null;
@@ -482,7 +477,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 			setSetting("general.landlord", landlord.toString());
 		}
 		String properName = Utils.toName(landlord);
-		if(properName == null) {
+		if(properName.isEmpty()) {
 			properName = name;
 		}
 		setSetting("general.landlordName", properName);
@@ -592,8 +587,11 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	 */
 	public List<String> getGroupNames() {
 		List<String> result = new ArrayList<>();
-		for(RegionGroup group : getGroups()) {
-			result.add(group.getName());
+		// Inline #getGroups
+		for(RegionGroup group : plugin.getFileManager().getGroups()) {
+			if(group.isMember(this)) {
+				result.add(group.getName());
+			}
 		}
 		return result;
 	}
@@ -1371,7 +1369,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	/**
 	 * Class to store the result of a limits check.
 	 */
-	public class LimitResult {
+	public static class LimitResult {
 		private final boolean actionAllowed;
 		private final LimitType limitingFactor;
 		private final int maximum;
@@ -1486,8 +1484,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	public boolean matchesLimitGroup(String group) {
 		List<String> worlds = plugin.getConfig().getStringList("limitGroups." + group + ".worlds");
 		List<String> groups = plugin.getConfig().getStringList("limitGroups." + group + ".groups");
-		if((worlds == null || worlds.isEmpty() || worlds.contains(getWorldName()))) {
-			if(groups == null || groups.isEmpty()) {
+		if(worlds.isEmpty() || worlds.contains(getWorldName())) {
+			if(groups.isEmpty()) {
 				return true;
 			} else {
 				boolean inGroups = false;

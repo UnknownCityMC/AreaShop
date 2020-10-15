@@ -57,7 +57,7 @@ public class FeatureManager extends Manager {
 		for(Class<? extends RegionFeature> clazz : featureClasses) {
 			try {
 				regionFeatureConstructors.put(clazz, clazz.getConstructor(GeneralRegion.class));
-			} catch(NoSuchMethodException | IllegalArgumentException e) {
+			} catch(NoSuchMethodException | IllegalArgumentException ignored) {
 				// The feature does not have a region specific part
 			}
 		}
@@ -71,7 +71,7 @@ public class FeatureManager extends Manager {
 	}
 
 	/**
-	 * Instanciate a feature for a certain region.
+	 * Instantiate a feature for a certain region.
 	 * @param region       The region to create a feature for
 	 * @param featureClazz The class of the feature to create
 	 * @return The feature class
