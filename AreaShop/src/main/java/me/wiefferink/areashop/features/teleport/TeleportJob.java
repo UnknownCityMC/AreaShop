@@ -221,7 +221,6 @@ class TeleportJob {
         BlockVector3 min = worldguardRegion.getMinimumPoint();
         BlockVector3 max = worldguardRegion.getMaximumPoint();
 
-        player.sendMessage("Loading Chunks Phase 0");
         final Collection<Chunk> collection = ConcurrentHashMap.newKeySet();
         final List<CompletableFuture<Object>> futures = new ArrayList<>();
         final Collection<int[]> coords = new HashSet<>();
