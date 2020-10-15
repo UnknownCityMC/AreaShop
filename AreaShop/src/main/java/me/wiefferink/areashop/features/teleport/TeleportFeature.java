@@ -1,10 +1,11 @@
-package me.wiefferink.areashop.features;
+package me.wiefferink.areashop.features.teleport;
 
 import co.aikar.taskchain.TaskChain;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Utils;

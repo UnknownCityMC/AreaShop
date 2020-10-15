@@ -1,4 +1,4 @@
-package me.wiefferink.areashop.features;
+package me.wiefferink.areashop.features.teleport;
 
 import co.aikar.taskchain.TaskChain;
 import com.sk89q.worldedit.math.BlockVector2;
@@ -17,12 +17,11 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
@@ -31,6 +30,7 @@ class TeleportJob {
     private final AreaShop plugin;
     private final GeneralRegion region;
     private final TeleportFeature feature;
+    private BukkitTask notifierTask;
 
     private boolean running;
     private int checked;
@@ -130,6 +130,7 @@ class TeleportJob {
     }
 
     public CompletableFuture<Boolean> executeTeleport(final Player player, boolean toSign, boolean checkRestrictions) {
+
         if (running) {
             throw new IllegalStateException("Task is already running!");
         }
@@ -254,7 +255,12 @@ class TeleportJob {
             int maxTries = plugin.getConfig().getInt("maximumTries");
 
             // Tracking of which sides to continue the search
-            this.done = TeleportFeature.isSafe(startLocation);
+            try {
+                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(startLocation)).get(5, TimeUnit.SECONDS);
+            } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+                ex.printStackTrace();
+                this.done = false;
+            }
             Utils.newChain().async(() -> {
                 while ((blocksInRegionCopy || !insideRegion) && !done) {
                     blocksInRegionCopy = false;
@@ -271,7 +277,12 @@ class TeleportJob {
                             }
                             if (!insideRegion || regionContains.apply(new double[]{x + safeX, y + safeY, safeZ - radius})) {
                                 checked++;
-                                done = TeleportFeature.isSafe(temp) || checked > maxTries;
+                                try {
+                                    this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
+                                } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+                                    ex.printStackTrace();
+                                    this.done = false;
+                                }
                                 blocksInRegionCopy = true;
                                 continueThisDirection = true;
                             }
@@ -295,9 +306,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + x, safeY + y, safeZ - radius})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -321,9 +333,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + radius, y + safeY, z + safeZ})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -347,9 +360,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX - radius, safeY + y, safeZ + z})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -373,9 +387,10 @@ class TeleportJob {
                     if (!insideRegion || regionContains.apply(new double[]{safeX, safeY + radius, safeZ})) {
                         checked++;
                         try {
-                            this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                            this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                         } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                             ex.printStackTrace();
+                            this.done = false;
                         }
                         blocksInRegionCopy = true;
                         continueThisDirection = true;
@@ -390,9 +405,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + x, safeY + radius, safeZ - r})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -406,9 +422,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + r, safeY + radius, safeZ + z})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -422,9 +439,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + x, safeY + radius, safeZ + r})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -438,9 +456,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX - r, safeY + radius, safeZ + z})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -463,9 +482,10 @@ class TeleportJob {
                     if (!insideRegion || regionContains.apply(new double[]{safeX, safeY - radius, safeZ})) {
                         checked++;
                         try {
-                            this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                            this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                         } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                             ex.printStackTrace();
+                            this.done = false;
                         }
                         blocksInRegionCopy = true;
                         continueThisDirection = true;
@@ -480,9 +500,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + x, safeY - radius, safeZ - r})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -496,9 +517,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + r, safeY - radius, safeZ + z})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -512,9 +534,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX + x, safeY - radius, safeZ + r})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -528,9 +551,10 @@ class TeleportJob {
                         if (!insideRegion || regionContains.apply(new double[]{safeX - r, safeY - radius, safeZ + z})) {
                             checked++;
                             try {
-                                this.done = Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp) || checked > maxTries).get(5, TimeUnit.SECONDS);
+                                this.done = checked > maxTries || Bukkit.getScheduler().callSyncMethod(plugin, () -> TeleportFeature.isSafe(temp)).get(5, TimeUnit.SECONDS);
                             } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                                 ex.printStackTrace();
+                                this.done = false;
                             }
                             blocksInRegionCopy = true;
                             continueThisDirection = true;
@@ -568,17 +592,49 @@ class TeleportJob {
                 }
             }));
         };
+        // Start notifying the player, the one issue is that checked/max is 0 is if chunk loading takes up >= ~5s
+        doNotifications(player.getUniqueId());
         TaskChain<?> chain = Utils.newChain();
         if (schedulingFuture != null) {
+            // If there aren't too many chunks, pre-load them. Max will take 10 ticks ~ 500-600ms
             chain = chain.asyncFirstFuture(() -> schedulingFuture).asyncFutures((unused) -> futures);
         }
+        // Run the calculation task async
         chain.async(task::run).execute();
+        // Don't keep chunks force-loaded once the teleportation has been completed.
         return future.thenApply((unused0) -> {
             for (Chunk chunk : collection) {
-                chunk.setForceLoaded(false);
+                chunk.setForceLoaded(false); // Should be fine to call async(?)
             }
             running = false;
             return unused0;
         });
+    }
+
+    /**
+     * Get the task which notifies player of teleport progress.
+     *
+     * @return Returns the task, may be null.
+     */
+    public BukkitTask getNotifierTask() {
+        return notifierTask;
+    }
+
+    private void doNotifications(final UUID player0) {
+        final int maxTries = plugin.getConfig().getInt("maximumTries");
+        this.notifierTask = new BukkitRunnable() {
+
+            @Override
+            public void run() {
+                final Player player = Bukkit.getPlayer(player0);
+                if (TeleportJob.this.done || player == null) {
+                    this.cancel();
+                    TeleportJob.this.notifierTask = null;
+                    return;
+                }
+                region.message(player, "teleport-calculation-progress", "%done%", String.valueOf(checked), "%max%", String.valueOf(maxTries));
+            }
+
+        }.runTaskTimer(plugin, Utils.millisToTicks(5000), Utils.millisToTicks(5000));
     }
 }

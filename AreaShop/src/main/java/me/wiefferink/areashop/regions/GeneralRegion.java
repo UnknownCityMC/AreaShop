@@ -8,7 +8,7 @@ import me.wiefferink.areashop.events.NotifyRegionEvent;
 import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.features.FriendsFeature;
 import me.wiefferink.areashop.features.RegionFeature;
-import me.wiefferink.areashop.features.TeleportFeature;
+import me.wiefferink.areashop.features.teleport.TeleportFeature;
 import me.wiefferink.areashop.features.signs.SignsFeature;
 import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
 import me.wiefferink.areashop.managers.FileManager;
