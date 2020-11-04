@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>areashop-fawe-1-15</artifactId>
     <packaging>jar</packaging>
-    <name>AreaShop FastAsyncWorldEdit 1.14+</name>
+    <name>AreaShop FastAsyncWorldEdit 1.15+</name>
     <version>latest</version>
 
     <parent>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
             <type>jar</type>
             <scope>provided</scope>
             <optional>true</optional>
