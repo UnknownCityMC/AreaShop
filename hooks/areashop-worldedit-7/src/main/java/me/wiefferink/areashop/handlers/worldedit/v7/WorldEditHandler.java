@@ -99,10 +99,10 @@ public class WorldEditHandler extends WorldEditInterface {
 		BlockVector3 origin = BlockVector3.at(region.getMinimumPoint().getBlockX(), region.getMinimumPoint().getBlockY(), region.getMinimumPoint().getBlockZ());
 
 		// Read the schematic and paste it into the world
-		try(Closer closer = Closer.create()) {
+		try(Closer closer = Closer.create();
 			FileInputStream fis = closer.register(new FileInputStream(file));
 			BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
-			ClipboardReader reader = format.getReader(bis);
+			ClipboardReader reader = format.getReader(bis)) {
 
 			//WorldData worldData = world.getWorldData();
 			LocalSession session = new LocalSession(pluginInterface.getWorldEdit().getLocalConfiguration());
@@ -195,10 +195,9 @@ public class WorldEditHandler extends WorldEditInterface {
 			return false;
 		}
 
-		try(Closer closer = Closer.create()) {
-			FileOutputStream fos = closer.register(new FileOutputStream(file));
+		try(Closer closer = Closer.create(); FileOutputStream fos = closer.register(new FileOutputStream(file));
 			BufferedOutputStream bos = closer.register(new BufferedOutputStream(fos));
-			ClipboardWriter writer = closer.register(format.getWriter(bos));
+			ClipboardWriter writer = closer.register(format.getWriter(bos));) {
 			writer.write(clipboard);
 		} catch(IOException e) {
 			pluginInterface.getLogger().warning("An error occured while saving schematic of " + regionInterface.getName() + ", enable debug to see the complete stacktrace");
