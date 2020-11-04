@@ -22,6 +22,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -579,7 +580,7 @@ public class SignsFeature extends RegionFeature {
      * @return List of signs
      */
     public List<RegionSign> getSigns() {
-        return Collections.unmodifiableList(new ArrayList<>(signs.values()));
+        return new ArrayList<>(signs.values());
     }
 
     /**
@@ -597,7 +598,7 @@ public class SignsFeature extends RegionFeature {
      * @return A List with all sign locations
      */
     public List<Location> getSignLocations() {
-        List<Location> result = new ArrayList<>();
+        List<Location> result = new ArrayList<>(signs.size());
         for (RegionSign sign : signs.values()) {
             result.add(sign.getLocation());
         }
@@ -614,7 +615,8 @@ public class SignsFeature extends RegionFeature {
      */
     public void addSign(Location location, Material signType, BlockFace facing, String profile) {
         int i = 0;
-        while (getRegion().getConfig().isSet("general.signs." + i)) {
+        final YamlConfiguration configuration = getRegion().getConfig();
+        while (configuration.isSet("general.signs." + i)) {
             i++;
         }
         String signPath = "general.signs." + i + ".";

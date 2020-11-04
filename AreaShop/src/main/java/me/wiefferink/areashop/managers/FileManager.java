@@ -30,12 +30,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class FileManager extends Manager {
 
     private final Set<String> worldRegionsRequireSaving;
-    private final HashMap<String, GeneralRegion> regions;
+
+    private final Map<String, BuyRegion> buyRegions = new HashMap<>();
+    private final Map<String, RentRegion> rentRegions = new HashMap<>();
+    private final Map<String, GeneralRegion> allRegions = new HashMap<>();
     private final String regionsPath;
     private final HashMap<String, RegionGroup> groups;
     private final String configPath;
@@ -54,7 +56,6 @@ public class FileManager extends Manager {
      * Constructor, initialize variabeles.
      */
     public FileManager() {
-        regions = new HashMap<>();
         regionsPath = plugin.getDataFolder() + File.separator + AreaShop.regionsFolder;
         configPath = plugin.getDataFolder() + File.separator + "config.yml";
         groups = new HashMap<>();
@@ -150,7 +151,7 @@ public class FileManager extends Manager {
      * @return The region if found, otherwise null
      */
     public GeneralRegion getRegion(String name) {
-        return regions.get(name.toLowerCase());
+        return allRegions.get(name.toLowerCase());
     }
 
     /**
@@ -160,11 +161,7 @@ public class FileManager extends Manager {
      * @return RentRegion if it could be found, otherwise null
      */
     public RentRegion getRent(String name) {
-        GeneralRegion region = regions.get(name.toLowerCase());
-        if (region instanceof RentRegion) {
-            return (RentRegion) region;
-        }
-        return null;
+        return rentRegions.get(name.toLowerCase());
     }
 
     /**
@@ -174,11 +171,7 @@ public class FileManager extends Manager {
      * @return BuyRegion if it could be found, otherwise null
      */
     public BuyRegion getBuy(String name) {
-        GeneralRegion region = regions.get(name.toLowerCase());
-        if (region instanceof BuyRegion) {
-            return (BuyRegion) region;
-        }
-        return null;
+        return buyRegions.get(name.toLowerCase());
     }
 
     /**
@@ -187,13 +180,7 @@ public class FileManager extends Manager {
      * @return List of all rental regions
      */
     public List<RentRegion> getRents() {
-        List<RentRegion> result = new LinkedList<>();
-        for (GeneralRegion region : regions.values()) {
-            if (region instanceof RentRegion) {
-                result.add((RentRegion) region);
-            }
-        }
-        return result;
+        return new ArrayList<>(rentRegions.values());
     }
 
     /**
@@ -202,13 +189,7 @@ public class FileManager extends Manager {
      * @return List of all buy regions
      */
     public List<BuyRegion> getBuys() {
-        List<BuyRegion> result = new LinkedList<>();
-        for (GeneralRegion region : regions.values()) {
-            if (region instanceof BuyRegion) {
-                result.add((BuyRegion) region);
-            }
-        }
-        return result;
+        return new ArrayList<>(buyRegions.values());
     }
 
     /**
@@ -217,7 +198,9 @@ public class FileManager extends Manager {
      * @return List of all regions (it is safe to modify the list)
      */
     public List<GeneralRegion> getRegions() {
-        return new ArrayList<>(regions.values());
+        final List<GeneralRegion> list = new ArrayList<>(allRegions.size());
+        list.addAll(allRegions.values());
+        return list;
     }
 
     /**
@@ -226,7 +209,11 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getBuyNames() {
-        return getBuys().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        final List<String> list = new ArrayList<>(buyRegions.size());
+        for (GeneralRegion region : buyRegions.values()) {
+            list.add(region.getName());
+        }
+        return list;
     }
 
     /**
@@ -235,7 +222,11 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getRentNames() {
-        return getRents().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        final List<String> list = new ArrayList<>(rentRegions.size());
+        for (GeneralRegion region : rentRegions.values()) {
+            list.add(region.getName());
+        }
+        return list;
     }
 
     /**
@@ -244,7 +235,11 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getRegionNames() {
-        return getRegions().stream().map(GeneralRegion::getName).collect(Collectors.toList());
+        final List<String> list = new ArrayList<>(allRegions.size());
+        for (GeneralRegion region : rentRegions.values()) {
+            list.add(region.getName());
+        }
+        return list;
     }
 
     /**
@@ -253,7 +248,11 @@ public class FileManager extends Manager {
      * @return A String list with all the names
      */
     public List<String> getGroupNames() {
-      return getGroups().stream().map(RegionGroup::getName).collect(Collectors.toList());
+        final List<String> names = new ArrayList<>(groups.size());
+        for (RegionGroup group : groups.values()) {
+            names.add(group.getName());
+        }
+        return names;
     }
 
     /**
@@ -289,7 +288,16 @@ public class FileManager extends Manager {
         if (event.isCancelled()) {
             return event;
         }
-        regions.put(region.getName().toLowerCase(), region);
+        final String name = region.getName().toLowerCase();
+        // Forcefully remove regions from cache.
+        buyRegions.remove(name);
+        rentRegions.remove(name);
+        if (region instanceof BuyRegion) {
+            buyRegions.put(region.getName().toLowerCase(), (BuyRegion) region);
+        } else if (region instanceof RentRegion) {
+            rentRegions.put(region.getName().toLowerCase(), (RentRegion) region);
+        }
+        allRegions.put(region.getName().toLowerCase(), region);
         Bukkit.getPluginManager().callEvent(new AddedRegionEvent(region));
         return event;
     }
@@ -403,8 +411,9 @@ public class FileManager extends Manager {
         }
 
         region.resetRegionFlags();
-        regions.remove(region.getLowerCaseName());
-
+        rentRegions.remove(region.getLowerCaseName());
+        buyRegions.remove(region.getLowerCaseName());
+        allRegions.remove(region.getLowerCaseName());
         // Remove file
         File file = new File(plugin.getDataFolder() + File.separator + AreaShop.regionsFolder + File.separator + region.getLowerCaseName() + ".yml");
         if (file.exists()) {
@@ -552,12 +561,12 @@ public class FileManager extends Manager {
         this.saveWorldGuardRegions();
 
         final AtomicInteger processed = new AtomicInteger();
-        for (GeneralRegion region : getRegions()) {
+        for (GeneralRegion region : allRegions.values()) {
             if (region.isSaveRequired()) {
                 region.saveNowAsync().thenAccept((unused) -> processed.getAndIncrement());
             }
         }
-        final int finalCount = getRegions().size();
+        final int finalCount = allRegions.size();
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
         new BukkitRunnable() {
             @Override
@@ -579,7 +588,7 @@ public class FileManager extends Manager {
         if (isSaveGroupsRequired()) {
             saveGroupsNow();
         }
-        for (GeneralRegion region : getRegions()) {
+        for (GeneralRegion region : allRegions.values()) {
             if (region.isSaveRequired()) {
                 region.saveNow();
             }
@@ -832,7 +841,6 @@ public class FileManager extends Manager {
      * @return true if succeeded, otherwise false
      */
     public boolean loadGroupsFile() {
-        boolean result = true;
         File groupFile = new File(groupsPath);
         if (groupFile.exists() && groupFile.isFile()) {
             try (
@@ -850,14 +858,16 @@ public class FileManager extends Manager {
             RegionGroup group = new RegionGroup(plugin, groupName);
             groups.put(groupName, group);
         }
-        return result;
+        return true;
     }
 
     /**
      * Load all region files.
      */
     public void loadRegionFiles() {
-        regions.clear();
+        rentRegions.clear();
+        buyRegions.clear();
+        allRegions.clear();
         final File file = new File(regionsPath);
         if (!file.exists()) {
             if (!file.mkdirs()) {
@@ -952,7 +962,7 @@ public class FileManager extends Manager {
 
         boolean noWorldRegions = !noWorld.isEmpty();
         while (!noWorld.isEmpty()) {
-            List<GeneralRegion> toDisplay = new ArrayList<>();
+            List<GeneralRegion> toDisplay = new ArrayList<>(noWorld.size());
             String missingWorld = noWorld.get(0).getWorldName();
             toDisplay.add(noWorld.get(0));
             for (int i = 1; i < noWorld.size(); i++) {
@@ -972,7 +982,7 @@ public class FileManager extends Manager {
         }
 
         if (!incorrectDuration.isEmpty()) {
-            List<String> incorrectDurationNames = new ArrayList<>();
+            List<String> incorrectDurationNames = new ArrayList<>(incorrectDuration.size());
             for (GeneralRegion region : incorrectDuration) {
                 incorrectDurationNames.add(region.getName());
             }
@@ -1280,7 +1290,7 @@ public class FileManager extends Manager {
 
         // Add 'general.lastActive' to rented/bought regions (initialize at current time)
         if (fileStatus == null || fileStatus < 3) {
-            for (GeneralRegion region : getRegions()) {
+            for (GeneralRegion region : allRegions.values()) {
                 region.updateLastActiveTime();
             }
             // Update versions file to 3
