@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.features;
 
+import co.aikar.taskchain.TaskChain;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.lib.PaperLib;
@@ -8,12 +9,12 @@ import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -40,18 +41,18 @@ public class TeleportFeature extends RegionFeature {
      */
     private static boolean isSafe(Location location) {
         Block feet = location.getBlock();
-        Block head = feet.getRelative(BlockFace.UP);
-        Block below = feet.getRelative(BlockFace.DOWN);
-        Block above = head.getRelative(BlockFace.UP);
+        BlockState head = PaperLib.getBlockState(feet.getRelative(BlockFace.UP), true).getState();
+        BlockState below =  PaperLib.getBlockState(feet.getRelative(BlockFace.DOWN), true).getState();
+        BlockState above =  PaperLib.getBlockState(head.getBlock().getRelative(BlockFace.UP), true).getState();
 
         // Check the block at the feet and head of the player
         if ((feet.getType().isSolid() && !canSpawnIn(feet.getType())) || feet.isLiquid()) {
             return false;
-        } else if ((head.getType().isSolid() && !canSpawnIn(head.getType())) || head.isLiquid()) {
+        } else if ((head.getType().isSolid() && !canSpawnIn(head.getType())) || head.getBlock().isLiquid()) {
             return false;
-        } else if (!below.getType().isSolid() || cannotSpawnOn(below.getType()) || below.isLiquid()) {
+        } else if (!below.getType().isSolid() || cannotSpawnOn(below.getType()) || below.getBlock().isLiquid()) {
             return false;
-        } else if (above.isLiquid() || cannotSpawnBeside(above.getType())) {
+        } else if (above.getBlock().isLiquid() || cannotSpawnBeside(above.getType())) {
             return false;
         }
 
@@ -65,7 +66,7 @@ public class TeleportFeature extends RegionFeature {
                         continue;
                     }
 
-                    around.add(below.getRelative(x, y, z).getType());
+                    around.add(PaperLib.getBlockState(below.getBlock().getRelative(x, y, z), true).getState().getType());
                 }
             }
         }
@@ -259,9 +260,11 @@ public class TeleportFeature extends RegionFeature {
 
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
         final boolean finalToSign = toSign;
-        Utils.newChain().future(Utils.runAsBatches(collection, 10, (arr) -> PaperLib.getChunkAtAsync(world, arr[0], arr[1]), false))
-                .delay(3)
-                .syncLast((unused) -> {
+        TaskChain<?> chain = Utils.newChain();
+        if (collection.size() < 64) {
+            chain = chain.future(Utils.runAsBatches(collection, 16, (arr) -> PaperLib.getChunkAtAsync(world, arr[0], arr[1]), false));
+        }
+        chain.delay(3).syncLast((unused) -> {
             boolean blocksInRegionCopy = blocksInRegion;
             Location safeLocation = startLocation;
             // Tries limit tracking
@@ -493,7 +496,7 @@ public class TeleportFeature extends RegionFeature {
                 AreaShop.debug("No location found, checked " + checked + " spots of max " + maxTries);
                 future.complete(false);
             }
-        });
+        }).execute();
         return future;
     }
 

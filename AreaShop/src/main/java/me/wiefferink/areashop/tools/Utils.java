@@ -867,20 +867,19 @@ public class Utils {
         if (batchSize < 1) {
             throw new IllegalArgumentException("Invalid batch size!");
         }
-        final List<E> cloned = new ArrayList<>(objects);
+        final Queue<E> cloned = new LinkedList<>(objects);
         final CompletableFuture<Object> future = new CompletableFuture<>();
         BukkitRunnable runnable = new BukkitRunnable() {
-            int lastIndex;
 
             @Override
             public void run() {
-                if (lastIndex >= cloned.size() - 1) {
+                if (cloned.isEmpty()) {
                     future.complete(true);
                     cancel();
-                    return;
                 }
-                int index = Math.min(batchSize, objects.size() - 1);
-                cloned.subList(lastIndex, index).forEach(task);
+                for (int i = 0; i < batchSize && !cloned.isEmpty(); i++) {
+                    task.accept(cloned.remove());
+                }
             }
         };
         if (async) {

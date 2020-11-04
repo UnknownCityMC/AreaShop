@@ -1,6 +1,8 @@
 package me.wiefferink.areashop.features.signs;
 
 import com.google.common.base.Objects;
+import io.papermc.lib.PaperLib;
+import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
@@ -11,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.WallSign;
@@ -141,7 +144,7 @@ public class RegionSign {
         }
 
         ConfigurationSection stateConfig = signConfig.getConfigurationSection(getRegion().getState().getValue());
-
+        assert stateConfig != null;
         // Get the lines
         String[] signLines = new String[4];
         boolean signEmpty = true;
@@ -153,21 +156,22 @@ public class RegionSign {
             block.setType(Material.AIR);
             return true;
         }
-
+        final BlockStateSnapshotResult snapshotResult = PaperLib.getBlockState(block, true);
+        final BlockState blockState = snapshotResult.getState();
         // Place the sign back (with proper rotation and type) after it has been hidden or (indirectly) destroyed
         if (!Materials.isSign(block.getType())) {
             Material signType = getMaterial();
             if (signType.name().contains("SIGN")) {
+                final BlockData data = blockState.getBlockData();
                 // Don't do physics here, we first need to update the direction
-                block.setType(signType, false);
-                BlockData data = block.getBlockData();
+                blockState.setType(signType);
                 if (data instanceof WallSign) {
                     ((WallSign) data).setFacing(getFacing());
                 } else if (data instanceof Sign) {
                     ((org.bukkit.block.data.type.Sign) data).setRotation(getFacing());
                 }
-                block.setBlockData(data, true);
-
+                blockState.setBlockData(data);
+                blockState.update(false, false);
                 // Check if the sign has popped
                 if (!Materials.isSign(block.getType())) {
                     AreaShop.warn("Setting sign", key, "of region", getRegion().getName(), "failed, could not set sign block back");
@@ -185,7 +189,7 @@ public class RegionSign {
         if (!regionConfig.isString("general.signs." + key + ".facing")) {
             final BlockFace rotation;
             if (Materials.isSign(block.getType())) {
-                BlockData data = block.getBlockData();
+                BlockData data = blockState.getBlockData();
                 if (data instanceof org.bukkit.block.data.type.Sign) {
                     rotation = ((org.bukkit.block.data.type.Sign) block.getBlockData()).getRotation();
                 } else if (data instanceof WallSign) {
@@ -200,7 +204,7 @@ public class RegionSign {
         }
 
         // Apply replacements and color and then set it on the sign
-        Sign signState = (Sign) block.getState();
+        Sign signState = (Sign) blockState;
         for (int i = 0; i < signLines.length; i++) {
             if (signLines[i] == null) {
                 signState.setLine(i, "");
@@ -210,8 +214,7 @@ public class RegionSign {
             signLines[i] = Utils.applyColors(signLines[i]);
             signState.setLine(i, signLines[i]);
         }
-        signState.update(false, false);
-        return true;
+        return signState.update(false, false);
     }
 
     /**

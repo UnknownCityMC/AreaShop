@@ -51,7 +51,7 @@ public class DelCommand extends CommandAreaShop {
 				return;
 			}
 			List<GeneralRegion> regions = Utils.getRegionsInSelection(selection);
-			if(regions == null || regions.isEmpty()) {
+			if(regions.isEmpty()) {
 				plugin.message(player, "cmd-noRegionsFound");
 				return;
 			}

@@ -46,7 +46,14 @@ public class WorldEditHandler extends WorldEditInterface {
 	@Override
 	public WorldEditSelection getPlayerSelection(Player player) {
 		try {
-			Region region = pluginInterface.getWorldEdit().getSession(player).getSelection(BukkitAdapter.adapt(player.getWorld()));
+			final LocalSession session = pluginInterface.getWorldEdit().getSession(player);
+			if (session == null) {
+				return null;
+			}
+			Region region = session.getSelection(BukkitAdapter.adapt(player.getWorld()));
+			if (region == null) {
+				return null;
+			}
 			return new WorldEditSelection(
 					player.getWorld(),
 					BukkitAdapter.adapt(player.getWorld(), region.getMinimumPoint()),

@@ -125,7 +125,7 @@ public class AddCommand extends CommandAreaShop {
 		TreeSet<String> namesNoPermission = new TreeSet<>();
 		TreeSet<String> namesAddCancelled = new TreeSet<>(); // Denied by an event listener
 		Utils.runAsBatches(regions.entrySet(),
-			plugin.getConfig().getInt("adding.regionsPerTick"),
+			Math.min(plugin.getConfig().getInt("adding.regionsPerTick"), 1),
 				(regionEntry) -> {
 				String regionName = regionEntry.getKey();
 				ProtectedRegion region = regionEntry.getValue();

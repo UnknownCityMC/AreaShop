@@ -681,22 +681,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             return true;
         }
         final String packageName = "me.wiefferink.areashop.handlers.";
-        final Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
-        if (fawe != null && fawe.isEnabled()) {
-            final String version = fawe.getDescription().getVersion();
-            if (version.startsWith("1.15") || version.startsWith("1.16")) {
-                try {
-                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_15.FastAsyncWorldEditHandler")
-                            .getDeclaredConstructor(AreaShopInterface.class).newInstance(this);
-                } catch (ReflectiveOperationException ex) {
-                    getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
-                    ex.printStackTrace();
-                }
-            }
-            if (this.worldEditInterface == null) {
-                info("FAWE Version: " + version + " detected, no compatible handler found. Using the WorldEdit handler instead.");
-            }
-        }
         if (this.worldEditInterface == null) {
             final String version = worldEdit.getDescription().getVersion();
             Matcher matcher = VERSION_MATCHER_3.matcher(version);
@@ -716,6 +700,23 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                 ex.printStackTrace();
                 error("Failed to hook into WorldEdit!");
                 return false;
+            }
+        }
+        this.worldEdit = (WorldEditPlugin) worldEdit;
+        final Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
+        if (fawe != null && fawe.isEnabled()) {
+            final String version = fawe.getDescription().getVersion();
+            if (version.startsWith("1.15") || version.startsWith("1.16")) {
+                try {
+                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_15.FastAsyncWorldEditHandler")
+                            .getDeclaredConstructor(AreaShopInterface.class).newInstance(this);
+                } catch (ReflectiveOperationException ex) {
+                    getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
+                    ex.printStackTrace();
+                }
+            }
+            if (this.worldEditInterface == null) {
+                info("FAWE Version: " + version + " detected, no compatible handler found. Using the WorldEdit handler instead.");
             }
         }
         final String wgVersion = worldGuard.getDescription().getVersion();

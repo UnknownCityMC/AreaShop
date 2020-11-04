@@ -1,6 +1,5 @@
 package me.wiefferink.areashop.managers;
 
-import co.aikar.taskchain.TaskChain;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -36,20 +35,20 @@ import java.util.stream.Collectors;
 public class FileManager extends Manager {
 
     private final Set<String> worldRegionsRequireSaving;
-    private HashMap<String, GeneralRegion> regions = null;
-    private String regionsPath = null;
-    private HashMap<String, RegionGroup> groups = null;
-    private String configPath = null;
+    private final HashMap<String, GeneralRegion> regions;
+    private final String regionsPath;
+    private final HashMap<String, RegionGroup> groups;
+    private final String configPath;
     private YamlConfiguration config = null;
-    private String groupsPath = null;
+    private final String groupsPath;
     private YamlConfiguration groupsConfig = null;
-    private String defaultPath = null;
+    private final String defaultPath;
     private YamlConfiguration defaultConfig = null;
     private YamlConfiguration defaultConfigFallback = null;
     private boolean saveGroupsRequired = false;
     private HashMap<String, Integer> versions = null;
-    private String versionPath = null;
-    private String schemFolder = null;
+    private final String versionPath;
+    private final String schemFolder;
 
     /**
      * Constructor, initialize variabeles.

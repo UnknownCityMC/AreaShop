@@ -255,7 +255,7 @@ public class WorldGuardRegionFlagsFeature extends RegionFeature {
 		result = result.replace("&1", "&B");
 		result = result.replace("&d", "&p");
 		result = result.replace("&5", "&P");
-		result = result.replace("&0", "&0");
+		//result = result.replace("&0", "&0");
 		result = result.replace("&8", "&1");
 		result = result.replace("&7", "&2");
 		result = result.replace("&f", "&w");
