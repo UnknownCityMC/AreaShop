@@ -366,7 +366,7 @@ public class BuyRegion extends GeneralRegion {
 			r = null;
 			OfflinePlayer oldOwnerPlayer = Bukkit.getOfflinePlayer(oldOwner);
 			String oldOwnerName = getPlayerName();
-			if(oldOwnerPlayer != null && oldOwnerPlayer.getName() != null) {
+			if(oldOwnerPlayer.hasPlayedBefore() && oldOwnerPlayer.getName() != null) {
 				r = plugin.getEconomy().depositPlayer(oldOwnerPlayer, getWorldName(), getResellPrice());
 				oldOwnerName = oldOwnerPlayer.getName();
 			} else if(oldOwnerName != null) {

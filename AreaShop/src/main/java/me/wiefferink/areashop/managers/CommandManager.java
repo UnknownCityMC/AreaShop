@@ -34,17 +34,11 @@ import me.wiefferink.areashop.commands.StackCommand;
 import me.wiefferink.areashop.commands.StopresellCommand;
 import me.wiefferink.areashop.commands.TeleportCommand;
 import me.wiefferink.areashop.commands.UnrentCommand;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
-public class CommandManager extends Manager implements CommandExecutor, TabCompleter {
+public class CommandManager extends Manager implements TabExecutor {
 	private final ArrayList<CommandAreaShop> commands;
 
 	/**
@@ -88,7 +82,6 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 
 		// Register commands in bukkit
 		plugin.getCommand("AreaShop").setExecutor(this);
-		plugin.getCommand("AreaShop").setTabCompleter(this);
 	}
 
 	/**
@@ -165,10 +158,10 @@ public class CommandManager extends Manager implements CommandExecutor, TabCompl
 
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-		List<String> result = new ArrayList<>();
 		if(!sender.hasPermission("areashop.tabcomplete")) {
-			return result;
+			return Collections.emptyList();
 		}
+		List<String> result = new ArrayList<>();
 		int toCompleteNumber = args.length;
 		String toCompletePrefix = args[args.length - 1].toLowerCase();
 		//AreaShop.debug("toCompleteNumber=" + toCompleteNumber + ", toCompletePrefix=" + toCompletePrefix + ", length=" + toCompletePrefix.length());

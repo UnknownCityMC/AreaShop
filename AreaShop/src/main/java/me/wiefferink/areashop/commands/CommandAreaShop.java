@@ -6,10 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Abstract class for generalising command classes.
@@ -46,7 +43,7 @@ public abstract class CommandAreaShop {
 	 * @return A collection with all the possibilities for argument to complete
 	 */
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		return new ArrayList<>();
+		return Collections.emptyList();
 	}
 
 	/**
@@ -89,7 +86,7 @@ public abstract class CommandAreaShop {
 		return false;
 	}
 
-	private class CommandTime {
+	private static class CommandTime {
 		public final String command;
 		public final long time;
 
