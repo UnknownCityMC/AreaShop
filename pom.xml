@@ -63,6 +63,10 @@
   <modules>
     <module>hooks/areashop-interface</module>
 
+    <!-- NMS Abstractions -->
+    <module>hooks/areashop-nms-1-16-5</module>
+    <module>hooks/areashop-nms-1-15-2</module>
+
     <!-- FAWE Compat -->
     <module>hooks/areashop-fawe-1-15</module>
 

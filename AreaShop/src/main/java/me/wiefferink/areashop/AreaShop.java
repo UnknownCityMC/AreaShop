@@ -5,6 +5,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
+import me.wiefferink.areashop.interfaces.NMS;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.listeners.PlayerLoginLogoutListener;
@@ -129,6 +130,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     private List<String> chatprefix = null;
     private boolean ready = false;
     private GithubUpdateCheck githubUpdateCheck = null;
+    private NMS nms;
 
     public static AreaShop getInstance() {
         return AreaShop.instance;
@@ -262,6 +264,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
      */
     public void setChatprefix(List<String> chatprefix) {
         this.chatprefix = chatprefix;
+    }
+
+    public NMS getNMSHelper() {
+        return this.nms;
     }
 
     /**
@@ -563,6 +569,22 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
         HandlerList.unregisterAll(this);
     }
 
+    private void setupNMS() throws IllegalStateException {
+        final String packageName = Bukkit.getServer().getClass().getPackage().getName();
+        final String[] split = packageName.split("\\.");
+        final String nmsRevision = split[3];
+        try {
+            Class<?> rawClazz = Class.forName("me.wiefferink.areashop.nms." + nmsRevision + ".NMSImpl");
+            if (!NMS.class.isAssignableFrom(rawClazz)) {
+                throw new IllegalStateException("Invalid NMS Impl: " + rawClazz.getCanonicalName() + " does not implement the NMS!");
+            }
+            Class<? extends NMS> casted = rawClazz.asSubclass(NMS.class);
+            this.nms = casted.getConstructor().newInstance();
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("Failed to instantiate the NMS Helper!", ex);
+        }
+    }
+
     /**
      * Called on start or reload of the server.
      */
@@ -578,6 +600,9 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             error("Vault plugin is not present or has not loaded correctly");
             error = true;
         }
+
+        // Setup the NMS helper
+        setupNMS();
 
         // Load all data from files and check versions
         fileManager = new FileManager();
