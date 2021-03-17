@@ -25,11 +25,50 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Sign that is connected to a region to display information and interact with the region.
  */
 public class RegionSign {
+
+    public static Level invalidSignLogLevel;
+    public static boolean removeInvalidSigns;
+
+    static {
+        YamlConfiguration configuration = AreaShop.getInstance().getConfig();
+        removeInvalidSigns = configuration.getBoolean("signs.removeInvalid");
+        final String rawLogLevel = configuration.getString("signs.invalidSignLogLevel", "WARNING");
+        try {
+            assert rawLogLevel != null;
+            invalidSignLogLevel = Level.parse(rawLogLevel);
+        } catch (IllegalArgumentException ex) {
+            AreaShop.warn("Invalid Logging Level: " + rawLogLevel);
+            invalidSignLogLevel = Level.WARNING;
+        }
+    }
+
+
+    private static boolean canLogSignError() {
+        return AreaShop.getInstance().getLogger().isLoggable(invalidSignLogLevel);
+    }
+
+    private static void logSignError(String... messages) {
+        if (invalidSignLogLevel == Level.OFF) {
+            return;
+        }
+        if (invalidSignLogLevel == Level.SEVERE) {
+            AreaShop.error((Object) messages);
+        }
+        else if (invalidSignLogLevel == Level.WARNING) {
+            AreaShop.warn((Object) messages);
+        } else if (invalidSignLogLevel.intValue() >= Level.FINE.intValue()) {
+            AreaShop.debug((Object) messages);
+        } else {
+            AreaShop.info((Object) messages);
+        }
+    }
 
     private final SignsFeature signsFeature;
     private final String key;
@@ -181,11 +220,21 @@ public class RegionSign {
                 blockState.setBlockData(blockData);
                 // Check if the sign has popped
                 if (!Materials.isSign(block.getType())) {
-                    AreaShop.warn("Setting sign", key, "of region", region.getName(), "failed, could not set sign block back");
+                    if (canLogSignError()) {
+                        logSignError("Setting sign", key, "of region", region.getName(), "failed, could not set sign block back");
+                    }
+                    if (removeInvalidSigns) {
+                        remove();
+                    }
                     return false;
                 }
             } else {
-                AreaShop.warn("Setting sign", key, "of region", region.getName(), "failed, RegionSign material was: " + signType.name());
+                if (canLogSignError()) {
+                    logSignError("Setting sign", key, "of region", region.getName(), "failed, RegionSign material was: " + signType.name());
+                } if (removeInvalidSigns) {
+                    remove();
+                    return false;
+                }
             }
         }
 

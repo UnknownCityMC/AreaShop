@@ -34,6 +34,8 @@ inactive:
 signs:
   delay: '1 minute'
   regionsPerTick: 3
+  invalidSignLogLevel: WARNING
+  removeInvalid: false
 # Number of regions per tick to check when a player joins to see if his name changed for regions he owned (updates the regions when changed).
 nameupdate:
   regionsPerTick: 10

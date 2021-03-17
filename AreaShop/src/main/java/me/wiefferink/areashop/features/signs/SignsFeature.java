@@ -272,7 +272,9 @@ public class SignsFeature extends RegionFeature {
 
         // Check if the sign is meant for this plugin
         if (line0.contains(plugin.getConfig().getString("signTags.rent"))) {
-            if (!player.hasPermission("areashop.createrent") && !player.hasPermission("areashop.createrent.member") && !player.hasPermission("areashop.createrent.owner")) {
+            if (!player.hasPermission("areashop.createrent")
+                    && !player.hasPermission("areashop.createrent.member")
+                    && !player.hasPermission("areashop.createrent.owner")) {
                 plugin.message(player, "setup-noPermissionRent");
                 return;
             }
