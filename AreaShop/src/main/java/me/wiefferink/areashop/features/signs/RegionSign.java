@@ -111,7 +111,11 @@ public class RegionSign {
     /**
      * Get the material of the sign as saved in the config.
      *
+<<<<<<< HEAD
      * @return Material of the sign, usually or one of the other wood types (different result for 1.13-), Material.AIR if none.
+=======
+     * @return Material of the sign, usually, a sign or {@link Material#AIR} if none.
+>>>>>>> 2849693 (Experimental work on using internal methods to determine sign validity)
      */
     public Material getMaterial() {
         String name = getRegion().getConfig().getString("general.signs." + key + ".signType");

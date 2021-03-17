@@ -6,6 +6,7 @@ import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.features.RegionFeature;
+import me.wiefferink.areashop.interfaces.BlockBehaviourHelper;
 import me.wiefferink.areashop.managers.FileManager;
 import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.regions.BuyRegion;
@@ -40,6 +41,7 @@ public class SignsFeature extends RegionFeature {
 
     private static final Map<String, RegionSign> allSigns = Collections.synchronizedMap(new HashMap<>());
     private static final Map<String, List<RegionSign>> signsByChunk = Collections.synchronizedMap(new HashMap<>());
+    private static final BlockBehaviourHelper behaviourHelper = AreaShop.getInstance().getNMSHelper().behaviourHelper();
 
     private Map<String, RegionSign> signs;
 
@@ -176,19 +178,9 @@ public class SignsFeature extends RegionFeature {
             return;
         }
         final Block block = event.getBlock();
-        final BlockData blockData = block.getBlockData();
-        final Block attachedBlock;
-        if (blockData instanceof WallSign) {
-            attachedBlock = block.getRelative(((WallSign) blockData).getFacing().getOppositeFace());
-        } else if (blockData instanceof Sign) {
-            attachedBlock = block.getRelative(BlockFace.DOWN);
-        } else {
-            attachedBlock = null;
-        }
 
-        // Check if still attached to a block
-        // TODO: signs cannot be placed on all blocks, improve this check to isSolid()?
-        if (attachedBlock == null || attachedBlock.getType() != Material.AIR) {
+        // If the block is in a valid position then we don't care
+        if (behaviourHelper.isBlockValid(block)) {
             return;
         }
 

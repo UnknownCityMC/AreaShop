@@ -21,6 +21,7 @@ dependencies {
     implementation project(':areashop-worldguard-7')
     implementation project(':areashop-worldedit-7')
     implementation project(':areashop-fawe-1-15')
+    implementation project(':areashop-nms-1-16-5')
 
     // Runtime plugins
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5-SNAPSHOT'

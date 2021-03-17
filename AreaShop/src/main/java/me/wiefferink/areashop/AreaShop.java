@@ -5,6 +5,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
+import me.wiefferink.areashop.interfaces.NMS;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.listeners.PlayerLoginLogoutListener;
@@ -28,12 +29,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +49,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String groupsFile = "groups.yml";
     public static final String defaultFile = "default.yml";
     public static final String configFile = "config.yml";
-    public static final String signLogFileName = "signErrors.log";
     public static final String configFileHidden = "hiddenConfig.yml";
     public static final String versionFile = "versions";
     // Euro tag for in the config
@@ -114,7 +111,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String tagTeleportWorld = "tpworld";
     // REGEX Matcher for Versions which follow a x.x.x format.
     private static final Pattern VERSION_MATCHER_3 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
-    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+    private static final Pattern VERSION_MATCHER_2 = Pattern.compile("([0-9]+)\\.([0-9]+)");
     // Statically available instance
     private static AreaShop instance = null;
     // General variables
@@ -132,6 +129,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     private List<String> chatprefix = null;
     private boolean ready = false;
     private GithubUpdateCheck githubUpdateCheck = null;
+    private NMS nms;
     private SignErrorLogger signErrorLogger;
 
     public static AreaShop getInstance() {
@@ -266,6 +264,14 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
      */
     public void setChatprefix(List<String> chatprefix) {
         this.chatprefix = chatprefix;
+    }
+
+    public NMS getNMSHelper() {
+        return this.nms;
+    }
+
+    public SignErrorLogger getSignErrorLogger() {
+        return this.signErrorLogger;
     }
 
     /**
@@ -423,12 +429,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
      * Register all required tasks.
      */
     private void setupTasks() {
-        long signLogTicks = Utils.millisToTicks(TimeUnit.MINUTES.toMillis(5));
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                                                        () -> signErrorLogger.saveIfDirty(),
-                                                        signLogTicks,
-                                                         signLogTicks
-        );
         // Rent expiration timer
         long expirationCheck =
                 Utils.millisToTicks(Utils.getDurationFromSecondsOrString("expiration.delay"));
@@ -573,6 +573,22 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
         HandlerList.unregisterAll(this);
     }
 
+    private void setupNMS() throws IllegalStateException {
+        final String packageName = Bukkit.getServer().getClass().getPackage().getName();
+        final String[] split = packageName.split("\\.");
+        final String nmsRevision = split[3];
+        try {
+            Class<?> rawClazz = Class.forName("me.wiefferink.areashop.nms." + nmsRevision + ".NMSImpl");
+            if (!NMS.class.isAssignableFrom(rawClazz)) {
+                throw new IllegalStateException("Invalid NMS Impl: " + rawClazz.getCanonicalName() + " does not implement the NMS!");
+            }
+            Class<? extends NMS> casted = rawClazz.asSubclass(NMS.class);
+            this.nms = casted.getConstructor().newInstance();
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("Failed to instantiate the NMS Helper!", ex);
+        }
+    }
+
     /**
      * Called on start or reload of the server.
      */
@@ -588,16 +604,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             error("Vault plugin is not present or has not loaded correctly");
             error = true;
         }
-        File signLogFile = new File(getDataFolder(), signLogFileName);
-        signErrorLogger = new SignErrorLogger(signLogFile);
-        try {
-            if (!signLogFile.isFile()) {
-                signLogFile.createNewFile();
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            AreaShop.error("Failed to create the sign error log file!");
-        }
+
+        // Setup the NMS helper
+        setupNMS();
+
         // Load all data from files and check versions
         fileManager = new FileManager();
         managers.add(fileManager);
@@ -636,7 +646,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                     Matcher matcher0 = VERSION_MATCHER_3.matcher(latestVersion);
                     boolean dual0 = false;
                     if (!matcher0.find()) {
-                        matcher0 = VERSION_MATCHER_3.matcher(latestVersion);
+                        matcher0 = VERSION_MATCHER_2.matcher(latestVersion);
                         if (!matcher0.find()) {
                             throw new IllegalArgumentException("Invalid Versions Detected!");
                         }
@@ -695,6 +705,22 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             return true;
         }
         final String packageName = "me.wiefferink.areashop.handlers.";
+        final Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
+        if (fawe != null && fawe.isEnabled()) {
+            final String version = fawe.getDescription().getVersion();
+            if (version.startsWith("1.15") || version.startsWith("1.16")) {
+                try {
+                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_15.FastAsyncWorldEditHandler")
+                            .getDeclaredConstructor(AreaShopInterface.class).newInstance(this);
+                } catch (ReflectiveOperationException ex) {
+                    getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
+                    ex.printStackTrace();
+                }
+            }
+            if (this.worldEditInterface == null) {
+                info("FAWE Version: " + version + " detected, no compatible handler found. Using the WorldEdit handler instead.");
+            }
+        }
         if (this.worldEditInterface == null) {
             final String version = worldEdit.getDescription().getVersion();
             Matcher matcher = VERSION_MATCHER_3.matcher(version);
@@ -714,23 +740,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                 ex.printStackTrace();
                 error("Failed to hook into WorldEdit!");
                 return false;
-            }
-        }
-        this.worldEdit = (WorldEditPlugin) worldEdit;
-        final Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
-        if (fawe != null && fawe.isEnabled()) {
-            final String version = fawe.getDescription().getVersion();
-            if (version.startsWith("1.15") || version.startsWith("1.16")) {
-                try {
-                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_15.FastAsyncWorldEditHandler")
-                            .getDeclaredConstructor(AreaShopInterface.class).newInstance(this);
-                } catch (ReflectiveOperationException ex) {
-                    getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
-                    ex.printStackTrace();
-                }
-            }
-            if (this.worldEditInterface == null) {
-                info("FAWE Version: " + version + " detected, no compatible handler found. Using the WorldEdit handler instead.");
             }
         }
         final String wgVersion = worldGuard.getDescription().getVersion();
@@ -787,10 +796,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
         return worldEdit;
     }
 
-    public SignErrorLogger getSignErrorLogger() {
-        return signErrorLogger;
-    }
-
     /**
      * Reload all files of the plugin and update all regions.
      *
@@ -814,7 +819,3 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     }
 
 }
-
-
-
-
