@@ -118,7 +118,11 @@ public class RegionSign {
      * Remove this sign from the region.
      */
     public void remove() {
-        getLocation().getBlock().setType(Material.AIR);
+        final Block block = getLocation().getBlock();
+        if (block.getType() == getMaterial()) {
+            // If removing a valid sign, replace with air, otherwise ignore.
+            block.setType(Material.AIR);
+        }
         signsFeature.getSignsRef().remove(getStringLocation());
         SignsFeature.getAllSigns().remove(getStringLocation());
         SignsFeature.getSignsByChunk().get(getStringChunk()).remove(this);

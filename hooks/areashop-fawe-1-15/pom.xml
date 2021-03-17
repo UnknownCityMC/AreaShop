@@ -24,7 +24,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
             <type>jar</type>
             <scope>provided</scope>
             <optional>true</optional>
@@ -32,7 +32,7 @@
         <dependency>
             <groupId>com.intellectualsites.fawe</groupId>
             <artifactId>FAWE-Bukkit</artifactId>
-            <version>1.16-380</version> <!-- Equivalent to WE 7.0.2? -->
+            <version>1.16-583</version> <!-- Equivalent to WE 7.0.2? -->
             <scope>provided</scope>
         </dependency>
         <dependency>

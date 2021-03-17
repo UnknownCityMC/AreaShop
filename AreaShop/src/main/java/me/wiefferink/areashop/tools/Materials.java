@@ -7,8 +7,11 @@ import org.bukkit.Material;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Materials {
+
+	private static final Pattern SIGN_PATTERN = Pattern.compile("(SIGN)");
 
 	private Materials() {
 
@@ -126,7 +129,7 @@ public class Materials {
 	 * @return true if the given material is a sign
 	 */
 	public static boolean isSign(String name) {
-		return name != null && (FLOOR_SIGN_TYPES.contains(name) || WALL_SIGN_TYPES.contains(name));
+		return name != null && SIGN_PATTERN.matcher(name).find();
 	}
 
 }
