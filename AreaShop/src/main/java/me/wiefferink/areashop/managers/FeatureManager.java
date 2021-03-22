@@ -68,6 +68,8 @@ public class FeatureManager extends Manager {
 		for(RegionFeature feature : globalFeatures) {
 			feature.shutdown();
 		}
+		// FIXME make this system less hacky!
+		SignsFeature.shutdownGlobalState();
 	}
 
 	/**

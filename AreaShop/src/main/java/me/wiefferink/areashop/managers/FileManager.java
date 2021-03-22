@@ -311,10 +311,16 @@ public class FileManager extends Manager {
         // Forcefully remove regions from cache.
         buyRegions.remove(name);
         rentRegions.remove(name);
+        final GeneralRegion existing;
         if (region instanceof BuyRegion) {
-            buyRegions.put(region.getName().toLowerCase(), (BuyRegion) region);
+            existing = buyRegions.put(region.getName().toLowerCase(), (BuyRegion) region);
         } else if (region instanceof RentRegion) {
-            rentRegions.put(region.getName().toLowerCase(), (RentRegion) region);
+            existing = rentRegions.put(region.getName().toLowerCase(), (RentRegion) region);
+        } else {
+            existing = null;
+        }
+        if (existing != null) {
+            AreaShop.debug("FileManager: Region ", existing.getName(), " was overwritten.");
         }
         allRegions.put(region.getName().toLowerCase(), region);
         Bukkit.getPluginManager().callEvent(new AddedRegionEvent(region));
@@ -884,6 +890,9 @@ public class FileManager extends Manager {
      * Load all region files.
      */
     public void loadRegionFiles() {
+        buyRegions.values().forEach(GeneralRegion::invalidate);
+        buyRegions.clear();
+        rentRegions.values().forEach(GeneralRegion::invalidate);
         rentRegions.clear();
         buyRegions.clear();
         allRegions.clear();

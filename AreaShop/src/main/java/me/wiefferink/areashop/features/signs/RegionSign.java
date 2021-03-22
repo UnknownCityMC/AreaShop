@@ -5,6 +5,7 @@ import io.papermc.lib.PaperLib;
 import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.managers.SignErrorLogger;
+import me.wiefferink.areashop.interfaces.BlockBehaviourHelper;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
@@ -25,11 +26,50 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Sign that is connected to a region to display information and interact with the region.
  */
 public class RegionSign {
+
+
+    public static final BlockBehaviourHelper behaviourHelper = AreaShop.getInstance().getNMSHelper().behaviourHelper();
+    public static Level invalidSignLogLevel;
+    public static boolean removeInvalidSigns;
+
+    static {
+        YamlConfiguration configuration = AreaShop.getInstance().getConfig();
+        removeInvalidSigns = configuration.getBoolean("signs.removeInvalid");
+        final String rawLogLevel = configuration.getString("signs.invalidSignLogLevel", "WARNING");
+        try {
+            assert rawLogLevel != null;
+            invalidSignLogLevel = Level.parse(rawLogLevel);
+        } catch (IllegalArgumentException ex) {
+            AreaShop.warn("Invalid Logging Level: " + rawLogLevel);
+            invalidSignLogLevel = Level.WARNING;
+        }
+    }
+
+
+    private static boolean canLogSignError() {
+        return AreaShop.getInstance().getLogger().isLoggable(invalidSignLogLevel);
+    }
+
+    private static void logSignError(String... messages) {
+        if (invalidSignLogLevel == Level.OFF) {
+            return;
+        }
+        if (invalidSignLogLevel == Level.SEVERE) {
+            AreaShop.error((Object) messages);
+        } else if (invalidSignLogLevel == Level.WARNING) {
+            AreaShop.warn((Object) messages);
+        } else if (invalidSignLogLevel.intValue() >= Level.FINE.intValue()) {
+            AreaShop.debug((Object) messages);
+        } else {
+            AreaShop.info((Object) messages);
+        }
+    }
 
     private final SignsFeature signsFeature;
     private final String key;
@@ -111,11 +151,7 @@ public class RegionSign {
     /**
      * Get the material of the sign as saved in the config.
      *
-<<<<<<< HEAD
-     * @return Material of the sign, usually or one of the other wood types (different result for 1.13-), Material.AIR if none.
-=======
      * @return Material of the sign, usually, a sign or {@link Material#AIR} if none.
->>>>>>> 2849693 (Experimental work on using internal methods to determine sign validity)
      */
     public Material getMaterial() {
         String name = getRegion().getConfig().getString("general.signs." + key + ".signType");
@@ -221,7 +257,8 @@ public class RegionSign {
             signLines[i] = Utils.applyColors(signLines[i]);
             signState.setLine(i, signLines[i]);
         }
-        return signState.update(false, false);
+        // BlockState#update *should* return true here.
+        return blockState.update(true, false);
     }
 
     /**
