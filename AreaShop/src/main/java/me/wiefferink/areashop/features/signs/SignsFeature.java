@@ -4,7 +4,6 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
-import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.interfaces.BlockBehaviourHelper;
 import me.wiefferink.areashop.managers.FileManager;
@@ -31,15 +30,22 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
 
 import java.util.*;
 
 public class SignsFeature extends RegionFeature {
 
-    private static final Map<String, RegionSign> allSigns = Collections.synchronizedMap(new HashMap<>());
-    private static final Map<String, List<RegionSign>> signsByChunk = Collections.synchronizedMap(new HashMap<>());
+    public static final SignCache signCache = new SignCache();
+
     private static final BlockBehaviourHelper behaviourHelper = AreaShop.getInstance().getNMSHelper().behaviourHelper();
+
+    static {
+        signCache.registerListeners();
+    }
+
+    public static void shutdownGlobalState() {
+        signCache.shutdown();
+    }
 
     private Map<String, RegionSign> signs;
 
@@ -66,10 +72,8 @@ public class SignsFeature extends RegionFeature {
                     continue;
                 }
                 signs.put(sign.getStringLocation(), sign);
-                signsByChunk.computeIfAbsent(sign.getStringChunk(), key -> new ArrayList<>())
-                        .add(sign);
+                signCache.addSign(sign);
             }
-            allSigns.putAll(signs);
         }
     }
 
@@ -111,7 +115,7 @@ public class SignsFeature extends RegionFeature {
      * @return The RegionSign that is at the location, or null if none
      */
     public static RegionSign getSignByLocation(Location location) {
-        return allSigns.get(locationToString(location));
+        return signCache.getSignByLocation(location);
     }
 
     /**
@@ -120,7 +124,7 @@ public class SignsFeature extends RegionFeature {
      * @return Map with all signs: locationString -&gt; RegionSign
      */
     public static Map<String, RegionSign> getAllSigns() {
-        return allSigns;
+        return signCache.getAllSigns();
     }
 
     /**
@@ -129,7 +133,7 @@ public class SignsFeature extends RegionFeature {
      * @return Map with signs by chunk: chunkString -&gt; List&lt;RegionSign&gt;
      */
     public static Map<String, List<RegionSign>> getSignsByChunk() {
-        return signsByChunk;
+        return signCache.getSignsByChunk();
     }
 
     @Override
@@ -137,16 +141,15 @@ public class SignsFeature extends RegionFeature {
         // Deregister signs from the registry
         if (signs != null) {
             for (Map.Entry<String, RegionSign> entry : signs.entrySet()) {
-                allSigns.remove(entry.getKey());
-                signsByChunk.get(entry.getValue().getStringChunk()).remove(entry.getValue());
+                signCache.removeSign(entry.getValue());
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) {
-            return;
+        if (getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
         }
         Block block = event.getBlock();
         // Check if it is a sign
@@ -155,6 +158,9 @@ public class SignsFeature extends RegionFeature {
             RegionSign regionSign = SignsFeature.getSignByLocation(block.getLocation());
             if (regionSign == null) {
                 return;
+            }
+            if (regionSign.getRegion().invalidated()) {
+                AreaShop.warn("SignsFeature: Sign feature for an invalidated region object is still active!");
             }
             // Remove the sign of the rental region if the player has permission
             if (event.getPlayer().hasPermission("areashop.delsign")) {
@@ -169,21 +175,23 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onIndirectSignBreak(BlockPhysicsEvent event) {
+        if (getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
+        }
         // Check if the block is a sign
         if (!Materials.isSign(event.getBlock().getType())) {
             return;
         }
         final Block block = event.getBlock();
 
-        // If the block is in a valid position then we don't care
-        if (behaviourHelper.isBlockValid(block)) {
-            return;
-        }
-
         // Check if the sign is really the same as a saved rent
         RegionSign regionSign = SignsFeature.getSignByLocation(event.getBlock().getLocation());
         if (regionSign == null) {
             return;
+        }
+        // If the block is in an invalid position then we remove the sign
+        if (!behaviourHelper.isBlockValid(block)) {
+            regionSign.remove();
         }
 
         // Remove the sign so that it does not fall on the floor as an item (next region update will place it back when possible)
@@ -194,6 +202,9 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignClick(PlayerInteractEvent event) {
+        if (getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
+        }
         Block block = event.getClickedBlock();
         if (block == null) {
             return;
@@ -239,10 +250,10 @@ public class SignsFeature extends RegionFeature {
         event.setCancelled(ran);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
-        if (event.isCancelled()) {
-            return;
+        if (getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
         }
         Player player = event.getPlayer();
         if (!plugin.isReady()) {
@@ -525,21 +536,6 @@ public class SignsFeature extends RegionFeature {
         }
     }
 
-    @EventHandler
-    public void regionUpdate(UpdateRegionEvent event) {
-        event.getRegion().getSignsFeature().update();
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onChunkLoad(ChunkLoadEvent event) {
-        List<RegionSign> chunkSigns = signsByChunk.get(chunkToString(event.getChunk()));
-        if (chunkSigns == null) {
-            return;
-        }
-        int batchSize = Math.max(chunkSigns.size() / 10, 10);
-        Utils.runAsBatches(chunkSigns, batchSize, RegionSign::update, false);
-    }
-
     /**
      * Update all signs connected to this region.
      *
@@ -622,9 +618,7 @@ public class SignsFeature extends RegionFeature {
         // Add to the map
         RegionSign sign = new RegionSign(this, String.valueOf(i));
         signs.put(sign.getStringLocation(), sign);
-        allSigns.put(sign.getStringLocation(), sign);
-        signsByChunk.computeIfAbsent(sign.getStringChunk(), key -> new ArrayList<>())
-                .add(sign);
+        signCache.addSign(sign);
     }
 
 }

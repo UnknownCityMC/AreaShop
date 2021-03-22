@@ -1,14 +1,13 @@
 package me.wiefferink.areashop.features.signs;
 
 import com.google.common.base.Objects;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.lib.PaperLib;
 import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.interfaces.BlockBehaviourHelper;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.areashop.tools.Value;
 import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -26,13 +25,13 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Sign that is connected to a region to display information and interact with the region.
  */
 public class RegionSign {
 
+    public static final BlockBehaviourHelper behaviourHelper = AreaShop.getInstance().getNMSHelper().behaviourHelper();
     public static Level invalidSignLogLevel;
     public static boolean removeInvalidSigns;
 
@@ -60,8 +59,7 @@ public class RegionSign {
         }
         if (invalidSignLogLevel == Level.SEVERE) {
             AreaShop.error((Object) messages);
-        }
-        else if (invalidSignLogLevel == Level.WARNING) {
+        } else if (invalidSignLogLevel == Level.WARNING) {
             AreaShop.warn((Object) messages);
         } else if (invalidSignLogLevel.intValue() >= Level.FINE.intValue()) {
             AreaShop.debug((Object) messages);
@@ -213,7 +211,7 @@ public class RegionSign {
         // Place the sign back (with proper rotation and type) after it has been hidden or (indirectly) destroyed
         if (!Materials.isSign(block.getType())) {
             Material signType = getMaterial();
-            if (signType.name().contains("SIGN")) {
+            if (Materials.isSign(signType)) {
                 // Don't do physics here, we first need to update the direction
                 blockState.setType(signType);
                 if (blockData instanceof WallSign) {
@@ -221,9 +219,11 @@ public class RegionSign {
                 } else if (blockData instanceof Sign) {
                     ((org.bukkit.block.data.type.Sign) blockData).setRotation(getFacing());
                 }
-                blockState.setBlockData(blockData);
-                // Check if the sign has popped
-                if (!Materials.isSign(block.getType())) {
+                if (behaviourHelper.canPlace(block.getLocation(), blockData)) {
+                    blockState.setBlockData(blockData);
+                    // Update the block if its valid but don't apply physics
+                    blockState.update(true, false);
+                } else {
                     if (canLogSignError()) {
                         logSignError("Setting sign", key, "of region", region.getName(), "failed, could not set sign block back");
                     }
@@ -235,7 +235,8 @@ public class RegionSign {
             } else {
                 if (canLogSignError()) {
                     logSignError("Setting sign", key, "of region", region.getName(), "failed, RegionSign material was: " + signType.name());
-                } if (removeInvalidSigns) {
+                }
+                if (removeInvalidSigns) {
                     remove();
                     return false;
                 }
@@ -274,8 +275,7 @@ public class RegionSign {
             signState.setLine(i, signLines[i]);
         }
         // BlockState#update *should* return true here.
-        blockState.update(false, false);
-        return true;
+        return blockState.update(true, false);
     }
 
     /**
