@@ -5,7 +5,8 @@ import io.papermc.lib.PaperLib;
 import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.interfaces.BlockBehaviourHelper;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
+import me.wiefferink.areashop.regions.util.ClickType;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
@@ -108,7 +109,7 @@ public class RegionSign {
      *
      * @return The region this sign is linked to
      */
-    public GeneralRegion getRegion() {
+    public LegacyGeneralRegion getRegion() {
         return signsFeature.getRegion();
     }
 
@@ -175,7 +176,7 @@ public class RegionSign {
             return false;
         }
 
-        final GeneralRegion region = getRegion();
+        final LegacyGeneralRegion region = getRegion();
 
         if (region.isDeleted()) {
             return false;
@@ -225,7 +226,7 @@ public class RegionSign {
                     blockState.update(true, false);
                 } else {
                     if (canLogSignError()) {
-                        logSignError("Setting sign", key, "of region", region.getName(), "failed, could not set sign block back");
+                        logSignError("Setting sign", key, "of region", region.getRegionId(), "failed, could not set sign block back");
                     }
                     if (removeInvalidSigns) {
                         remove();
@@ -234,7 +235,7 @@ public class RegionSign {
                 }
             } else {
                 if (canLogSignError()) {
-                    logSignError("Setting sign", key, "of region", region.getName(), "failed, RegionSign material was: " + signType.name());
+                    logSignError("Setting sign", key, "of region", region.getRegionId(), "failed, RegionSign material was: " + signType.name());
                 }
                 if (removeInvalidSigns) {
                     remove();
@@ -311,12 +312,12 @@ public class RegionSign {
      * @param clickType The type of clicking
      * @return true if the commands ran successfully, false if any of them failed
      */
-    public boolean runSignCommands(Player clicker, GeneralRegion.ClickType clickType) {
+    public boolean runSignCommands(Player clicker, ClickType clickType) {
         ConfigurationSection signConfig = getProfile();
         if (signConfig == null) {
             return false;
         }
-        final GeneralRegion region = getRegion();
+        final LegacyGeneralRegion region = getRegion();
         ConfigurationSection stateConfig = signConfig.getConfigurationSection(region.getState().getValue().toLowerCase());
 
         // Run player commands if specified
@@ -344,6 +345,6 @@ public class RegionSign {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(key, getRegion().getName());
+        return Objects.hashCode(key, getRegion().getRegionId());
     }
 }

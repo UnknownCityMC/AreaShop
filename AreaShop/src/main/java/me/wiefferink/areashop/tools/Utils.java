@@ -7,7 +7,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.interactivemessenger.Log;
 import me.wiefferink.interactivemessenger.processing.Message;
@@ -325,10 +325,10 @@ public class Utils {
      * @param selection The selection to check
      * @return A list with all the AreaShop regions intersecting with the selection
      */
-    public static List<GeneralRegion> getRegionsInSelection(WorldEditSelection selection) {
-        ArrayList<GeneralRegion> result = new ArrayList<>();
+    public static List<LegacyGeneralRegion> getRegionsInSelection(WorldEditSelection selection) {
+        ArrayList<LegacyGeneralRegion> result = new ArrayList<>();
         for (ProtectedRegion region : getWorldEditRegionsInSelection(selection)) {
-            GeneralRegion asRegion = AreaShop.getInstance().getFileManager().getRegion(region.getId());
+            LegacyGeneralRegion asRegion = AreaShop.getInstance().getFileManager().getRegion(region.getId());
             if (asRegion != null) {
                 result.add(asRegion);
             }
@@ -342,7 +342,7 @@ public class Utils {
      * @param location The location to check
      * @return A list with all the AreaShop regions that contain the location
      */
-    public static List<GeneralRegion> getRegions(Location location) {
+    public static List<LegacyGeneralRegion> getRegions(Location location) {
         return getRegionsInSelection(new WorldEditSelection(location.getWorld(), location, location));
     }
 
@@ -427,7 +427,7 @@ public class Utils {
      */
     public static List<RentRegion> getImportantRentRegions(Location location) {
         List<RentRegion> result = new ArrayList<>();
-        for (GeneralRegion region : getImportantRegions(location, GeneralRegion.RegionType.RENT)) {
+        for (LegacyGeneralRegion region : getImportantRegions(location, LegacyGeneralRegion.RegionType.RENT)) {
             result.add((RentRegion) region);
         }
         return result;
@@ -442,7 +442,7 @@ public class Utils {
      */
     public static List<BuyRegion> getImportantBuyRegions(Location location) {
         List<BuyRegion> result = new ArrayList<>();
-        for (GeneralRegion region : getImportantRegions(location, GeneralRegion.RegionType.BUY)) {
+        for (LegacyGeneralRegion region : getImportantRegions(location, LegacyGeneralRegion.RegionType.BUY)) {
             result.add((BuyRegion) region);
         }
         return result;
@@ -455,7 +455,7 @@ public class Utils {
      * @param location The location to check for regions
      * @return empty list if no regions found, 1 member if 1 region is a priority, more if regions with the same priority
      */
-    public static List<GeneralRegion> getImportantRegions(Location location) {
+    public static List<LegacyGeneralRegion> getImportantRegions(Location location) {
         return getImportantRegions(location, null);
     }
 
@@ -467,22 +467,22 @@ public class Utils {
      * @param type     The type of regions to look for, null for all
      * @return empty list if no regions found, 1 member if 1 region is a priority, more if regions with the same priority
      */
-    public static List<GeneralRegion> getImportantRegions(Location location, GeneralRegion.RegionType type) {
-        List<GeneralRegion> result = new ArrayList<>();
+    public static List<LegacyGeneralRegion> getImportantRegions(Location location, LegacyGeneralRegion.RegionType type) {
+        List<LegacyGeneralRegion> result = new ArrayList<>();
         Set<ProtectedRegion> regions = AreaShop.getInstance().getWorldGuardHandler().getApplicableRegionsSet(location);
         if (regions != null) {
-            List<GeneralRegion> candidates = new ArrayList<>();
+            List<LegacyGeneralRegion> candidates = new ArrayList<>();
             for (ProtectedRegion pr : regions) {
-                GeneralRegion region = AreaShop.getInstance().getFileManager().getRegion(pr.getId());
+                LegacyGeneralRegion region = AreaShop.getInstance().getFileManager().getRegion(pr.getId());
                 if (region != null && (
-                        (type == GeneralRegion.RegionType.RENT && region instanceof RentRegion)
-                                || (type == GeneralRegion.RegionType.BUY && region instanceof BuyRegion)
+                        (type == LegacyGeneralRegion.RegionType.RENT && region instanceof RentRegion)
+                                || (type == LegacyGeneralRegion.RegionType.BUY && region instanceof BuyRegion)
                                 || type == null)) {
                     candidates.add(region);
                 }
             }
             boolean first = true;
-            for (GeneralRegion region : candidates) {
+            for (LegacyGeneralRegion region : candidates) {
                 if (region == null) {
                     AreaShop.debug("skipped null region");
                     continue;
@@ -768,7 +768,7 @@ public class Utils {
      * @param region The region to apply replacements for and use for logging
      * @return double evaluated from the input or a very high default in case of a script exception
      */
-    public static double evaluateToDouble(String input, GeneralRegion region) {
+    public static double evaluateToDouble(String input, LegacyGeneralRegion region) {
         // Replace variables
         input = Message.fromString(input).replacements(region).getSingle();
 
@@ -787,7 +787,7 @@ public class Utils {
         try {
             result = scriptEngine.eval(input);
         } catch (ScriptException e) {
-            AreaShop.warn("Price of region", region.getName(), "is set with an invalid expression: '" + input + "', exception:", ExceptionUtils.getStackTrace(e));
+            AreaShop.warn("Price of region", region.getRegionId(), "is set with an invalid expression: '" + input + "', exception:", ExceptionUtils.getStackTrace(e));
             return 99999999999.0; // High fallback for safety
         }
 
@@ -795,7 +795,7 @@ public class Utils {
         if (Utils.isDouble(result.toString())) {
             return Double.parseDouble(result.toString());
         } else {
-            AreaShop.warn("Price of region", region.getName(), "is set with the expression '" + input + "' that returns a result that is not a number:", result);
+            AreaShop.warn("Price of region", region.getRegionId(), "is set with the expression '" + input + "' that returns a result that is not a number:", result);
             return 99999999999.0; // High fallback for safety
         }
     }

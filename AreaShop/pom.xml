@@ -25,6 +25,12 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>20.1.0</version>
+        </dependency>
+
         <!-- Bukkit, AreaShop aims to support 1.15.2+ -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -47,6 +53,31 @@
             <version>3.7.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>5.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-assistedinject</artifactId>
+            <version>5.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- PaperLib -->
         <dependency>
             <groupId>io.papermc</groupId>
             <artifactId>paperlib</artifactId>
@@ -279,9 +310,19 @@
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>me.wiefferink.areashop.shaded.bstats</shadedPattern>
                                 </relocation>
+                                <!-- Relocate PaperLib -->
                                 <relocation>
                                     <pattern>io.papermc</pattern>
                                     <shadedPattern>me.wiefferink.areashop.shaded.paperlib</shadedPattern>
+                                </relocation>
+                                <!-- Relocate Guice -->
+                                <relocation>
+                                    <pattern>com.google.inject</pattern>
+                                    <shadedPattern>me.wiefferink.areashop.shaded.google.inject</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.inject</pattern>
+                                    <shadedPattern>me.wiefferink.areashop.shaded.javax.inject</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

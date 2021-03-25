@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
@@ -40,11 +40,11 @@ public class AddfriendCommand extends CommandAreaShop {
 			return;
 		}
 
-		GeneralRegion region;
+		LegacyGeneralRegion region;
 		if(args.length <= 2) {
 			if(sender instanceof Player) {
 				// get the region by location
-				List<GeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
+				List<LegacyGeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
 				if(regions.isEmpty()) {
 					plugin.message(sender, "cmd-noRegionsAtLocation");
 					return;

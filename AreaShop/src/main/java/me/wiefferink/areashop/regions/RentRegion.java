@@ -5,6 +5,7 @@ import me.wiefferink.areashop.events.ask.RentingRegionEvent;
 import me.wiefferink.areashop.events.ask.UnrentingRegionEvent;
 import me.wiefferink.areashop.events.notify.RentedRegionEvent;
 import me.wiefferink.areashop.events.notify.UnrentedRegionEvent;
+import me.wiefferink.areashop.regions.util.*;
 import me.wiefferink.areashop.tools.Utils;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -23,7 +24,7 @@ import java.util.UUID;
 
 import static me.wiefferink.areashop.tools.Utils.millisToHumanFormat;
 
-public class RentRegion extends GeneralRegion {
+public class RentRegion extends LegacyGeneralRegion {
 	private long warningsDoneUntil = Calendar.getInstance().getTimeInMillis();
 
 	/**
@@ -49,11 +50,11 @@ public class RentRegion extends GeneralRegion {
 	}
 
 	@Override
-	public RegionState getState() {
+	public RegionStatus getState() {
 		if(isRented()) {
-			return RegionState.RENTED;
+			return RegionStatus.RENTED;
 		} else {
-			return RegionState.FORRENT;
+			return RegionStatus.FORRENT;
 		}
 	}
 
@@ -561,7 +562,7 @@ public class RentRegion extends GeneralRegion {
 		EconomyResponse r = plugin.getEconomy().withdrawPlayer(offlinePlayer, getWorldName(), price);
 		if(!r.transactionSuccess()) {
 			message(offlinePlayer, "rent-payError");
-			AreaShop.debug("Something went wrong with getting money from " + offlinePlayer.getName() + " while renting " + getName() + ": " + r.errorMessage);
+			AreaShop.debug("Something went wrong with getting money from " + offlinePlayer.getName() + " while renting " + getRegionId() + ": " + r.errorMessage);
 			return false;
 		}
 		// Optionally give money to the landlord
@@ -577,7 +578,7 @@ public class RentRegion extends GeneralRegion {
 				r = plugin.getEconomy().depositPlayer(landlordName, getWorldName(), price);
 			}
 			if(r == null || !r.transactionSuccess()) {
-				AreaShop.warn("Something went wrong with paying '" + landlordName + "' " + Utils.formatCurrency(price) + " for his rent of region " + getName() + " to " + offlinePlayer.getName());
+				AreaShop.warn("Something went wrong with paying '" + landlordName + "' " + Utils.formatCurrency(price) + " for his rent of region " + getRegionId() + " to " + offlinePlayer.getName());
 			}
 		}
 
@@ -686,7 +687,7 @@ public class RentRegion extends GeneralRegion {
 					error = true;
 				}
 				if(error || r == null || !r.transactionSuccess()) {
-					AreaShop.warn("Something went wrong with paying back to " + getPlayerName() + " money while unrenting region " + getName());
+					AreaShop.warn("Something went wrong with paying back to " + getPlayerName() + " money while unrenting region " + getRegionId());
 				}
 			}
 		}
@@ -724,7 +725,7 @@ public class RentRegion extends GeneralRegion {
 		final long now = System.currentTimeMillis();
 		//AreaShop.debug("currentTime=" + Calendar.getInstance().getTimeInMillis() + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (Calendar.getInstance().getTimeInMillis()-player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
 		if(now > (lastPlayed + inactiveSetting)) {
-			AreaShop.info("Region " + getName() + " unrented because of inactivity for player " + getPlayerName());
+			AreaShop.info("Region " + getRegionId() + " unrented because of inactivity for player " + getPlayerName());
 			AreaShop.debug("currentTime=" + now + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (now - player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
 			return this.unRent(true, null);
 		}

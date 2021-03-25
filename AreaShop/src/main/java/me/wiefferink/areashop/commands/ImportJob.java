@@ -8,7 +8,7 @@ import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.features.signs.SignsFeature;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
 import org.bukkit.Bukkit;
@@ -197,7 +197,7 @@ public class ImportJob {
 
 			// Read and import regions
 			for(String regionKey : regions.getKeys(false)) {
-				GeneralRegion existingRegion = plugin.getFileManager().getRegion(regionKey);
+				LegacyGeneralRegion existingRegion = plugin.getFileManager().getRegion(regionKey);
 				if(existingRegion != null) {
 					if(world.getName().equalsIgnoreCase(existingRegion.getWorldName())) {
 						messageNoPrefix("import-alreadyAdded", regionKey);
@@ -238,7 +238,7 @@ public class ImportJob {
 				}
 
 				// Create region
-				GeneralRegion region;
+				LegacyGeneralRegion region;
 				if(rentable || (owner != null && !isBought)) {
 					region = new RentRegion(regionKey, world);
 				} else {
@@ -317,7 +317,7 @@ public class ImportJob {
 	 * @param region GeneralRegion to copy settings to, or null if doing generic settings
 	 * @param permanent Region cannot be rented or bought, disables some features
 	 */
-	private void importRegionSettings(ConfigurationSection from, ConfigurationSection to, GeneralRegion region, boolean permanent) {
+	private void importRegionSettings(ConfigurationSection from, ConfigurationSection to, LegacyGeneralRegion region, boolean permanent) {
 		// Maximum rental time, TODO check if this is actually the same
 		if(from.isLong("permissions.max-rent-time")) {
 			to.set("rent.maxRentTime", minutesToString(from.getLong("permissions.max-rent-time")));
@@ -385,7 +385,7 @@ public class ImportJob {
 			for(String signLocation : from.getStringList("info.signs")) {
 				String[] locationParts = signLocation.split(", ");
 				if(locationParts.length != 3) {
-					message("import-invalidSignLocation", region.getName(), signLocation);
+					message("import-invalidSignLocation", region.getRegionId(), signLocation);
 					continue;
 				}
 
@@ -394,7 +394,7 @@ public class ImportJob {
 				try {
 					location = new Location(region.getWorld(), Double.parseDouble(locationParts[0]), Double.parseDouble(locationParts[1]), Double.parseDouble(locationParts[2]));
 				} catch(NumberFormatException e) {
-					message("import-invalidSignLocation", region.getName(), signLocation);
+					message("import-invalidSignLocation", region.getRegionId(), signLocation);
 					continue;
 				}
 
@@ -402,7 +402,7 @@ public class ImportJob {
 				RegionSign regionSign = SignsFeature.getSignByLocation(location);
 				if(regionSign != null) {
 					if(!regionSign.getRegion().equals(region)) {
-						message("import-signAlreadyAdded", region.getName(), signLocation, regionSign.getRegion().getName());
+						message("import-signAlreadyAdded", region.getRegionId(), signLocation, regionSign.getRegion().getRegionId());
 					}
 					continue;
 				}

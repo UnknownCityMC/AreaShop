@@ -2,7 +2,7 @@ package me.wiefferink.areashop.commands;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.command.CommandSender;
@@ -32,7 +32,7 @@ public class SetteleportCommand extends CommandAreaShop {
 	 * @param region The region to check for
 	 * @return true if the person can set the teleport location, otherwise false
 	 */
-	public static boolean canUse(CommandSender person, GeneralRegion region) {
+	public static boolean canUse(CommandSender person, LegacyGeneralRegion region) {
 		if(!(person instanceof Player)) {
 			return false;
 		}
@@ -52,10 +52,10 @@ public class SetteleportCommand extends CommandAreaShop {
 			return;
 		}
 		Player player = (Player)sender;
-		GeneralRegion region;
+		LegacyGeneralRegion region;
 		if(args.length < 2) {
 			// get the region by location
-			List<GeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
+			List<LegacyGeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
 			if(regions.isEmpty()) {
 				plugin.message(sender, "cmd-noRegionsAtLocation");
 				return;

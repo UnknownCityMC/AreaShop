@@ -10,8 +10,10 @@ import me.wiefferink.areashop.events.notify.RentedRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import me.wiefferink.areashop.managers.FileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.util.RegionEvent;
+import me.wiefferink.areashop.regions.util.RegionType;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -116,11 +118,11 @@ public class AddCommand extends CommandAreaShop {
 		final Player finalPlayer = player;
 		AreaShop.debug("Starting add task with " + regions.size() + " regions");
 
-		TreeSet<GeneralRegion> regionsSuccess = new TreeSet<>();
-		TreeSet<GeneralRegion> regionsAlready = new TreeSet<>();
-		TreeSet<GeneralRegion> regionsAlreadyOtherWorld = new TreeSet<>();
-		TreeSet<GeneralRegion> regionsRentCancelled = new TreeSet<>(); // Denied by an event listener
-		TreeSet<GeneralRegion> regionsBuyCancelled = new TreeSet<>(); // Denied by an event listener
+		TreeSet<LegacyGeneralRegion> regionsSuccess = new TreeSet<>();
+		TreeSet<LegacyGeneralRegion> regionsAlready = new TreeSet<>();
+		TreeSet<LegacyGeneralRegion> regionsAlreadyOtherWorld = new TreeSet<>();
+		TreeSet<LegacyGeneralRegion> regionsRentCancelled = new TreeSet<>(); // Denied by an event listener
+		TreeSet<LegacyGeneralRegion> regionsBuyCancelled = new TreeSet<>(); // Denied by an event listener
 		TreeSet<String> namesBlacklisted = new TreeSet<>();
 		TreeSet<String> namesNoPermission = new TreeSet<>();
 		TreeSet<String> namesAddCancelled = new TreeSet<>(); // Denied by an event listener
@@ -138,7 +140,7 @@ public class AddCommand extends CommandAreaShop {
 				} else {
 					type = "buy";
 				}
-				FileManager.AddResult result = plugin.getFileManager().checkRegionAdd(sender, region, world, isRent ? GeneralRegion.RegionType.RENT : GeneralRegion.RegionType.BUY);
+				FileManager.AddResult result = plugin.getFileManager().checkRegionAdd(sender, region, world, isRent ? RegionType.RENT : RegionType.BUY);
 				if(result == FileManager.AddResult.ALREADYADDED) {
 					regionsAlready.add(plugin.getFileManager().getRegion(regionName));
 				} else if(result == FileManager.AddResult.ALREADYADDEDOTHERWORLD) {
@@ -174,10 +176,10 @@ public class AddCommand extends CommandAreaShop {
 
 						AddingRegionEvent event = plugin.getFileManager().addRegion(rent);
 						if (event.isCancelled()) {
-							namesAddCancelled.add(rent.getName());
+							namesAddCancelled.add(rent.getRegionId());
 							return;
 						}
-						rent.handleSchematicEvent(GeneralRegion.RegionEvent.CREATED);
+						rent.handleSchematicEvent(RegionEvent.CREATED);
 						rent.update();
 
 						// Add existing owners/members if any
@@ -196,7 +198,7 @@ public class AddCommand extends CommandAreaShop {
 								rent.updateLastActiveTime();
 
 								// Fire schematic event and updated times extended
-								rent.handleSchematicEvent(GeneralRegion.RegionEvent.RENTED);
+								rent.handleSchematicEvent(RegionEvent.RENTED);
 
 								// Add others as friends
 								for(UUID friend : existing) {
@@ -217,11 +219,11 @@ public class AddCommand extends CommandAreaShop {
 
 						AddingRegionEvent event = plugin.getFileManager().addRegion(buy);
 						if (event.isCancelled()) {
-							namesAddCancelled.add(buy.getName());
+							namesAddCancelled.add(buy.getRegionId());
 							return;
 						}
 
-						buy.handleSchematicEvent(GeneralRegion.RegionEvent.CREATED);
+						buy.handleSchematicEvent(RegionEvent.CREATED);
 						buy.update();
 
 						// Add existing owners/members if any
@@ -239,7 +241,7 @@ public class AddCommand extends CommandAreaShop {
 								buy.updateLastActiveTime();
 
 								// Update everything
-								buy.handleSchematicEvent(GeneralRegion.RegionEvent.BOUGHT);
+								buy.handleSchematicEvent(RegionEvent.BOUGHT);
 
 								// Add others as friends
 								for (UUID friend : existing) {

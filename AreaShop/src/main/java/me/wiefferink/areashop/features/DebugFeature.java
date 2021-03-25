@@ -23,52 +23,52 @@ public class DebugFeature extends RegionFeature {
 
 	@EventHandler
 	public void buyingRegion(BuyingRegionEvent event) {
-		AreaShop.debug("BuyingRegionEvent: " + event.getPlayer().getName() + " is trying to buy " + event.getRegion().getName());
+		AreaShop.debug("BuyingRegionEvent: " + event.getPlayer().getName() + " is trying to buy " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void boughtRegion(BoughtRegionEvent event) {
-		AreaShop.debug("BoughtRegionEvent: " + event.getRegion().getPlayerName() + " bought " + event.getRegion().getName());
+		AreaShop.debug("BoughtRegionEvent: " + event.getRegion().getPlayerName() + " bought " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void sellingRegion(SellingRegionEvent event) {
-		AreaShop.debug("SellingRegionEvent: " + event.getRegion().getName() + " is trying to sell " + event.getRegion().getName());
+		AreaShop.debug("SellingRegionEvent: " + event.getRegion().getRegionId() + " is trying to sell " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void soldRegion(SoldRegionEvent event) {
-		AreaShop.debug("SoldRegionEvent: " + Utils.toName(event.getOldBuyer()) + " sold " + event.getRegion().getName());
+		AreaShop.debug("SoldRegionEvent: " + Utils.toName(event.getOldBuyer()) + " sold " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void resellingRegion(ResellingRegionEvent event) {
-		AreaShop.debug("ResellingRegionEvent: " + event.getRegion().getName() + " is trying to resell " + event.getRegion().getName());
+		AreaShop.debug("ResellingRegionEvent: " + event.getRegion().getRegionId() + " is trying to resell " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void resoldRegion(ResoldRegionEvent event) {
-		AreaShop.debug("ResoldRegionEvent: " + Utils.toName(event.getFromPlayer()) + " resold " + event.getRegion().getName() + " to " + event.getRegion().getPlayerName());
+		AreaShop.debug("ResoldRegionEvent: " + Utils.toName(event.getFromPlayer()) + " resold " + event.getRegion().getRegionId() + " to " + event.getRegion().getPlayerName());
 	}
 
 	@EventHandler
 	public void rentingRegion(RentingRegionEvent event) {
-		AreaShop.debug("RentingRegionEvent: " + event.getPlayer().getName() + " is trying to rent " + event.getRegion().getName() + ", extending=" + event.isExtending());
+		AreaShop.debug("RentingRegionEvent: " + event.getPlayer().getName() + " is trying to rent " + event.getRegion().getRegionId() + ", extending=" + event.isExtending());
 	}
 
 	@EventHandler
 	public void rentedRegion(RentedRegionEvent event) {
-		AreaShop.debug("RentedRegionEvent: " + event.getRegion().getPlayerName() + " rented " + event.getRegion().getName() + ", extending=" + event.hasExtended());
+		AreaShop.debug("RentedRegionEvent: " + event.getRegion().getPlayerName() + " rented " + event.getRegion().getRegionId() + ", extending=" + event.hasExtended());
 	}
 
 	@EventHandler
 	public void unrentingRegion(UnrentingRegionEvent event) {
-		AreaShop.debug("UnrentingRegionEvent: " + event.getRegion().getPlayerName() + " is trying to unrent " + event.getRegion().getName());
+		AreaShop.debug("UnrentingRegionEvent: " + event.getRegion().getPlayerName() + " is trying to unrent " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void unrentedRegion(UnrentedRegionEvent event) {
-		AreaShop.debug("UnrentedRegionEvent: " + Utils.toName(event.getOldRenter()) + " unrented " + event.getRegion().getName());
+		AreaShop.debug("UnrentedRegionEvent: " + Utils.toName(event.getOldRenter()) + " unrented " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
@@ -78,21 +78,21 @@ public class DebugFeature extends RegionFeature {
 
 	@EventHandler
 	public void addedRegion(AddedRegionEvent event) {
-		AreaShop.debug("AddedRegionEvent: " + event.getRegion().getName());
+		AreaShop.debug("AddedRegionEvent: " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void removedRegion(DeletedRegionEvent event) {
-		AreaShop.debug("DeletedRegionEvent: " + event.getRegion().getName());
+		AreaShop.debug("DeletedRegionEvent: " + event.getRegion().getRegionId());
 	}
 
 	@EventHandler
 	public void addedFriend(AddedFriendEvent event) {
-		AreaShop.debug("AddedFriendEvent: region " + event.getRegion().getName() + ", " + event.getFriend().getName() + " by " + (event.getBy() == null ? "<nobody>" : event.getBy().getName()));
+		AreaShop.debug("AddedFriendEvent: region " + event.getRegion().getRegionId() + ", " + event.getFriend().getName() + " by " + (event.getBy() == null ? "<nobody>" : event.getBy().getName()));
 	}
 
 	@EventHandler
 	public void deleteFriend(DeletedFriendEvent event) {
-		AreaShop.debug("DeletedFriendEvent: region " + event.getRegion().getName() + ", " + event.getFriend().getName() + " by " + (event.getBy() == null ? "<nobody>" : event.getBy().getName()));
+		AreaShop.debug("DeletedFriendEvent: region " + event.getRegion().getRegionId() + ", " + event.getFriend().getName() + " by " + (event.getBy() == null ? "<nobody>" : event.getBy().getName()));
 	}
 }

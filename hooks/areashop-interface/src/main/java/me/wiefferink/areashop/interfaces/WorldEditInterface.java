@@ -19,9 +19,9 @@ public abstract class WorldEditInterface {
 	 * @param regionInterface Region to restore from
 	 * @return true when successful, otherwise false
 	 */
-	public abstract boolean restoreRegionBlocks(File file, GeneralRegionInterface regionInterface);
+	public abstract boolean restoreRegionBlocks(File file, IRegion regionInterface);
 
-	public CompletableFuture<Boolean> restoreRegionBlocksAsync(File file, GeneralRegionInterface regionInterface) {
+	public CompletableFuture<Boolean> restoreRegionBlocksAsync(File file, IRegion regionInterface) {
 		return CompletableFuture.completedFuture(restoreRegionBlocks(file, regionInterface));
 	}
 
@@ -32,9 +32,9 @@ public abstract class WorldEditInterface {
 	 * @param regionInterface Region to restore from
 	 * @return true when successful, otherwise false
 	 */
-	public abstract boolean saveRegionBlocks(File file, GeneralRegionInterface regionInterface);
+	public abstract boolean saveRegionBlocks(File file, IRegion regionInterface);
 
-	public CompletableFuture<Boolean> saveRegionBlocksAsync(File file, GeneralRegionInterface regionInterface) {
+	public CompletableFuture<Boolean> saveRegionBlocksAsync(File file, IRegion regionInterface) {
 		return CompletableFuture.completedFuture(saveRegionBlocks(file, regionInterface));
 	}
 

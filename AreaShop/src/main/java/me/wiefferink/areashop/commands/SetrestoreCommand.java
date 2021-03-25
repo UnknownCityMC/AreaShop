@@ -1,6 +1,6 @@
 package me.wiefferink.areashop.commands;
 
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class SetrestoreCommand extends CommandAreaShop {
 			plugin.message(sender, "setrestore-help");
 			return;
 		}
-		GeneralRegion region = plugin.getFileManager().getRegion(args[1]);
+		LegacyGeneralRegion region = plugin.getFileManager().getRegion(args[1]);
 		if(region == null) {
 			plugin.message(sender, "setrestore-notRegistered", args[1]);
 			return;

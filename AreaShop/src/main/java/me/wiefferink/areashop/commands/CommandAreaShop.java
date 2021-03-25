@@ -28,12 +28,11 @@ public abstract class CommandAreaShop {
 	 * @return true if it can execute the command, false otherwise
 	 */
 	public boolean canExecute(Command command, String[] args) {
-		String commandString = command.getName() + " " + StringUtils.join(args, " ").toLowerCase();
-		final String start = getCommandStart().toLowerCase();
-		if(commandString.length() > start.length()) {
-			return commandString.startsWith(start + " ");
+		String commandString = command.getName() + " " + StringUtils.join(args, " ");
+		if(commandString.length() > getCommandStart().length()) {
+			return commandString.toLowerCase().startsWith(getCommandStart().toLowerCase() + " ");
 		}
-		return commandString.startsWith(start);
+		return commandString.toLowerCase().startsWith(getCommandStart().toLowerCase());
 	}
 
 	/**

@@ -109,7 +109,7 @@ public class ResellCommand extends CommandAreaShop {
 		if(toComplete == 3) {
 			for(BuyRegion region : plugin.getFileManager().getBuys()) {
 				if(region.isSold() && !region.isInResellingMode()) {
-					result.add(region.getName());
+					result.add(region.getRegionId());
 				}
 			}
 		}

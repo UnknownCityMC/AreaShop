@@ -1,10 +1,9 @@
 package me.wiefferink.areashop.commands;
 
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,7 +16,7 @@ public class TeleportCommand extends CommandAreaShop {
      * @param region The region to check for
      * @return true if the person can teleport to it, otherwise false
      */
-    public static boolean canUse(CommandSender person, GeneralRegion region) {
+    public static boolean canUse(CommandSender person, LegacyGeneralRegion region) {
         if (!(person instanceof Player)) {
             return false;
         }
@@ -56,7 +55,7 @@ public class TeleportCommand extends CommandAreaShop {
             return;
         }
         Player player = (Player) sender;
-        GeneralRegion region = plugin.getFileManager().getRegion(args[1]);
+        LegacyGeneralRegion region = plugin.getFileManager().getRegion(args[1]);
         if (region == null) {
             plugin.message(player, "teleport-noRentOrBuy", args[1]);
             return;

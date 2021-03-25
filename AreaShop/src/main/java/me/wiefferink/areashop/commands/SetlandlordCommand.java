@@ -1,6 +1,6 @@
 package me.wiefferink.areashop.commands;
 
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -37,11 +37,11 @@ public class SetlandlordCommand extends CommandAreaShop {
 		}
 		@SuppressWarnings("deprecation")
 		OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
-		GeneralRegion region;
+		LegacyGeneralRegion region;
 		if(args.length < 3) {
 			if(sender instanceof Player) {
 				// get the region by location
-				List<GeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
+				List<LegacyGeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
 				if(regions.isEmpty()) {
 					plugin.message(sender, "cmd-noRegionsAtLocation");
 					return;

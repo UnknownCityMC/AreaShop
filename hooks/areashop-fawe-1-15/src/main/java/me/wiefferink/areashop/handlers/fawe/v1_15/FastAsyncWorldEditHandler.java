@@ -27,7 +27,7 @@ import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionType;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
-import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
+import me.wiefferink.areashop.interfaces.IRegion;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -77,7 +77,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
 
     @Override
     @Beta
-    public CompletableFuture<Boolean> restoreRegionBlocksAsync(File rawFile, GeneralRegionInterface regionInterface) {
+    public CompletableFuture<Boolean> restoreRegionBlocksAsync(File rawFile, IRegion regionInterface) {
         File file = null;
         ClipboardFormat format = null;
         for (ClipboardFormat formatOption : BuiltInClipboardFormat.values()) {
@@ -90,20 +90,20 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
             }
         }
         if (file == null) {
-            pluginInterface.getLogger().info("Did not restore region " + regionInterface.getName()
+            pluginInterface.getLogger().info("Did not restore region " + regionInterface.getRegionId()
                     + ", schematic file does not exist: " + rawFile.getAbsolutePath());
             return CompletableFuture.completedFuture(false);
         }
-        pluginInterface.debugI("Trying to restore region", regionInterface.getName(), " from file",
+        pluginInterface.debugI("Trying to restore region", regionInterface.getRegionId(), " from file",
                 file.getAbsolutePath(), "with format", format.getName());
 
         com.sk89q.worldedit.world.World world = null;
-        if (regionInterface.getName() != null) {
+        if (regionInterface.getRegionId() != null) {
             world = BukkitAdapter.adapt(regionInterface.getWorld());
         }
         if (world == null) {
             pluginInterface.getLogger().info(
-                    "Did not restore region " + regionInterface.getName() + ", world not found: "
+                    "Did not restore region " + regionInterface.getRegionId() + ", world not found: "
                             + regionInterface.getWorldName());
             return CompletableFuture.completedFuture(false);
         }
@@ -120,7 +120,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
                         region.getMinimumPoint().getBlockZ());
         final RegionBoundMask mask = new RegionBoundMask(region);
         final File finalFile = file;
-        final String regionName = regionInterface.getName();
+        final String regionName = regionInterface.getRegionId();
         final double regionWidth = regionInterface.getWidth(), regionHeight = regionInterface.getHeight(), regionDepth = regionInterface.getDepth();
         final LocalSession session =
                 new LocalSession(pluginInterface.getWorldEdit().getLocalConfiguration());
@@ -165,19 +165,19 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
                 Operations.completeLegacy(copy);
             } catch (MaxChangedBlocksException e) {
                 pluginInterface.getLogger().warning(
-                        "exceeded the block limit while restoring schematic of " + regionInterface.getName()
+                        "exceeded the block limit while restoring schematic of " + regionInterface.getRegionId()
                                 + ", limit in exception: " + e.getBlockLimit() + ", limit passed by AreaShop: "
                                 + pluginInterface.getConfig().getInt("maximumBlocks"));
                 CompletableFuture.completedFuture(false);
             } catch (IOException e) {
                 pluginInterface.getLogger().warning(
-                        "An error occured while restoring schematic of " + regionInterface.getName()
+                        "An error occured while restoring schematic of " + regionInterface.getRegionId()
                                 + ", enable debug to see the complete stacktrace");
                 pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
                 CompletableFuture.completedFuture(false);
             } catch (Exception e) {
                 pluginInterface.getLogger()
-                        .warning("crashed during restore of " + regionInterface.getName());
+                        .warning("crashed during restore of " + regionInterface.getRegionId());
                 pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
                 CompletableFuture.completedFuture(false);
             }
@@ -188,19 +188,19 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
     }
 
     @Override
-    public boolean restoreRegionBlocks(File rawFile, GeneralRegionInterface regionInterface) {
+    public boolean restoreRegionBlocks(File rawFile, IRegion regionInterface) {
         return restoreRegionBlocksAsync(rawFile, regionInterface).join();
     }
 
     @Override
     @Beta
-    public CompletableFuture<Boolean> saveRegionBlocksAsync(File file, GeneralRegionInterface regionInterface) {
+    public CompletableFuture<Boolean> saveRegionBlocksAsync(File file, IRegion regionInterface) {
         // TODO implement using the FastAsyncWorldEdit api to save async
         ClipboardFormat format = BuiltInClipboardFormat.MINECRAFT_STRUCTURE;
         // TODO allow selecting FAWE format in the config? (when enabled you cannot go back to vanilla WorldEdit easily)
 
         file = new File(file.getAbsolutePath() + "." + format.getPrimaryFileExtension());
-        pluginInterface.debugI("Trying to save region", regionInterface.getName(), " to file",
+        pluginInterface.debugI("Trying to save region", regionInterface.getRegionId(), " to file",
                 file.getAbsolutePath(), "with format", format.getName());
         com.sk89q.worldedit.world.World world = null;
         if (regionInterface.getWorld() != null) {
@@ -208,7 +208,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
         }
         if (world == null) {
             pluginInterface.getLogger().warning(
-                    "Did not save region " + regionInterface.getName() + ", world not found: "
+                    "Did not save region " + regionInterface.getRegionId() + ", world not found: "
                             + regionInterface.getWorldName());
             return CompletableFuture.completedFuture(false);
         }
@@ -218,7 +218,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
 
         final ProtectedRegion region = regionInterface.getRegion();
         final BlockVector3 min = region.getMinimumPoint(), max = region.getMaximumPoint();
-        final String regionName = regionInterface.getName();
+        final String regionName = regionInterface.getRegionId();
         final World finalWorld = world;
         final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
         final File finalFile = file;
@@ -264,7 +264,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
     }
 
     @Override
-    public boolean saveRegionBlocks(File file, GeneralRegionInterface regionInterface) {
+    public boolean saveRegionBlocks(File file, IRegion regionInterface) {
         return saveRegionBlocksAsync(file, regionInterface).join();
     }
 

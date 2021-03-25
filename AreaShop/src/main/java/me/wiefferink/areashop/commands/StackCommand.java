@@ -6,9 +6,10 @@ import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.util.RegionEvent;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.Location;
@@ -180,7 +181,7 @@ public class StackCommand extends CommandAreaShop {
 						manager.addRegion(region);
 
 						// Add the region to AreaShop
-						GeneralRegion newRegion;
+						LegacyGeneralRegion newRegion;
 						if(rentRegions) {
 							newRegion = new RentRegion(regionName, selection.getWorld());
 
@@ -196,7 +197,7 @@ public class StackCommand extends CommandAreaShop {
 							plugin.message(player, "general-cancelled", event.getReason());
 							continue;
 						}
-						newRegion.handleSchematicEvent(GeneralRegion.RegionEvent.CREATED);
+						newRegion.handleSchematicEvent(RegionEvent.CREATED);
 						newRegion.update();
 					}
 				}

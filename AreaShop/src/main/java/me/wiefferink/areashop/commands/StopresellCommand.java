@@ -86,7 +86,7 @@ public class StopresellCommand extends CommandAreaShop {
 		if(toComplete == 2) {
 			for(BuyRegion region : plugin.getFileManager().getBuys()) {
 				if(region.isSold() && region.isInResellingMode()) {
-					result.add(region.getName());
+					result.add(region.getRegionId());
 				}
 			}
 		}

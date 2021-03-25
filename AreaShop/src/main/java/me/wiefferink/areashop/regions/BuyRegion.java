@@ -1,5 +1,7 @@
 package me.wiefferink.areashop.regions;
 
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.ask.BuyingRegionEvent;
 import me.wiefferink.areashop.events.ask.ResellingRegionEvent;
@@ -7,6 +9,11 @@ import me.wiefferink.areashop.events.ask.SellingRegionEvent;
 import me.wiefferink.areashop.events.notify.BoughtRegionEvent;
 import me.wiefferink.areashop.events.notify.ResoldRegionEvent;
 import me.wiefferink.areashop.events.notify.SoldRegionEvent;
+import me.wiefferink.areashop.handlers.worldedit.v7.WorldEditHandler;
+import me.wiefferink.areashop.handlers.worldguard.v7.WorldGuardHandler;
+import me.wiefferink.areashop.managers.FileManager;
+import me.wiefferink.areashop.module.RegionFactory;
+import me.wiefferink.areashop.regions.util.*;
 import me.wiefferink.areashop.tools.Utils;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -15,18 +22,30 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Calendar;
 import java.util.UUID;
 
-public class BuyRegion extends GeneralRegion {
+public class BuyRegion extends AbstractRegion {
 
-	public BuyRegion(YamlConfiguration config) {
-		super(config);
-	}
+	public static String KEY_SECTION = "buy";
 
-	public BuyRegion(String name, World world) {
-		super(name, world);
+	public static String KEY_BUYER = "buyer";
+	public static String KEY_BUYER_NAME = "buyerName";
+	public static String KEY_PRICE = "price";
+	public static String KEY_RESELL_MODE = "resellMode";
+	public static String KEY_RESELL_PRICE = "resellPrice";
+	public static String KEY_MONEY_BACK_PERCENTAGE = "moneyBack";
+	public static String KEY_INACTIVE_TIME_THRESHOLD = "inactiveTimeUntilSell";
+
+	@AssistedInject
+	public BuyRegion(@NotNull @Assisted YamlConfiguration config,
+					 @NotNull RegionFactory regionFactory,
+					 @NotNull AreaShop plugin,
+					 @NotNull FileManager fileManager,
+					 @NotNull WorldEditHandler worldEditHandler,
+					 @NotNull WorldGuardHandler worldGuardHandler) {
+		super(config, regionFactory, plugin, fileManager, worldEditHandler, worldGuardHandler);
 	}
 
 	@Override
@@ -35,13 +54,18 @@ public class BuyRegion extends GeneralRegion {
 	}
 
 	@Override
-	public RegionState getState() {
+	public @NotNull BuyMeta regionMeta() {
+		return (BuyMeta) super.regionMeta();
+	}
+
+	@Override
+	public RegionStatus status() {
 		if(isSold() && isInResellingMode()) {
-			return RegionState.RESELL;
+			return RegionStatus.RESELL;
 		} else if(isSold() && !isInResellingMode()) {
-			return RegionState.SOLD;
+			return RegionStatus.SOLD;
 		} else {
-			return RegionState.FORSALE;
+			return RegionStatus.FORSALE;
 		}
 	}
 
@@ -360,7 +384,7 @@ public class BuyRegion extends GeneralRegion {
 			EconomyResponse r = plugin.getEconomy().withdrawPlayer(offlinePlayer, getWorldName(), getResellPrice());
 			if(!r.transactionSuccess()) {
 				message(offlinePlayer, "buy-payError");
-				AreaShop.debug("Something went wrong with getting money from " + offlinePlayer.getName() + " while buying " + getName() + ": " + r.errorMessage);
+				AreaShop.debug("Something went wrong with getting money from " + offlinePlayer.getName() + " while buying " + getRegionId() + ": " + r.errorMessage);
 				return false;
 			}
 			r = null;
@@ -373,7 +397,7 @@ public class BuyRegion extends GeneralRegion {
 				r = plugin.getEconomy().depositPlayer(oldOwnerName, getWorldName(), getResellPrice());
 			}
 			if(r == null || !r.transactionSuccess()) {
-				AreaShop.warn("Something went wrong with paying '" + oldOwnerName + "' " + getFormattedPrice() + " for his resell of region " + getName() + " to " + offlinePlayer.getName());
+				AreaShop.warn("Something went wrong with paying '" + oldOwnerName + "' " + getFormattedPrice() + " for his resell of region " + getRegionId() + " to " + offlinePlayer.getName());
 			}
 			// Resell is done, disable that now
 			disableReselling();
@@ -422,7 +446,7 @@ public class BuyRegion extends GeneralRegion {
 					r = plugin.getEconomy().depositPlayer(landlordName, getWorldName(), getPrice());
 				}
 				if(r != null && !r.transactionSuccess()) {
-					AreaShop.warn("Something went wrong with paying '" + landlordName + "' " + getFormattedPrice() + " for his sell of region " + getName() + " to " + offlinePlayer.getName());
+					AreaShop.warn("Something went wrong with paying '" + landlordName + "' " + getFormattedPrice() + " for his sell of region " + getRegionId() + " to " + offlinePlayer.getName());
 				}
 			}
 
@@ -518,7 +542,7 @@ public class BuyRegion extends GeneralRegion {
 					error = true;
 				}
 				if(error || response == null || !response.transactionSuccess()) {
-					AreaShop.warn("Something went wrong with paying back money to " + getPlayerName() + " while selling region " + getName());
+					AreaShop.warn("Something went wrong with paying back money to " + getPlayerName() + " while selling region " + getRegionId());
 				}
 			}
 		}
@@ -554,7 +578,7 @@ public class BuyRegion extends GeneralRegion {
 		long now = System.currentTimeMillis();
 		//AreaShop.debug("currentTime=" + Calendar.getInstance().getTimeInMillis() + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (Calendar.getInstance().getTimeInMillis()-player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
 		if(now > (lastPlayed + inactiveSetting)) {
-			AreaShop.info("Region " + getName() + " unrented because of inactivity for player " + getPlayerName());
+			AreaShop.info("Region " + getRegionId() + " unrented because of inactivity for player " + getPlayerName());
 			AreaShop.debug("currentTime=" + now + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (now - player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
 			return this.sell(true, null);
 		}

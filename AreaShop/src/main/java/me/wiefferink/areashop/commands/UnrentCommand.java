@@ -1,6 +1,6 @@
 package me.wiefferink.areashop.commands;
 
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.command.CommandSender;
@@ -30,7 +30,7 @@ public class UnrentCommand extends CommandAreaShop {
 	 * @param region The region to check for
 	 * @return true if the person can unrent it, otherwise false
 	 */
-	public static boolean canUse(CommandSender person, GeneralRegion region) {
+	public static boolean canUse(CommandSender person, LegacyGeneralRegion region) {
 		if(person.hasPermission("areashop.unrent")) {
 			return true;
 		}
@@ -85,7 +85,7 @@ public class UnrentCommand extends CommandAreaShop {
 		if(toComplete == 2) {
 			for(RentRegion region : plugin.getFileManager().getRents()) {
 				if(region.isRented()) {
-					result.add(region.getName());
+					result.add(region.getRegionId());
 				}
 			}
 		}

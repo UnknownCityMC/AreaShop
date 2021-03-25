@@ -2,7 +2,7 @@ package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.features.signs.SignsFeature;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Material;
@@ -60,7 +60,7 @@ public class AddsignCommand extends CommandAreaShop {
             return;
         }
 
-        GeneralRegion region;
+        LegacyGeneralRegion region;
         if (args.length > 1) {
             // Get region by argument
             region = plugin.getFileManager().getRegion(args[1]);
@@ -70,12 +70,12 @@ public class AddsignCommand extends CommandAreaShop {
             }
         } else {
             // Get region by sign position
-            List<GeneralRegion> regions = Utils.getImportantRegions(block.getLocation());
+            List<LegacyGeneralRegion> regions = Utils.getImportantRegions(block.getLocation());
             if (regions.isEmpty()) {
                 plugin.message(sender, "addsign-noRegions");
                 return;
             } else if (regions.size() > 1) {
-                plugin.message(sender, "addsign-couldNotDetect", regions.get(0).getName(), regions.get(1).getName());
+                plugin.message(sender, "addsign-couldNotDetect", regions.get(0).getRegionId(), regions.get(1).getRegionId());
                 return;
             }
             region = regions.get(0);

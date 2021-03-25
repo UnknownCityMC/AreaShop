@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
@@ -42,7 +42,7 @@ public class InfoCommand extends CommandAreaShop {
 	 * @param pageInput   The page number, if any
 	 * @param baseCommand The command to execute for next/previous page (/areashop will be added)
 	 */
-	private void showSortedPagedList(CommandSender sender, List<? extends GeneralRegion> regions, RegionGroup filterGroup, String keyHeader, String pageInput, String baseCommand) {
+	private void showSortedPagedList(CommandSender sender, List<? extends LegacyGeneralRegion> regions, RegionGroup filterGroup, String keyHeader, String pageInput, String baseCommand) {
 		int maximumItems = 20;
 		int itemsPerPage = maximumItems - 2;
 		int page = 1;
@@ -66,7 +66,7 @@ public class InfoCommand extends CommandAreaShop {
 				if(typeCompare != 0) {
 					return typeCompare;
 				} else {
-					return one.getName().compareTo(two.getName());
+					return one.getRegionId().compareTo(two.getRegionId());
 				}
 			});
 			// Header
@@ -85,8 +85,8 @@ public class InfoCommand extends CommandAreaShop {
 			int linesPrinted = 1; // header
 			for(int i = (page - 1) * itemsPerPage; i < page * itemsPerPage && i < regions.size(); i++) {
 				String state;
-				GeneralRegion region = regions.get(i);
-				if(region.getType() == GeneralRegion.RegionType.RENT) {
+				LegacyGeneralRegion region = regions.get(i);
+				if(region.getType() == LegacyGeneralRegion.RegionType.RENT) {
 					if(region.getOwner() == null) {
 						state = "Forrent";
 					} else {
@@ -137,8 +137,8 @@ public class InfoCommand extends CommandAreaShop {
 	 * @param region The region to get the order for
 	 * @return An integer for sorting by type
 	 */
-	private Integer getTypeOrder(GeneralRegion region) {
-		if(region.getType() == GeneralRegion.RegionType.RENT) {
+	private Integer getTypeOrder(LegacyGeneralRegion region) {
+		if(region.getType() == LegacyGeneralRegion.RegionType.RENT) {
 			if(region.getOwner() == null) {
 				return 1;
 			} else {
@@ -217,7 +217,7 @@ public class InfoCommand extends CommandAreaShop {
 
 			// List of regions without a group
 			else if(args[1].equalsIgnoreCase("nogroup")) {
-				List<GeneralRegion> regions = plugin.getFileManager().getRegions();
+				List<LegacyGeneralRegion> regions = plugin.getFileManager().getRegions();
 				for(RegionGroup group : plugin.getFileManager().getGroups()) {
 					regions.removeAll(group.getMemberRegions());
 				}
@@ -239,7 +239,7 @@ public class InfoCommand extends CommandAreaShop {
 					} else {
 						if(sender instanceof Player) {
 							// get the region by location
-							List<GeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
+							List<LegacyGeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
 							if(regions.isEmpty()) {
 								plugin.message(sender, "cmd-noRegionsAtLocation");
 								return;

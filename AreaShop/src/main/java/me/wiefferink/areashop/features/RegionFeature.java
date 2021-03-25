@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.features;
 
 import me.wiefferink.areashop.AreaShop;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -31,13 +31,13 @@ public abstract class RegionFeature implements Listener {
 	public static final AreaShop plugin = AreaShop.getInstance();
 
 	protected YamlConfiguration config = plugin.getConfig();
-	private GeneralRegion region;
+	private LegacyGeneralRegion region;
 
 	/**
 	 * Set the region for this feature.
 	 * @param region Feature region
 	 */
-	public void setRegion(GeneralRegion region) {
+	public void setRegion(LegacyGeneralRegion region) {
 		this.region = region;
 	}
 
@@ -45,7 +45,7 @@ public abstract class RegionFeature implements Listener {
 	 * Get the region of this feature.
 	 * @return region of this feature, or null if generic
 	 */
-	public GeneralRegion getRegion() {
+	public LegacyGeneralRegion getRegion() {
 		return region;
 	}
 

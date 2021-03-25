@@ -41,9 +41,9 @@ public class RegionGroup {
 	public Set<String> getAutoRegions() {
 		if(autoDirty) {
 			autoRegions = new HashSet<>();
-			for(GeneralRegion region : plugin.getFileManager().getRegions()) {
+			for(LegacyGeneralRegion region : plugin.getFileManager().getRegions()) {
 				if(worlds.contains(region.getWorldName())) {
-					autoRegions.add(region.getName());
+					autoRegions.add(region.getRegionId());
 				}
 			}
 			autoDirty = false;
@@ -101,8 +101,8 @@ public class RegionGroup {
 	 * @param region The region to add to the group (GeneralRegion or a subclass of it)
 	 * @return true if the region was not already added, otherwise false
 	 */
-	public boolean addMember(GeneralRegion region) {
-		if(regions.add(region.getName())) {
+	public boolean addMember(MarketableRegion region) {
+		if(regions.add(region.getRegionId())) {
 			setSetting("regions", new ArrayList<>(regions));
 			saveRequired();
 			return true;
@@ -115,8 +115,8 @@ public class RegionGroup {
 	 * @param region The region to remove
 	 * @return true if the region was in the group before, otherwise false
 	 */
-	public boolean removeMember(GeneralRegion region) {
-		if(regions.remove(region.getName())) {
+	public boolean removeMember(MarketableRegion region) {
+		if(regions.remove(region.getRegionId())) {
 			setSetting("regions", new ArrayList<>(regions));
 			saveRequired();
 			return true;
@@ -146,8 +146,8 @@ public class RegionGroup {
 	 * Get all members of the group as GeneralRegions.
 	 * @return A Set with all group members
 	 */
-	public Set<GeneralRegion> getMemberRegions() {
-		Set<GeneralRegion> result = new HashSet<>();
+	public Set<LegacyGeneralRegion> getMemberRegions() {
+		Set<LegacyGeneralRegion> result = new HashSet<>();
 		for(String playerName : getMembers()) {
 			result.add(plugin.getFileManager().getRegion(playerName));
 		}
@@ -175,8 +175,8 @@ public class RegionGroup {
 	 * @param region Region to check
 	 * @return true if the region is in the group, otherwise false
 	 */
-	public boolean isMember(GeneralRegion region) {
-		return getMembers().contains(region.getName());
+	public boolean isMember(LegacyGeneralRegion region) {
+		return getMembers().contains(region.getRegionId());
 	}
 
 	/**

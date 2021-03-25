@@ -9,7 +9,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.AreaShop;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
 import org.bukkit.Bukkit;
@@ -28,7 +28,7 @@ import java.util.function.Function;
 class TeleportJob {
 
     private final AreaShop plugin;
-    private final GeneralRegion region;
+    private final LegacyGeneralRegion region;
     private final TeleportFeature feature;
     private BukkitTask notifierTask;
 

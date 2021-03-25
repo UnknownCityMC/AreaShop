@@ -60,7 +60,7 @@ public class BuyCommand extends CommandAreaShop {
 		if(toComplete == 2) {
 			for(BuyRegion region : plugin.getFileManager().getBuys()) {
 				if(!region.isSold()) {
-					result.add(region.getName());
+					result.add(region.getRegionId());
 				}
 			}
 		}

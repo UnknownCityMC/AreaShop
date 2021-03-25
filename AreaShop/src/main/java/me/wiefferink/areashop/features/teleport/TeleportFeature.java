@@ -1,13 +1,10 @@
 package me.wiefferink.areashop.features.teleport;
 
-import co.aikar.taskchain.TaskChain;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.features.signs.RegionSign;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.areashop.tools.Value;
 import org.bukkit.*;
@@ -16,7 +13,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +23,7 @@ public class TeleportFeature extends RegionFeature {
     public TeleportFeature() {
     }
 
-    public TeleportFeature(GeneralRegion region) {
+    public TeleportFeature(LegacyGeneralRegion region) {
         setRegion(region);
     }
 

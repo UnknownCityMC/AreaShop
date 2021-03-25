@@ -2,7 +2,7 @@ package me.wiefferink.areashop.features;
 
 import me.wiefferink.areashop.events.askandnotify.AddedFriendEvent;
 import me.wiefferink.areashop.events.askandnotify.DeletedFriendEvent;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class FriendsFeature extends RegionFeature {
 
-	public FriendsFeature(GeneralRegion region) {
+	public FriendsFeature(LegacyGeneralRegion region) {
 		setRegion(region);
 	}
 

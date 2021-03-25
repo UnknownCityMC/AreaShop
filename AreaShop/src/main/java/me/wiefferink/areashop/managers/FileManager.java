@@ -10,11 +10,11 @@ import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
 import me.wiefferink.areashop.events.notify.AddedRegionEvent;
 import me.wiefferink.areashop.events.notify.DeletedRegionEvent;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
-import me.wiefferink.areashop.regions.GeneralRegion.RegionEvent;
-import me.wiefferink.areashop.regions.GeneralRegion.RegionType;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.util.RegionEvent;
+import me.wiefferink.areashop.regions.util.RegionType;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -30,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class FileManager extends Manager {
 
@@ -75,7 +74,7 @@ public class FileManager extends Manager {
     @Override
     public void shutdown() {
         // Update lastactive time for players that are online now
-        for (GeneralRegion region : getRegions()) {
+        for (LegacyGeneralRegion region : getRegions()) {
             Player player = Bukkit.getPlayer(region.getOwner());
             if (player != null) {
                 region.updateLastActiveTime();
@@ -151,8 +150,8 @@ public class FileManager extends Manager {
      * @param name The name of the region to get (will be normalized)
      * @return The region if found, otherwise null
      */
-    public GeneralRegion getRegion(String name) {
-        GeneralRegion region = buyRegions.get(name.toLowerCase());
+    public LegacyGeneralRegion getRegion(String name) {
+        LegacyGeneralRegion region = buyRegions.get(name.toLowerCase());
         return region == null ? rentRegions.get(name.toLowerCase()) : region;
     }
 
@@ -199,8 +198,8 @@ public class FileManager extends Manager {
      *
      * @return List of all regions (it is safe to modify the list)
      */
-    public List<GeneralRegion> getRegions() {
-        List<GeneralRegion> regions = new ArrayList<>(buyRegions.size() + rentRegions.size());
+    public List<LegacyGeneralRegion> getRegions() {
+        List<LegacyGeneralRegion> regions = new ArrayList<>(buyRegions.size() + rentRegions.size());
         regions.addAll(buyRegions.values());
         regions.addAll(rentRegions.values());
         return regions;
@@ -254,7 +253,7 @@ public class FileManager extends Manager {
      * @param region Then region to add
      * @return true when successful, otherwise false (denied by an event listener)
      */
-    public AddingRegionEvent addRegion(GeneralRegion region) {
+    public AddingRegionEvent addRegion(LegacyGeneralRegion region) {
         AddingRegionEvent event = addRegionNoSave(region);
         if (event.isCancelled()) {
             return event;
@@ -270,7 +269,7 @@ public class FileManager extends Manager {
      * @param region The region to add
      * @return true when successful, otherwise false (denied by an event listener)
      */
-    public AddingRegionEvent addRegionNoSave(GeneralRegion region) {
+    public AddingRegionEvent addRegionNoSave(LegacyGeneralRegion region) {
         AddingRegionEvent event = new AddingRegionEvent(region);
         if (region == null) {
             AreaShop.debug("Tried adding a null region!");
@@ -281,16 +280,16 @@ public class FileManager extends Manager {
         if (event.isCancelled()) {
             return event;
         }
-        final GeneralRegion existing;
+        final LegacyGeneralRegion existing;
         if (region instanceof BuyRegion) {
-            existing = buyRegions.put(region.getName().toLowerCase(), (BuyRegion) region);
+            existing = buyRegions.put(region.getRegionId().toLowerCase(), (BuyRegion) region);
         } else if (region instanceof RentRegion) {
-            existing = rentRegions.put(region.getName().toLowerCase(), (RentRegion) region);
+            existing = rentRegions.put(region.getRegionId().toLowerCase(), (RentRegion) region);
         } else {
             existing = null;
         }
         if (existing != null) {
-            AreaShop.debug("FileManager: Region ", existing.getName(), " was overwritten.");
+            AreaShop.debug("FileManager: Region ", existing.getRegionId(), " was overwritten.");
         }
         Bukkit.getPluginManager().callEvent(new AddedRegionEvent(region));
         return event;
@@ -348,7 +347,7 @@ public class FileManager extends Manager {
                 || (sender.hasPermission("areashop.create" + typeString + ".member") && isMember))) {
             return AddResult.NOPERMISSION;
         }
-        GeneralRegion asRegion = plugin.getFileManager().getRegion(region.getId());
+        LegacyGeneralRegion asRegion = plugin.getFileManager().getRegion(region.getId());
         if (asRegion != null) {
             if (asRegion.getWorld().equals(world)) {
                 return AddResult.ALREADYADDED;
@@ -369,7 +368,7 @@ public class FileManager extends Manager {
      * @param giveMoneyBack use true to give money back to the player if someone is currently holding this region, otherwise false
      * @return true if the region has been removed, false otherwise
      */
-    public DeletingRegionEvent deleteRegion(GeneralRegion region, boolean giveMoneyBack) {
+    public DeletingRegionEvent deleteRegion(LegacyGeneralRegion region, boolean giveMoneyBack) {
         DeletingRegionEvent event = new DeletingRegionEvent(region);
         if (region == null) {
             event.cancel("null region");
@@ -464,12 +463,12 @@ public class FileManager extends Manager {
      * @param regions              Regions to update
      * @param confirmationReceiver The CommandSender that should be notified at completion
      */
-    public void updateRegions(final List<GeneralRegion> regions, final CommandSender confirmationReceiver) {
+    public void updateRegions(final List<LegacyGeneralRegion> regions, final CommandSender confirmationReceiver) {
         final int regionsPerTick = plugin.getConfig().getInt("update.regionsPerTick");
         if (confirmationReceiver != null) {
             plugin.message(confirmationReceiver, "reload-updateStart", regions.size(), regionsPerTick * 20);
         }
-        CompletableFuture<?> task = Utils.runAsBatches(regions, regionsPerTick, GeneralRegion::update, false);
+        CompletableFuture<?> task = Utils.runAsBatches(regions, regionsPerTick, LegacyGeneralRegion::update, false);
         task.thenAccept((unused) -> {
             if (confirmationReceiver != null) {
                 plugin.message(confirmationReceiver, "reload-updateComplete");
@@ -482,7 +481,7 @@ public class FileManager extends Manager {
      *
      * @param regions The list of regions to update.
      */
-    public void updateRegions(List<GeneralRegion> regions) {
+    public void updateRegions(List<LegacyGeneralRegion> regions) {
         updateRegions(regions, null);
     }
 
@@ -555,7 +554,7 @@ public class FileManager extends Manager {
         this.saveWorldGuardRegions();
 
         final AtomicInteger processed = new AtomicInteger();
-        for (GeneralRegion region : getRegions()) {
+        for (LegacyGeneralRegion region : getRegions()) {
             if (region.isSaveRequired()) {
                 region.saveNowAsync().thenAccept((unused) -> processed.getAndIncrement());
             }
@@ -582,7 +581,7 @@ public class FileManager extends Manager {
         if (isSaveGroupsRequired()) {
             saveGroupsNow();
         }
-        for (GeneralRegion region : getRegions()) {
+        for (LegacyGeneralRegion region : getRegions()) {
             if (region.isSaveRequired()) {
                 region.saveNow();
             }
@@ -664,7 +663,7 @@ public class FileManager extends Manager {
         if (checksPerTick < 1) {
             checksPerTick = Math.min(getRegions().size() / 10, 10);
         }
-        Utils.runAsBatches(getRegions(), checksPerTick, GeneralRegion::checkInactive, false);
+        Utils.runAsBatches(getRegions(), checksPerTick, LegacyGeneralRegion::checkInactive, false);
     }
 
     /**
@@ -860,9 +859,9 @@ public class FileManager extends Manager {
      * Load all region files.
      */
     public void loadRegionFiles() {
-        buyRegions.values().forEach(GeneralRegion::invalidate);
+        buyRegions.values().forEach(LegacyGeneralRegion::invalidate);
         buyRegions.clear();
-        rentRegions.values().forEach(GeneralRegion::invalidate);
+        rentRegions.values().forEach(LegacyGeneralRegion::invalidate);
         rentRegions.clear();
         final File file = new File(regionsPath);
         if (!file.exists()) {
@@ -886,9 +885,9 @@ public class FileManager extends Manager {
 
         List<String> noRegionType = new ArrayList<>();
         List<String> noNamePaths = new ArrayList<>();
-        List<GeneralRegion> noWorld = new ArrayList<>();
-        List<GeneralRegion> noRegion = new ArrayList<>();
-        List<GeneralRegion> incorrectDuration = new ArrayList<>();
+        List<LegacyGeneralRegion> noWorld = new ArrayList<>();
+        List<LegacyGeneralRegion> noRegion = new ArrayList<>();
+        List<LegacyGeneralRegion> incorrectDuration = new ArrayList<>();
         for (File regionFile : regionFiles) {
             if (regionFile.exists() && regionFile.isFile() && !regionFile.isHidden()) {
 
@@ -908,7 +907,7 @@ public class FileManager extends Manager {
 
                 // Construct the correct type of region
                 String type = regionConfig.getString("general.type");
-                GeneralRegion region;
+                LegacyGeneralRegion region;
                 if (RegionType.RENT.getValue().equals(type)) {
                     region = new RentRegion(regionConfig);
                 } else if (RegionType.BUY.getValue().equals(type)) {
@@ -920,7 +919,7 @@ public class FileManager extends Manager {
 
                 // Check consistency
                 boolean added = false;
-                if (region.getName() == null) {
+                if (region.getRegionId() == null) {
                     noNamePaths.add(regionFile.getPath());
                 } else if (region.getWorld() == null) {
                     noWorld.add(region);
@@ -949,8 +948,8 @@ public class FileManager extends Manager {
 
         if (!noRegion.isEmpty()) {
             List<String> noRegionNames = new ArrayList<>();
-            for (GeneralRegion region : noRegion) {
-                noRegionNames.add(region.getName());
+            for (LegacyGeneralRegion region : noRegion) {
+                noRegionNames.add(region.getRegionId());
             }
             AreaShop.warn("AreaShop regions that are missing their WorldGuard region: " + Utils.createCommaSeparatedList(noRegionNames));
             AreaShop.warn("Remove these regions from AreaShop with '/as del' or recreate their regions in WorldGuard.");
@@ -958,7 +957,7 @@ public class FileManager extends Manager {
 
         boolean noWorldRegions = !noWorld.isEmpty();
         while (!noWorld.isEmpty()) {
-            List<GeneralRegion> toDisplay = new ArrayList<>();
+            List<LegacyGeneralRegion> toDisplay = new ArrayList<>();
             String missingWorld = noWorld.get(0).getWorldName();
             toDisplay.add(noWorld.get(0));
             for (int i = 1; i < noWorld.size(); i++) {
@@ -967,8 +966,8 @@ public class FileManager extends Manager {
                 }
             }
             List<String> noWorldNames = new ArrayList<>();
-            for (GeneralRegion region : toDisplay) {
-                noWorldNames.add(region.getName());
+            for (LegacyGeneralRegion region : toDisplay) {
+                noWorldNames.add(region.getRegionId());
             }
             AreaShop.warn("World " + missingWorld + " is not loaded, the following AreaShop regions are not functional now: " + Utils.createCommaSeparatedList(noWorldNames));
             noWorld.removeAll(toDisplay);
@@ -979,8 +978,8 @@ public class FileManager extends Manager {
 
         if (!incorrectDuration.isEmpty()) {
             List<String> incorrectDurationNames = new ArrayList<>();
-            for (GeneralRegion region : incorrectDuration) {
-                incorrectDurationNames.add(region.getName());
+            for (LegacyGeneralRegion region : incorrectDuration) {
+                incorrectDurationNames.add(region.getRegionId());
             }
             AreaShop.warn("The following regions have an incorrect time format as duration: " + Utils.createCommaSeparatedList(incorrectDurationNames));
         }
@@ -1286,7 +1285,7 @@ public class FileManager extends Manager {
 
         // Add 'general.lastActive' to rented/bought regions (initialize at current time)
         if (fileStatus == null || fileStatus < 3) {
-            for (GeneralRegion region : getRegions()) {
+            for (LegacyGeneralRegion region : getRegions()) {
                 region.updateLastActiveTime();
             }
             // Update versions file to 3

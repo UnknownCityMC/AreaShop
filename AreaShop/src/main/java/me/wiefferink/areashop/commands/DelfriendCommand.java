@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
@@ -33,7 +33,7 @@ public class DelfriendCommand extends CommandAreaShop {
 	 * @param region The region to check for
 	 * @return true if the person can remove friends, otherwise false
 	 */
-	public static boolean canUse(CommandSender person, GeneralRegion region) {
+	public static boolean canUse(CommandSender person, LegacyGeneralRegion region) {
 		if(person.hasPermission("areashop.delfriendall")) {
 			return true;
 		}
@@ -55,11 +55,11 @@ public class DelfriendCommand extends CommandAreaShop {
 			plugin.message(sender, "delfriend-help");
 			return;
 		}
-		GeneralRegion region;
+		LegacyGeneralRegion region;
 		if(args.length <= 2) {
 			if(sender instanceof Player) {
 				// get the region by location
-				List<GeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
+				List<LegacyGeneralRegion> regions = Utils.getImportantRegions(((Player)sender).getLocation());
 				if(regions.isEmpty()) {
 					plugin.message(sender, "cmd-noRegionsAtLocation");
 					return;

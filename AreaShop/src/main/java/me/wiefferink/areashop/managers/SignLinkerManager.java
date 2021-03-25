@@ -2,7 +2,7 @@ package me.wiefferink.areashop.managers;
 
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.features.signs.SignsFeature;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
@@ -110,14 +110,14 @@ public class SignLinkerManager extends Manager implements Listener {
 				BlockIterator blockIterator = new BlockIterator(player, 100);
 				while(blockIterator.hasNext()) {
 					Block next = blockIterator.next();
-					List<GeneralRegion> regions = Utils.getRegions(next.getLocation());
+					List<LegacyGeneralRegion> regions = Utils.getRegions(next.getLocation());
 					if(regions.size() == 1) {
 						linker.setRegion(regions.get(0));
 						return;
 					} else if(regions.size() > 1) {
 						Set<String> names = new HashSet<>();
-						for(GeneralRegion region : regions) {
-							names.add(region.getName());
+						for(LegacyGeneralRegion region : regions) {
+							names.add(region.getRegionId());
 						}
 						plugin.message(player, "linksigns-multipleRegions", Utils.createCommaSeparatedList(names));
 						plugin.message(player, "linksigns-multipleRegionsAdvice");
@@ -178,7 +178,7 @@ public class SignLinkerManager extends Manager implements Listener {
 		public final Player linker;
 		public final String profile;
 
-		public GeneralRegion region = null;
+		public LegacyGeneralRegion region = null;
 
 		public Location location = null;
 		public Material type = null;
@@ -189,7 +189,7 @@ public class SignLinkerManager extends Manager implements Listener {
 			this.profile = profile;
 		}
 
-		public void setRegion(GeneralRegion region) {
+		public void setRegion(LegacyGeneralRegion region) {
 			this.region = region;
 			hasRegion = true;
 			if(!isComplete()) {

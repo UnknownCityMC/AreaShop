@@ -2,7 +2,7 @@ package me.wiefferink.areashop.tools;
 
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import org.bstats.Metrics;
 
@@ -118,7 +118,7 @@ public class Analytics {
 
 	private static RegionStateStats getStateStats() {
 		RegionStateStats result = new RegionStateStats();
-		for(GeneralRegion region : AreaShop.getInstance().getFileManager().getRegions()) {
+		for(LegacyGeneralRegion region : AreaShop.getInstance().getFileManager().getRegions()) {
 			if(region instanceof RentRegion) {
 				RentRegion rent = (RentRegion)region;
 				if(rent.isAvailable()) {

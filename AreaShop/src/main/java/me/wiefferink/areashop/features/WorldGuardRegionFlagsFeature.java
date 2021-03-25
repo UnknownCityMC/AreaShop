@@ -8,7 +8,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.interfaces.RegionAccessSet;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
+import me.wiefferink.areashop.regions.util.RegionStatus;
 import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.EventHandler;
@@ -30,7 +31,7 @@ public class WorldGuardRegionFlagsFeature extends RegionFeature {
 	 * @param region The region to update the flags for
 	 * @return true if the flags have been set correctly, otherwise false
 	 */
-	private boolean updateRegionFlags(GeneralRegion region) {
+	private boolean updateRegionFlags(LegacyGeneralRegion region) {
 		boolean result = true;
 
 		// Get section defining the region flag profile
@@ -49,7 +50,7 @@ public class WorldGuardRegionFlagsFeature extends RegionFeature {
 		ConfigurationSection stateFlags = flagProfileSection.getConfigurationSection(region.getState().getValue());
 
 		// If in reselling mode, fallback to 'resale' section if 'resell' is not found (legacy configuration problem: https://github.com/NLthijs48/AreaShop/issues/303)
-		if(stateFlags == null && region.getState() == GeneralRegion.RegionState.RESELL) {
+		if(stateFlags == null && region.getState() == RegionStatus.RESELL) {
 			stateFlags = flagProfileSection.getConfigurationSection("resale");
 		}
 		if(stateFlags != null) {
@@ -65,7 +66,7 @@ public class WorldGuardRegionFlagsFeature extends RegionFeature {
 	 * @param flags  The flags to apply
 	 * @return true if the flags have been set correctly, otherwise false
 	 */
-	private boolean updateRegionFlags(GeneralRegion region, ConfigurationSection flags) {
+	private boolean updateRegionFlags(LegacyGeneralRegion region, ConfigurationSection flags) {
 		boolean result = true;
 
 		Set<String> flagNames = flags.getKeys(false);
@@ -74,7 +75,7 @@ public class WorldGuardRegionFlagsFeature extends RegionFeature {
 		// Get the region
 		ProtectedRegion worldguardRegion = region.getRegion();
 		if(worldguardRegion == null) {
-			AreaShop.debug("Region '" + region.getName() + "' does not exist, setting flags failed");
+			AreaShop.debug("Region '" + region.getRegionId() + "' does not exist, setting flags failed");
 			return false;
 		}
 		// Loop through all flags that are set in the config

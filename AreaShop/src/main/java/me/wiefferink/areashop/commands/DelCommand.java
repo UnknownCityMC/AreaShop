@@ -3,7 +3,7 @@ package me.wiefferink.areashop.commands;
 import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.command.CommandSender;
@@ -50,16 +50,16 @@ public class DelCommand extends CommandAreaShop {
 				plugin.message(player, "cmd-noSelection");
 				return;
 			}
-			List<GeneralRegion> regions = Utils.getRegionsInSelection(selection);
+			List<LegacyGeneralRegion> regions = Utils.getRegionsInSelection(selection);
 			if(regions == null || regions.isEmpty()) {
 				plugin.message(player, "cmd-noRegionsFound");
 				return;
 			}
 			// Start removing the regions that he has permission for
 			ArrayList<String> namesSuccess = new ArrayList<>();
-			TreeSet<GeneralRegion> regionsFailed = new TreeSet<>();
-			TreeSet<GeneralRegion> regionsCancelled = new TreeSet<>();
-			for(GeneralRegion region : regions) {
+			TreeSet<LegacyGeneralRegion> regionsFailed = new TreeSet<>();
+			TreeSet<LegacyGeneralRegion> regionsCancelled = new TreeSet<>();
+			for(LegacyGeneralRegion region : regions) {
 				boolean isLandlord = region.isLandlord(((Player)sender).getUniqueId());
 				if(region instanceof RentRegion) {
 					if(!sender.hasPermission("areashop.destroyrent") && !(isLandlord && sender.hasPermission("areashop.destroyrent.landlord"))) {
@@ -77,7 +77,7 @@ public class DelCommand extends CommandAreaShop {
 				if (event.isCancelled()) {
 					regionsCancelled.add(region);
 				} else {
-					namesSuccess.add(region.getName());
+					namesSuccess.add(region.getRegionId());
 				}
 			}
 
@@ -92,7 +92,7 @@ public class DelCommand extends CommandAreaShop {
 				plugin.message(sender, "del-cancelled", Utils.combinedMessage(regionsCancelled, "region"));
 			}
 		} else {
-			GeneralRegion region = plugin.getFileManager().getRegion(args[1]);
+			LegacyGeneralRegion region = plugin.getFileManager().getRegion(args[1]);
 			if(region == null) {
 				plugin.message(sender, "cmd-notRegistered", args[1]);
 				return;

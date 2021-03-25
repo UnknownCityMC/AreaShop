@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.regions;
 
+import com.google.inject.Inject;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
@@ -9,11 +10,13 @@ import me.wiefferink.areashop.features.FriendsFeature;
 import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.features.signs.SignsFeature;
 import me.wiefferink.areashop.features.teleport.TeleportFeature;
-import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
+import me.wiefferink.areashop.handlers.worldedit.v7.WorldEditHandler;
+import me.wiefferink.areashop.handlers.worldguard.v7.WorldGuardHandler;
 import me.wiefferink.areashop.managers.FileManager;
+import me.wiefferink.areashop.module.RegionFactory;
+import me.wiefferink.areashop.regions.util.*;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
-import me.wiefferink.interactivemessenger.processing.ReplacementProvider;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -24,8 +27,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,148 +37,67 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class GeneralRegion implements GeneralRegionInterface, Comparable<GeneralRegion>, ReplacementProvider {
-    static final AreaShop plugin = AreaShop.getInstance();
+public abstract class AbstractRegion implements MarketableRegion {
 
-    final YamlConfiguration config;
+    private static final String KEY_SECTION = "general";
+
+    private final YamlConfiguration config;
+    private final RegionFeatureHelper featureHelper;
+
+    private final AreaShop plugin;
+    private final FileManager fileManager;
+    private final WorldGuardHandler worldGuardHandler;
+
+    private WorldEditHandler worldEditHandler;
+    private RegionMeta regionMeta;
     private boolean saveRequired = false;
     private boolean deleted = false;
-    private boolean invalidated = false;
     private long volume = -1;
 
-    private Map<Class<? extends RegionFeature>, RegionFeature> features;
-
-    // Enum for region types
-    public enum RegionType {
-        RENT("rent"),
-        BUY("buy");
-
-        private final String value;
-
-        RegionType(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
+    public AbstractRegion(
+            @NotNull RegionMeta regionMeta,
+            @NotNull YamlConfiguration data,
+            @NotNull RegionFactory regionFactory,
+            @NotNull AreaShop plugin,
+            @NotNull FileManager fileManager,
+            @NotNull WorldEditHandler worldEditHandler,
+            @NotNull WorldGuardHandler worldGuardHandler) {
+        this.regionMeta = Objects.requireNonNull(regionMeta);
+        this.config = Objects.requireNonNull(data);
+        this.featureHelper = regionFactory.createFeatureHelper(this);
+        this.plugin = plugin;
+        this.fileManager = fileManager;
+        this.worldEditHandler = worldEditHandler;
+        this.worldGuardHandler = worldGuardHandler;
     }
 
-    // Enum for schematic event types
-    public enum RegionEvent {
-        CREATED("created"),
-        DELETED("deleted"),
-        RENTED("rented"),
-        EXTENDED("extended"),
-        UNRENTED("unrented"),
-        BOUGHT("bought"),
-        SOLD("sold"),
-        RESELL("resell");
-
-        private final String value;
-
-        RegionEvent(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
-    // Enum for Region states
-    public enum RegionState {
-        FORRENT("forrent"),
-        RENTED("rented"),
-        FORSALE("forsale"),
-        SOLD("sold"),
-        RESELL("resell");
-
-        private final String value;
-
-        RegionState(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
-    // Enum for click types
-    public enum ClickType {
-        RIGHTCLICK("rightClick"),
-        LEFTCLICK("leftClick"),
-        SHIFTRIGHTCLICK("shiftRightClick"),
-        SHIFTLEFTCLICK("shiftLeftClick");
-
-        private final String value;
-
-        ClickType(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
-    // Enum for limit types
-    public enum LimitType {
-        RENTS("rents"),
-        BUYS("buys"),
-        TOTAL("total"),
-        EXTEND("extend");
-
-        private final String value;
-
-        LimitType(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
-    /**
-     * Constructor, used to restore regions from disk at startup.
-     *
-     * @param config The configuration of the region
-     */
-    public GeneralRegion(YamlConfiguration config) {
-        this.config = config;
-        setup();
-    }
-
-    /**
-     * Constructor, used for adding new regions.
-     *
-     * @param name  Name of the WorldGuard region that this region is attached to
-     * @param world The world of the WorldGuard region
-     */
-    public GeneralRegion(String name, World world) {
-        config = new YamlConfiguration();
-        setSetting("general.name", name);
-        setSetting("general.world", world.getName());
-        setSetting("general.type", getType().getValue().toLowerCase());
-        setup();
+    @Override
+    public @NotNull RegionMeta regionMeta() {
+        return this.regionMeta;
     }
 
     /**
      * Shared setup of all constructors.
      */
+    @Override
     public void setup() {
-        features = new HashMap<>();
+
     }
 
     /**
      * Deregister everything.
      */
+    @Override
     public void destroy() {
-        for (RegionFeature feature : features.values()) {
+        for (RegionFeature feature : this.featureHelper.values()) {
             feature.shutdown();
         }
+    }
+
+
+    @Override
+    public @NotNull RegionFeatureHelper featureHelper() {
+        return this.featureHelper;
     }
 
     /**
@@ -184,8 +107,9 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param <T>   The feature to get
      * @return The feature (either just instantiated or cached)
      */
+    @Deprecated
     public <T extends RegionFeature> T getFeature(Class<T> clazz) {
-        return clazz.cast(features.computeIfAbsent(clazz, (unused) -> plugin.getFeatureManager().getRegionFeature(this, clazz)));
+        return this.featureHelper.feature(clazz);
     }
 
     /**
@@ -193,6 +117,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return The FriendsFeature of this region
      */
+    @Deprecated
     public FriendsFeature getFriendsFeature() {
         return getFeature(FriendsFeature.class);
     }
@@ -202,6 +127,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return The SignsFeature of this region
      */
+    @Deprecated
     public SignsFeature getSignsFeature() {
         return getFeature(SignsFeature.class);
     }
@@ -211,6 +137,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return The TeleportFeature
      */
+    @Deprecated
     public TeleportFeature getTeleportFeature() {
         return getFeature(TeleportFeature.class);
     }
@@ -222,14 +149,18 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return The RegionType of this region
      */
-    public abstract RegionType getType();
+    @Deprecated
+    public RegionType getType() {
+        return this.regionMeta.type();
+    }
 
     /**
      * Get the region availability.
      *
      * @return true/false if region cant be rented or sell
      */
-    public abstract boolean isAvailable();
+    @Deprecated
+    public abstract boolean available();
 
     // Sorting by name
 
@@ -240,23 +171,34 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @return 0 if the names are the same, below zero if this region is earlier in the alphabet, otherwise above zero
      */
     @Override
-    public int compareTo(GeneralRegion o) {
-        return getName().compareTo(o.getName());
+    public int compareTo(MarketableRegion o) {
+        return getRegionId().compareTo(o.getRegionId());
     }
 
     @Override
     public String toString() {
-        return getName();
+        return "AbstractRegion{" +
+                "regionMeta=" + regionMeta +
+                ", saveRequired=" + saveRequired +
+                ", deleted=" + deleted +
+                ", volume=" + volume +
+                ", featureHelper=" + featureHelper +
+                '}';
     }
 
     @Override
     public boolean equals(Object region) {
-        return region instanceof GeneralRegion && ((GeneralRegion) region).getName().equals(getName());
+        return region instanceof AbstractRegion && ((AbstractRegion) region).getRegionId().equals(getRegionId());
     }
 
     @Override
     public int hashCode() {
-        return getName().hashCode();
+        int result = regionMeta.hashCode();
+        result = 31 * result + (saveRequired ? 1 : 0);
+        result = 31 * result + (deleted ? 1 : 0);
+        result = 31 * result + config.hashCode();
+        result = 31 * result + featureHelper.hashCode();
+        return result;
     }
 
     /**
@@ -264,6 +206,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return The config file that stores the region information
      */
+    @Deprecated
     public YamlConfiguration getConfig() {
         return config;
     }
@@ -272,8 +215,9 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * Broadcast an event to indicate that region settings have been changed.
      * This will update region flags, signs, etc.
      */
+    @Override
     public void update() {
-        Bukkit.getServer().getPluginManager().callEvent(new UpdateRegionEvent(this));
+        Bukkit.getPluginManager().callEvent(new UpdateRegionEvent(this));
     }
 
     /**
@@ -281,17 +225,11 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @param event The update event that should be broadcasted
      */
-    public void notifyAndUpdate(NotifyRegionEvent event) {
+    @Override
+    public void notifyAndUpdate(NotifyRegionEvent<?> event) {
         Bukkit.getPluginManager().callEvent(event);
         update();
     }
-
-    /**
-     * Get the state of a region.
-     *
-     * @return The RegionState of the region
-     */
-    public abstract RegionState getState();
 
     // GETTERS
 
@@ -300,23 +238,17 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return true if the region has been deleted, otherwise false
      */
+    @Override
     public boolean isDeleted() {
-        return deleted;
+        return this.deleted;
     }
 
     /**
      * Indicate that this region has been deleted.
      */
-    public void setDeleted() {
-        deleted = true;
-    }
-
-    public boolean invalidated() {
-        return invalidated;
-    }
-
-    public void invalidate() {
-        invalidated = true;
+    @Override
+    public void delete() {
+        this.deleted = true;
     }
 
     /**
@@ -325,17 +257,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @return The region name
      */
     @Override
-    public String getName() {
-        return config.getString("general.name");
-    }
-
-    /**
-     * Get the lowercase region name.
-     *
-     * @return The region name in lowercase
-     */
-    public String getLowerCaseName() {
-        return getName().toLowerCase();
+    public @NotNull String getRegionId() {
+        return this.regionMeta.regionId();
     }
 
     /**
@@ -343,39 +266,9 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return true if restoring is enabled, otherwise false
      */
+    @Deprecated
     public boolean isRestoreEnabled() {
-        return getBooleanSetting("general.enableRestore");
-    }
-
-    /**
-     * Get the time that the player was last active.
-     *
-     * @return Current time if he is online, last online time if offline, -1 if the region has no owner
-     */
-    public long getLastActiveTime() {
-        if (getOwner() == null) {
-            return -1;
-        }
-        Player player = Bukkit.getPlayer(getOwner());
-        long savedTime = getLongSetting("general.lastActive");
-        // Check if he is online currently
-        if (player != null || savedTime == 0) {
-            return Calendar.getInstance().getTimeInMillis();
-        }
-        return savedTime;
-    }
-
-    /**
-     * Set the last active time of the player to the current time.
-     */
-    public void updateLastActiveTime() {
-        if (getOwner() != null) {
-            setSetting("general.lastActive", Calendar.getInstance().getTimeInMillis());
-        }
-    }
-
-    public void removeLastActiveTime() {
-        setSetting("general.lastActive", null);
+        return this.regionMeta.restoreEnabled();
     }
 
     /**
@@ -384,7 +277,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @return The World where the region is located
      */
     @Override
-    public World getWorld() {
+    public @Nullable World getWorld() {
         return Bukkit.getWorld(getWorldName());
     }
 
@@ -395,138 +288,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      */
     @Override
     public String getWorldName() {
-        return getStringSetting("general.world");
-    }
-
-    /**
-     * Get the FileManager from the plugin.
-     *
-     * @return The FileManager (responsible for saving/loading regions and getting them)
-     */
-    public FileManager getFileManager() {
-        return plugin.getFileManager();
-    }
-
-    /**
-     * Check if the players is owner of this region.
-     *
-     * @param player Player to check ownership for
-     * @return true if the player currently rents or buys this region
-     */
-    public boolean isOwner(OfflinePlayer player) {
-        return isOwner(player.getUniqueId());
-    }
-
-    /**
-     * Check if the players is owner of this region.
-     *
-     * @param player Player to check ownership for
-     * @return true if the player currently rents or buys this region
-     */
-    public boolean isOwner(UUID player) {
-        return (this instanceof RentRegion && ((RentRegion) this).isRenter(player)) || (this instanceof BuyRegion && ((BuyRegion) this).isBuyer(player));
-    }
-
-    /**
-     * Get the player that is currently the owner of this region (either bought or rented it).
-     *
-     * @return The UUID of the owner of this region
-     */
-    public UUID getOwner() {
-        if (this instanceof RentRegion) {
-            return ((RentRegion) this).getRenter();
-        } else {
-            return ((BuyRegion) this).getBuyer();
-        }
-    }
-
-    /**
-     * Change the owner of the region.
-     *
-     * @param player The player that should be the owner
-     */
-    public void setOwner(UUID player) {
-        if (this instanceof RentRegion) {
-            ((RentRegion) this).setRenter(player);
-        } else {
-            ((BuyRegion) this).setBuyer(player);
-        }
-    }
-
-    /**
-     * Get the landlord of this region (the player that receives any revenue from this region).
-     *
-     * @return The UUID of the landlord of this region
-     */
-    public UUID getLandlord() {
-        String landlord = getStringSetting("general.landlord");
-        if (landlord != null && !landlord.isEmpty()) {
-            try {
-                return UUID.fromString(landlord);
-            } catch (IllegalArgumentException e) {
-                // Incorrect UUID
-            }
-        }
-        String landlordName = getStringSetting("general.landlordName");
-        if (landlordName != null && !landlordName.isEmpty()) {
-            @SuppressWarnings("deprecation")
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(landlordName);
-            if (offlinePlayer.hasPlayedBefore()) {
-                return offlinePlayer.getUniqueId();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get the name of the landlord.
-     *
-     * @return The name of the landlord, if unavailable by UUID it will return the old cached name, if that is unavailable it will return &lt;UNKNOWN&gt;
-     */
-    public String getLandlordName() {
-        String result = Utils.toName(getLandlord());
-        if (result.isEmpty()) {
-            result = config.getString("general.landlordName");
-            if (result == null || result.isEmpty()) {
-                result = null;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Set the landlord of this region (the player that receives all revenue of this region).
-     *
-     * @param landlord The UUID of the player that should be set as landlord
-     * @param name     The backup name of the player (for in case that the UUID cannot be resolved to a playername)
-     */
-    public void setLandlord(UUID landlord, String name) {
-        if (landlord != null) {
-            setSetting("general.landlord", landlord.toString());
-        }
-        String properName = Utils.toName(landlord);
-        if (properName.isEmpty()) {
-            properName = name;
-        }
-        setSetting("general.landlordName", properName);
-    }
-
-    /**
-     * Remove the landlord from this region.
-     */
-    public void removelandlord() {
-        setSetting("general.landlord", null);
-        setSetting("general.landlordName", null);
-    }
-
-    /**
-     * Check if the specified player is the landlord of this region.
-     *
-     * @param landlord The UUID of the players to check for landlord
-     * @return true if the player is the landlord, otherwise false
-     */
-    public boolean isLandlord(UUID landlord) {
-        return landlord != null && getLandlord() != null && getLandlord().equals(landlord);
+        return this.regionMeta.worldName();
     }
 
     /**
@@ -539,10 +301,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
         if (getWorld() == null
                 || plugin.getWorldGuard() == null
                 || plugin.getRegionManager(getWorld()) == null
-                || plugin.getRegionManager(getWorld()).getRegion(getName()) == null) {
+                || plugin.getRegionManager(getWorld()).getRegion(getRegionId()) == null) {
             return null;
         }
-        return plugin.getRegionManager(getWorld()).getRegion(getName());
+        return plugin.getRegionManager(getWorld()).getRegion(getRegionId());
     }
 
     /**
@@ -550,6 +312,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return Vector
      */
+    @Override
     public Vector getMinimumPoint() {
         return plugin.getWorldGuardHandler().getMinimumPoint(getRegion());
     }
@@ -559,6 +322,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return Vector
      */
+    @Override
     public Vector getMaximumPoint() {
         return plugin.getWorldGuardHandler().getMaximumPoint(getRegion());
     }
@@ -607,6 +371,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return A Set with all groups of this region
      */
+    @Override
     public Set<RegionGroup> getGroups() {
         Set<RegionGroup> result = new HashSet<>();
         for (RegionGroup group : plugin.getFileManager().getGroups()) {
@@ -622,6 +387,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return A list of groups this region is part of
      */
+    @Override
     public List<String> getGroupNames() {
         List<String> result = new ArrayList<>();
         // Inline #getGroups
@@ -639,7 +405,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 
             // Basics
             case AreaShop.tagRegionName:
-                return getName();
+                return getRegionId();
             case AreaShop.tagRegionType:
                 return getType().getValue().toLowerCase();
             case AreaShop.tagWorldName:
@@ -654,16 +420,18 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
                 return Utils.createCommaSeparatedList(getFriendsFeature().getFriendNames());
             case AreaShop.tagFriendsUUID:
                 return Utils.createCommaSeparatedList(getFriendsFeature().getFriends());
-            case AreaShop.tagLandlord:
+            /*
+                case AreaShop.tagLandlord:
                 return getLandlordName();
             case AreaShop.tagLandlordUUID:
                 return getLandlord();
+             */
             case AreaShop.tagVolume:
-                return getVolume();
+                return volume();
 
             // Date/time
             case AreaShop.tagEpoch:
-                return Calendar.getInstance().getTimeInMillis();
+                return System.currentTimeMillis();
             case AreaShop.tagMillisecond:
                 return Calendar.getInstance().get(Calendar.MILLISECOND);
             case AreaShop.tagSecond:
@@ -719,24 +487,6 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     }
 
     /**
-     * Check if for renting this region you should be inside of it.
-     *
-     * @return true if you need to be inside, otherwise false
-     */
-    public boolean restrictedToRegion() {
-        return getBooleanSetting("general.restrictedToRegion");
-    }
-
-    /**
-     * Check if for renting you need to be in the correct world.
-     *
-     * @return true if you need to be in the same world as the region, otherwise false
-     */
-    public boolean restrictedToWorld() {
-        return getBooleanSetting("general.restrictedToWorld") || restrictedToRegion();
-    }
-
-    /**
      * Check now if the player has been inactive for too long, unrent/sell will happen when true.
      *
      * @return true if the region has been unrented/sold, otherwise false
@@ -752,6 +502,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param prefix Specify if the message should have a prefix
      * @param params The parameters to inject into the message string
      */
+    @Override
     public void configurableMessage(Object target, String key, boolean prefix, Object... params) {
         Object[] newParams = new Object[params.length + 1];
         newParams[0] = this;
@@ -759,39 +510,14 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
         Message.fromKey(key).prefix(prefix).replacements(newParams).send(target);
     }
 
+    @Override
     public void messageNoPrefix(Object target, String key, Object... params) {
         configurableMessage(target, key, false, params);
     }
 
+    @Override
     public void message(Object target, String key, Object... params) {
         configurableMessage(target, key, true, params);
-    }
-
-    /**
-     * Check if a sign needs periodic updating.
-     *
-     * @return true if the signs of this region need periodic updating, otherwise false
-     */
-    public boolean needsPeriodicUpdate() {
-        return !(isDeleted() || !(this instanceof RentRegion)) && getSignsFeature().needsPeriodicUpdate();
-    }
-
-    /**
-     * Change the restore setting.
-     *
-     * @param restore true, false or general
-     */
-    public void setRestoreSetting(Boolean restore) {
-        setSetting("general.enableRestore", restore);
-    }
-
-    /**
-     * Change the restore profile.
-     *
-     * @param profile default or the name of the profile as set in the config
-     */
-    public void setSchematicProfile(String profile) {
-        setSetting("general.schematicProfile", profile);
     }
 
     /**
@@ -800,26 +526,27 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param fileName The name of the file to save to (extension and folder will be added)
      * @return true if the region has been saved properly, otherwise false
      */
+    @Override
     public boolean saveRegionBlocks(String fileName) {
         // Check if the region is correct
         ProtectedRegion region = getRegion();
         if (region == null) {
-            AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, save failed");
+            AreaShop.debug("Region '" + getRegionId() + "' does not exist in WorldGuard, save failed");
             return false;
         }
         // The path to save the schematic
-        File saveFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
+        File saveFile = new File(fileManager.getSchematicFolder() + File.separator + fileName);
         // Create parent directories
         File parent = saveFile.getParentFile();
         if (parent != null && !parent.exists()) {
             if (!parent.mkdirs()) {
-                AreaShop.warn("Did not save region " + getName() + ", schematic directory could not be created: " + saveFile.getAbsolutePath());
+                AreaShop.warn("Did not save region " + getRegionId() + ", schematic directory could not be created: " + saveFile.getAbsolutePath());
                 return false;
             }
         }
-        boolean result = plugin.getWorldEditHandler().saveRegionBlocks(saveFile, this);
+        boolean result = worldEditHandler.saveRegionBlocks(saveFile, this);
         if (result) {
-            AreaShop.debug("Saved schematic for region " + getName());
+            AreaShop.debug("Saved schematic for region " + getRegionId());
         }
         return true;
     }
@@ -830,26 +557,27 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param fileName The name of the file to save to (extension and folder will be added)
      * @return true if the region has been saved properly, otherwise false
      */
+    @Override
     public CompletableFuture<Boolean> saveRegionBlocksAsync(String fileName) {
         // Check if the region is correct
         ProtectedRegion region = getRegion();
         if (region == null) {
-            AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, save failed");
+            AreaShop.debug("Region '" + getRegionId() + "' does not exist in WorldGuard, save failed");
             return CompletableFuture.completedFuture(false);
         }
         // The path to save the schematic
-        File saveFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
+        File saveFile = new File(fileManager.getSchematicFolder() + File.separator + fileName);
         // Create parent directories
         File parent = saveFile.getParentFile();
         if (parent != null && !parent.exists()) {
             if (!parent.mkdirs()) {
-                AreaShop.warn("Did not save region " + getName() + ", schematic directory could not be created: " + saveFile.getAbsolutePath());
+                AreaShop.warn("Did not save region " + getRegionId() + ", schematic directory could not be created: " + saveFile.getAbsolutePath());
                 return CompletableFuture.completedFuture(false);
             }
         }
-        return plugin.getWorldEditHandler().saveRegionBlocksAsync(saveFile, this).thenApply(result -> {
+        return worldEditHandler.saveRegionBlocksAsync(saveFile, this).thenApply(result -> {
             if (result) {
-                AreaShop.debug("Saved schematic for region " + getName());
+                AreaShop.debug("Saved schematic for region " + getRegionId());
             }
             return result;
         });
@@ -861,16 +589,17 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param fileName The name of the file to save to (extension and folder will be added)
      * @return true if the region has been restored properly, otherwise false
      */
+    @Override
     public boolean restoreRegionBlocks(String fileName) {
         if (getRegion() == null) {
-            AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, restore failed");
+            AreaShop.debug("Region '" + getRegionId() + "' does not exist in WorldGuard, restore failed");
             return false;
         }
         // The path to save the schematic
-        File restoreFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
-        boolean result = plugin.getWorldEditHandler().restoreRegionBlocks(restoreFile, this);
+        File restoreFile = new File(fileManager.getSchematicFolder() + File.separator + fileName);
+        boolean result = worldEditHandler.restoreRegionBlocks(restoreFile, this);
         if (result) {
-            AreaShop.debug("Restored schematic for region " + getName());
+            AreaShop.debug("Restored schematic for region " + getRegionId());
 
             // Workaround for signs inside the region in combination with async restore of plugins like AsyncWorldEdit and FastAsyncWorldEdit
             Bukkit.getScheduler().runTaskLater(plugin, getSignsFeature()::update, 10);
@@ -884,16 +613,17 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param fileName The name of the file to save to (extension and folder will be added)
      * @return true if the region has been restored properly, otherwise false
      */
+    @Override
     public CompletableFuture<Boolean> restoreRegionBlocksAsync(String fileName) {
         if (getRegion() == null) {
-            AreaShop.debug("Region '" + getName() + "' does not exist in WorldGuard, restore failed");
+            AreaShop.debug("Region '" + getRegionId() + "' does not exist in WorldGuard, restore failed");
             return CompletableFuture.completedFuture(false);
         }
         // The path to save the schematic
-        File restoreFile = new File(plugin.getFileManager().getSchematicFolder() + File.separator + fileName);
-        return plugin.getWorldEditHandler().restoreRegionBlocksAsync(restoreFile, this).thenApply(result -> {
+        File restoreFile = new File(fileManager.getSchematicFolder() + File.separator + fileName);
+        return worldEditHandler.restoreRegionBlocksAsync(restoreFile, this).thenApply(result -> {
             if (result) {
-                AreaShop.debug("Restored schematic for region " + getName());
+                AreaShop.debug("Restored schematic for region " + getRegionId());
 
                 // Workaround for signs inside the region in combination with async restore of plugins like AsyncWorldEdit and FastAsyncWorldEdit
                 Bukkit.getScheduler().runTaskLater(plugin, getSignsFeature()::update, 10);
@@ -905,17 +635,19 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     /**
      * Reset all flags of the region.
      */
+    @Override
     public void resetRegionFlags() {
         ProtectedRegion region = getRegion();
         if (region != null) {
-            region.setFlag(plugin.getWorldGuardHandler().fuzzyMatchFlag("greeting"), null);
-            region.setFlag(plugin.getWorldGuardHandler().fuzzyMatchFlag("farewell"), null);
+            region.setFlag(worldGuardHandler.fuzzyMatchFlag("greeting"), null);
+            region.setFlag(worldGuardHandler.fuzzyMatchFlag("farewell"), null);
         }
     }
 
     /**
      * Indicate this region needs to be saved, saving will happen by a repeating task.
      */
+    @Override
     public void saveRequired() {
         saveRequired = true;
     }
@@ -925,8 +657,20 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return true if a save is required because some data changed, otherwise false
      */
+    @Override
     public boolean isSaveRequired() {
         return saveRequired;
+    }
+
+    private void flushToYaml() {
+        final ConfigurationSection raw = config.getConfigurationSection(KEY_SECTION);
+        final ConfigurationSection section;
+        if (raw == null) {
+            section = config.createSection(KEY_SECTION);
+        } else {
+            section = raw;
+        }
+        regionMeta.saveTo(section);
     }
 
     /**
@@ -934,8 +678,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return true if the region is saved successfully, otherwise false
      */
+    @Override
     public boolean saveNow() {
-        File file = new File(plugin.getFileManager().getRegionFolder() + File.separator + getName().toLowerCase() + ".yml");
+        flushToYaml();
+        File file = new File(plugin.getFileManager().getRegionFolder() + File.separator + getRegionId().toLowerCase() + ".yml");
         if (isDeleted()) {
             return !file.exists() || file.delete();
         }
@@ -950,8 +696,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
         }
     }
 
+    @Override
     public CompletableFuture<Boolean> saveNowAsync() {
-        final String fileName = plugin.getFileManager().getRegionFolder() + File.separator + getName().toLowerCase() + ".yml";
+        flushToYaml();
+        final String fileName = plugin.getFileManager().getRegionFolder() + File.separator + getRegionId().toLowerCase() + ".yml";
         final File file = new File(fileName);
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
         if (isDeleted()) {
@@ -1014,13 +762,13 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isString(path)) {
-            return this.getFileManager().getRegionSettings().getString(path).equalsIgnoreCase("true");
+        if (fileManager.getRegionSettings().isString(path)) {
+            return fileManager.getRegionSettings().getString(path).equalsIgnoreCase("true");
         }
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getBoolean(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getBoolean(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getBoolean(path);
+            return fileManager.getFallbackRegionSettings().getBoolean(path);
         }
     }
 
@@ -1051,10 +799,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getInt(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getInt(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getInt(path);
+            return fileManager.getFallbackRegionSettings().getInt(path);
         }
     }
 
@@ -1085,10 +833,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getDouble(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getDouble(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getDouble(path);
+            return fileManager.getFallbackRegionSettings().getDouble(path);
         }
     }
 
@@ -1119,10 +867,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getLong(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getLong(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getLong(path);
+            return fileManager.getFallbackRegionSettings().getLong(path);
         }
     }
 
@@ -1153,10 +901,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getString(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getString(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getString(path);
+            return fileManager.getFallbackRegionSettings().getString(path);
         }
     }
 
@@ -1187,10 +935,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getStringList(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getStringList(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getStringList(path);
+            return fileManager.getFallbackRegionSettings().getStringList(path);
         }
     }
 
@@ -1221,10 +969,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
             return result;
         }
 
-        if (this.getFileManager().getRegionSettings().isSet(path)) {
-            return this.getFileManager().getRegionSettings().getConfigurationSection(path);
+        if (fileManager.getRegionSettings().isSet(path)) {
+            return fileManager.getRegionSettings().getConfigurationSection(path);
         } else {
-            return this.getFileManager().getFallbackRegionSettings().getConfigurationSection(path);
+            return fileManager.getFallbackRegionSettings().getConfigurationSection(path);
         }
     }
 
@@ -1271,10 +1019,10 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
                 }
             }
             if (!found) {
-                if (this.getFileManager().getRegionSettings().isSet(path)) {
-                    result = this.getFileManager().getRegionSettings().get(path);
+                if (fileManager.getRegionSettings().isSet(path)) {
+                    result = fileManager.getRegionSettings().get(path);
                 } else {
-                    result = this.getFileManager().getFallbackRegionSettings().get(path);
+                    result = fileManager.getFallbackRegionSettings().get(path);
                 }
             }
         }
@@ -1310,6 +1058,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param player The player to check it for
      * @return LimitResult containing if it is allowed, why and limiting factor
      */
+    @Override
     public LimitResult limitsAllow(RegionType type, OfflinePlayer player) {
         return limitsAllow(type, player, false);
     }
@@ -1322,11 +1071,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param extend        Check for extending of rental regions
      * @return LimitResult containing if it is allowed, why and limiting factor
      */
+    @Override
     public LimitResult limitsAllow(RegionType type, OfflinePlayer offlinePlayer, boolean extend) {
         if (plugin.hasPermission(offlinePlayer, "areashop.limitbypass")) {
             return new LimitResult(true, null, 0, 0, null);
         }
-        GeneralRegion exclude = null;
+        AbstractRegion exclude = null;
         if (extend) {
             exclude = this;
         }
@@ -1351,12 +1101,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
                 int totalLimit = plugin.getConfig().getInt("limitGroups." + group + ".total");
                 int typeLimit = plugin.getConfig().getInt("limitGroups." + group + "." + typePath);
                 //AreaShop.debug("typeLimitOther="+typeLimit+", typePath="+typePath);
-                int totalCurrent = hasRegionsInLimitGroup(offlinePlayer, group, plugin.getFileManager().getRegions(), exclude);
+                int totalCurrent = hasRegionsInLimitGroup(offlinePlayer, group, fileManager.getRegions(), exclude);
                 int typeCurrent;
                 if (type == RegionType.RENT) {
-                    typeCurrent = hasRegionsInLimitGroup(offlinePlayer, group, plugin.getFileManager().getRents(), exclude);
+                    typeCurrent = hasRegionsInLimitGroup(offlinePlayer, group, fileManager.getRents(), exclude);
                 } else {
-                    typeCurrent = hasRegionsInLimitGroup(offlinePlayer, group, plugin.getFileManager().getBuys(), exclude);
+                    typeCurrent = hasRegionsInLimitGroup(offlinePlayer, group, fileManager.getBuys()exclude);
                 }
                 if (totalLimit == -1) {
                     totalLimit = Integer.MAX_VALUE;
@@ -1416,84 +1166,6 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     }
 
     /**
-     * Class to store the result of a limits check.
-     */
-    public static class LimitResult {
-        private final boolean actionAllowed;
-        private final LimitType limitingFactor;
-        private final int maximum;
-        private final int current;
-        private final String limitingGroup;
-
-        /**
-         * Constructor.
-         *
-         * @param actionAllowed  has the action been allowed?
-         * @param limitingFactor The LimitType that has prevented the action (if actionAllowed is false)
-         * @param maximum        The maximum number of regions allowed (if actionAllowed is false)
-         * @param current        The current number of regions the player has (if actionAllowed is false)
-         * @param limitingGroup  The group that is enforcing this limit (if actionAllowed is false)
-         */
-        public LimitResult(boolean actionAllowed, LimitType limitingFactor, int maximum, int current, String limitingGroup) {
-            this.actionAllowed = actionAllowed;
-            this.limitingFactor = limitingFactor;
-            this.maximum = maximum;
-            this.current = current;
-            this.limitingGroup = limitingGroup;
-        }
-
-        /**
-         * Check if the action is allowed.
-         *
-         * @return true if the actions is allowed, otherwise false
-         */
-        public boolean actionAllowed() {
-            return actionAllowed;
-        }
-
-        /**
-         * Get the type of the factor that is limiting the action, assuming actionAllowed() is false.
-         *
-         * @return The type of the limiting factor
-         */
-        public LimitType getLimitingFactor() {
-            return limitingFactor;
-        }
-
-        /**
-         * Get the maximum number of the group that is the limiting factor, assuming actionAllowed() is false.
-         *
-         * @return The maximum
-         */
-        public int getMaximum() {
-            return maximum;
-        }
-
-        /**
-         * Get the current number of regions in the group that is the limiting factor, assuming actionAllowed() is false.
-         *
-         * @return The current number of regions the player has
-         */
-        public int getCurrent() {
-            return current;
-        }
-
-        /**
-         * Get the name of the group that is limiting the action, assuming actionAllowed() is false.
-         *
-         * @return The name of the group
-         */
-        public String getLimitingGroup() {
-            return limitingGroup;
-        }
-
-        @Override
-        public String toString() {
-            return "actionAllowed=" + actionAllowed + ", limitingFactor=" + limitingFactor + ", maximum=" + maximum + ", current=" + current + ", limitingGroup=" + limitingGroup;
-        }
-    }
-
-    /**
      * Checks if two limitGroups are of the same category (same groups and worlds lists).
      *
      * @param firstGroup  The first group
@@ -1512,33 +1184,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
     }
 
     /**
-     * Get the amount of regions a player has matching a certain limits group (config.yml -- limitGroups)
-     *
-     * @param player     The player to check the amount for
-     * @param limitGroup The group to check
-     * @param regions    All the regions a player has bought or rented
-     * @param exclude    Exclude this region from the count
-     * @return The number of regions that the player has bought or rented matching the limit group (worlds and groups filters)
-     */
-    public int hasRegionsInLimitGroup(OfflinePlayer player, String limitGroup, List<? extends GeneralRegion> regions, GeneralRegion exclude) {
-        int result = 0;
-        for (GeneralRegion region : regions) {
-            if (region.getBooleanSetting("general.countForLimits")
-                    && region.isOwner(player)
-                    && region.matchesLimitGroup(limitGroup)
-                    && (exclude == null || !exclude.getName().equals(region.getName()))) {
-                result++;
-            }
-        }
-        return result;
-    }
-
-    /**
      * Check if this region matches the filters of a limit group.
      *
      * @param group The group to check
      * @return true if the region applies to the limit group, otherwise false
      */
+    @Override
     public boolean matchesLimitGroup(String group) {
         List<String> worlds = plugin.getConfig().getStringList("limitGroups." + group + ".worlds");
         List<String> groups = plugin.getConfig().getStringList("limitGroups." + group + ".groups");
@@ -1561,10 +1212,11 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @param type The type of event
      */
+    @Override
     public void handleSchematicEvent(RegionEvent type) {
         // Check the individual>group>default setting
         if (!isRestoreEnabled()) {
-            AreaShop.debug("Schematic operations for " + getName() + " not enabled, skipped");
+            AreaShop.debug("Schematic operations for " + getRegionId() + " not enabled, skipped");
             return;
         }
         // Get the safe and restore names
@@ -1595,6 +1247,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      * @param sender   The sender that should perform the command
      * @param commands A list of the commands to run (without slash and with tags)
      */
+    @Override
     public void runCommands(CommandSender sender, List<String> commands) {
         if (commands == null || commands.isEmpty()) {
             return;
@@ -1640,7 +1293,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
      *
      * @return Number of blocks in the region
      */
-    public long getVolume() {
+    @Override
+    public long volume() {
         // Cache volume, important for polygon regions
         if (volume < 0) {
             volume = calculateVolume();

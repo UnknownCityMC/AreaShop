@@ -2,7 +2,7 @@ package me.wiefferink.areashop.listeners;
 
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.entity.Player;
@@ -79,8 +79,8 @@ public final class PlayerLoginLogoutListener implements Listener {
                 return true;
             }
 
-            List<GeneralRegion> regions = new ArrayList<>();
-            for (GeneralRegion region : plugin.getFileManager().getRegions()) {
+            List<LegacyGeneralRegion> regions = new ArrayList<>();
+            for (LegacyGeneralRegion region : plugin.getFileManager().getRegions()) {
                 if (region.isOwner(player)) {
                     regions.add(region);
                 }
@@ -118,7 +118,7 @@ public final class PlayerLoginLogoutListener implements Listener {
      * @param player The player to update the active times for
      */
     private void updateLastActive(Player player) {
-        for (GeneralRegion region : plugin.getFileManager().getRegions()) {
+        for (LegacyGeneralRegion region : plugin.getFileManager().getRegions()) {
             if (region.isOwner(player)) {
                 region.updateLastActiveTime();
             }

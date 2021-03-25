@@ -60,7 +60,7 @@ public class RentCommand extends CommandAreaShop {
 		if(toComplete == 2) {
 			for(RentRegion region : plugin.getFileManager().getRents()) {
 				if(!region.isRented()) {
-					result.add(region.getName());
+					result.add(region.getRegionId());
 				}
 			}
 		}

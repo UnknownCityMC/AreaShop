@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.Bukkit;
@@ -69,8 +69,8 @@ public class MeCommand extends CommandAreaShop {
 			}
 		}
 		// Get the regions the player is added as friend
-		Set<GeneralRegion> friendRegions = new HashSet<>();
-		for(GeneralRegion region : plugin.getFileManager().getRegions()) {
+		Set<LegacyGeneralRegion> friendRegions = new HashSet<>();
+		for(LegacyGeneralRegion region : plugin.getFileManager().getRegions()) {
 			if(region.getFriendsFeature().getFriends().contains(player.getUniqueId())) {
 				friendRegions.add(region);
 			}
@@ -92,7 +92,7 @@ public class MeCommand extends CommandAreaShop {
 			}
 		}
 		if(!friendRegions.isEmpty()) {
-			for(GeneralRegion region : friendRegions) {
+			for(LegacyGeneralRegion region : friendRegions) {
 				plugin.messageNoPrefix(sender, "me-friendLine", region);
 			}
 		}

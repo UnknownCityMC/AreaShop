@@ -1,7 +1,7 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.command.CommandSender;
@@ -52,14 +52,14 @@ public class GroupaddCommand extends CommandAreaShop {
 				plugin.message(player, "cmd-noSelection");
 				return;
 			}
-			List<GeneralRegion> regions = Utils.getRegionsInSelection(selection);
+			List<LegacyGeneralRegion> regions = Utils.getRegionsInSelection(selection);
 			if(regions.isEmpty()) {
 				plugin.message(player, "cmd-noRegionsFound");
 				return;
 			}
-			TreeSet<GeneralRegion> regionsSuccess = new TreeSet<>();
-			TreeSet<GeneralRegion> regionsFailed = new TreeSet<>();
-			for(GeneralRegion region : regions) {
+			TreeSet<LegacyGeneralRegion> regionsSuccess = new TreeSet<>();
+			TreeSet<LegacyGeneralRegion> regionsFailed = new TreeSet<>();
+			for(LegacyGeneralRegion region : regions) {
 				if(group.addMember(region)) {
 					regionsSuccess.add(region);
 				} else {
@@ -75,7 +75,7 @@ public class GroupaddCommand extends CommandAreaShop {
 			// Update all regions, this does it in a task, updating them without lag
 			plugin.getFileManager().updateRegions(new ArrayList<>(regionsSuccess), player);
 		} else {
-			GeneralRegion region = plugin.getFileManager().getRegion(args[2]);
+			LegacyGeneralRegion region = plugin.getFileManager().getRegion(args[2]);
 			if(region == null) {
 				plugin.message(sender, "cmd-notRegistered", args[2]);
 				return;

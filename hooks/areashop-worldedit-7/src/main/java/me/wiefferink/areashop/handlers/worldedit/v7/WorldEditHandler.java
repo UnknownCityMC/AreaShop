@@ -24,7 +24,7 @@ import com.sk89q.worldedit.util.io.Closer;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionType;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
-import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
+import me.wiefferink.areashop.interfaces.IRegion;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -58,7 +58,7 @@ public class WorldEditHandler extends WorldEditInterface {
 	}
 
 	@Override
-	public boolean restoreRegionBlocks(File rawFile, GeneralRegionInterface regionInterface) {
+	public boolean restoreRegionBlocks(File rawFile, IRegion regionInterface) {
 		File file = null;
 		ClipboardFormat format = null;
 		for (ClipboardFormat formatOption : ClipboardFormats.getAll()) {
@@ -71,17 +71,17 @@ public class WorldEditHandler extends WorldEditInterface {
 			}
 		}
 		if(file == null) {
-			pluginInterface.getLogger().info("Did not restore region " + regionInterface.getName() + ", schematic file does not exist: " + rawFile.getAbsolutePath());
+			pluginInterface.getLogger().info("Did not restore region " + regionInterface.getRegionId() + ", schematic file does not exist: " + rawFile.getAbsolutePath());
 			return false;
 		}
-		pluginInterface.debugI("Trying to restore region", regionInterface.getName(), "from file", file.getAbsolutePath(), "with format", format.getName());
+		pluginInterface.debugI("Trying to restore region", regionInterface.getRegionId(), "from file", file.getAbsolutePath(), "with format", format.getName());
 
 		com.sk89q.worldedit.world.World world = null;
-		if(regionInterface.getName() != null) {
+		if(regionInterface.getRegionId() != null) {
 			world = BukkitAdapter.adapt(regionInterface.getWorld());
 		}
 		if(world == null) {
-			pluginInterface.getLogger().info("Did not restore region " + regionInterface.getName() + ", world not found: " + regionInterface.getWorldName());
+			pluginInterface.getLogger().info("Did not restore region " + regionInterface.getRegionId() + ", world not found: " + regionInterface.getWorldName());
 			return false;
 		}
 		EditSession editSession = pluginInterface.getWorldEdit().getWorldEdit() // WARNING Deprecated in 7.2.0!
@@ -103,7 +103,7 @@ public class WorldEditHandler extends WorldEditInterface {
 			if(clipboard.getDimensions().getY() != regionInterface.getHeight()
 					|| clipboard.getDimensions().getX() != regionInterface.getWidth()
 					|| clipboard.getDimensions().getZ() != regionInterface.getDepth()) {
-				pluginInterface.getLogger().warning("Size of the region " + regionInterface.getName() + " is not the same as the schematic to restore!");
+				pluginInterface.getLogger().warning("Size of the region " + regionInterface.getRegionId() + " is not the same as the schematic to restore!");
 				pluginInterface.debugI("schematic|region, x:" + clipboard.getDimensions().getX() + "|" + regionInterface.getWidth() + ", y:" + clipboard.getDimensions().getY() + "|" + regionInterface.getHeight() + ", z:" + clipboard.getDimensions().getZ() + "|" + regionInterface.getDepth());
 			}
 			clipboard.setOrigin(clipboard.getMinimumPoint());
@@ -133,14 +133,14 @@ public class WorldEditHandler extends WorldEditInterface {
 			}
 			Operations.completeLegacy(copy);
 		} catch(MaxChangedBlocksException e) {
-			pluginInterface.getLogger().warning("exceeded the block limit while restoring schematic of " + regionInterface.getName() + ", limit in exception: " + e.getBlockLimit() + ", limit passed by AreaShop: " + pluginInterface.getConfig().getInt("maximumBlocks"));
+			pluginInterface.getLogger().warning("exceeded the block limit while restoring schematic of " + regionInterface.getRegionId() + ", limit in exception: " + e.getBlockLimit() + ", limit passed by AreaShop: " + pluginInterface.getConfig().getInt("maximumBlocks"));
 			return false;
 		} catch(IOException e) {
-			pluginInterface.getLogger().warning("An error occured while restoring schematic of " + regionInterface.getName() + ", enable debug to see the complete stacktrace");
+			pluginInterface.getLogger().warning("An error occured while restoring schematic of " + regionInterface.getRegionId() + ", enable debug to see the complete stacktrace");
 			pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
 			return false;
 		} catch (Exception e) {
-			pluginInterface.getLogger().warning("crashed during restore of " + regionInterface.getName());
+			pluginInterface.getLogger().warning("crashed during restore of " + regionInterface.getRegionId());
 			pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
 			return false;
 		}
@@ -149,7 +149,7 @@ public class WorldEditHandler extends WorldEditInterface {
 	}
 
 	@Override
-	public boolean saveRegionBlocks(File file, GeneralRegionInterface regionInterface) {
+	public boolean saveRegionBlocks(File file, IRegion regionInterface) {
 		ClipboardFormat format = ClipboardFormats.findByAlias("sponge");
 		if(format == null) {
 			// Sponge format does not exist, try to select another one
@@ -163,13 +163,13 @@ public class WorldEditHandler extends WorldEditInterface {
 		}
 
 		file = new File(file.getAbsolutePath() + "." + format.getPrimaryFileExtension());
-		pluginInterface.debugI("Trying to save region", regionInterface.getName(), " to file", file.getAbsolutePath(), "with format", format.getName());
+		pluginInterface.debugI("Trying to save region", regionInterface.getRegionId(), " to file", file.getAbsolutePath(), "with format", format.getName());
 		com.sk89q.worldedit.world.World world = null;
 		if(regionInterface.getWorld() != null) {
 			world = BukkitAdapter.adapt(regionInterface.getWorld());
 		}
 		if(world == null) {
-			pluginInterface.getLogger().warning("Did not save region " + regionInterface.getName() + ", world not found: " + regionInterface.getWorldName());
+			pluginInterface.getLogger().warning("Did not save region " + regionInterface.getRegionId() + ", world not found: " + regionInterface.getWorldName());
 			return false;
 		}
 		EditSession editSession = pluginInterface.getWorldEdit().getWorldEdit() // WARNING Deprecated in 7.2.0!
@@ -184,7 +184,7 @@ public class WorldEditHandler extends WorldEditInterface {
 		try {
 			Operations.completeLegacy(copy);
 		} catch(MaxChangedBlocksException e) {
-			pluginInterface.getLogger().warning("Exceeded the block limit while saving schematic of " + regionInterface.getName() + ", limit in exception: " + e.getBlockLimit() + ", limit passed by AreaShop: " + pluginInterface.getConfig().getInt("maximumBlocks"));
+			pluginInterface.getLogger().warning("Exceeded the block limit while saving schematic of " + regionInterface.getRegionId() + ", limit in exception: " + e.getBlockLimit() + ", limit passed by AreaShop: " + pluginInterface.getConfig().getInt("maximumBlocks"));
 			return false;
 		}
 
@@ -194,11 +194,11 @@ public class WorldEditHandler extends WorldEditInterface {
 			ClipboardWriter writer = closer.register(format.getWriter(bos));
 			writer.write(clipboard);
 		} catch(IOException e) {
-			pluginInterface.getLogger().warning("An error occured while saving schematic of " + regionInterface.getName() + ", enable debug to see the complete stacktrace");
+			pluginInterface.getLogger().warning("An error occured while saving schematic of " + regionInterface.getRegionId() + ", enable debug to see the complete stacktrace");
 			pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
 			return false;
 		} catch (Exception e) {
-			pluginInterface.getLogger().warning("crashed during save of " + regionInterface.getName());
+			pluginInterface.getLogger().warning("crashed during save of " + regionInterface.getRegionId());
 			pluginInterface.debugI(ExceptionUtils.getStackTrace(e));
 			return false;
 		}

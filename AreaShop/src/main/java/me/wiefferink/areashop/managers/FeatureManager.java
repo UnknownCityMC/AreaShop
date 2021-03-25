@@ -8,7 +8,9 @@ import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.features.teleport.TeleportFeature;
 import me.wiefferink.areashop.features.WorldGuardRegionFlagsFeature;
 import me.wiefferink.areashop.features.signs.SignsFeature;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.interfaces.IRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -56,7 +58,7 @@ public class FeatureManager extends Manager {
 		regionFeatureConstructors = new HashMap<>();
 		for(Class<? extends RegionFeature> clazz : featureClasses) {
 			try {
-				regionFeatureConstructors.put(clazz, clazz.getConstructor(GeneralRegion.class));
+				regionFeatureConstructors.put(clazz, clazz.getConstructor(IRegion.class));
 			} catch(NoSuchMethodException | IllegalArgumentException ignored) {
 				// The feature does not have a region specific part
 			}
@@ -78,9 +80,9 @@ public class FeatureManager extends Manager {
 	 * @param featureClazz The class of the feature to create
 	 * @return The feature class
 	 */
-	public RegionFeature getRegionFeature(GeneralRegion region, Class<? extends RegionFeature> featureClazz) {
+	public <T extends RegionFeature> T getRegionFeature(@NotNull IRegion region, @NotNull Class<T> featureClazz) {
 		try {
-			return regionFeatureConstructors.get(featureClazz).newInstance(region);
+			return featureClazz.cast(regionFeatureConstructors.get(featureClazz).newInstance(region));
 		} catch(InstantiationException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 			AreaShop.error("Failed to instantiate feature", featureClazz, "for region", region, e, e.getCause());
 		}

@@ -1,8 +1,9 @@
 package me.wiefferink.areashop.commands;
 
 import me.wiefferink.areashop.regions.BuyRegion;
-import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.regions.LegacyGeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.util.RegionEvent;
 import me.wiefferink.areashop.tools.Utils;
 import org.bukkit.command.CommandSender;
 
@@ -36,7 +37,7 @@ public class SchematiceventCommand extends CommandAreaShop {
 			plugin.message(sender, "schemevent-help");
 			return;
 		}
-		GeneralRegion region = plugin.getFileManager().getRegion(args[1]);
+		LegacyGeneralRegion region = plugin.getFileManager().getRegion(args[1]);
 		if(region == null) {
 			plugin.message(sender, "cmd-notRegistered", args[1]);
 			return;
@@ -45,17 +46,17 @@ public class SchematiceventCommand extends CommandAreaShop {
 			plugin.message(sender, "general-noRegion", region);
 			return;
 		}
-		GeneralRegion.RegionEvent event = null;
+		RegionEvent event = null;
 		boolean exception = false;
 		try {
-			event = GeneralRegion.RegionEvent.valueOf(args[2].toUpperCase());
+			event = RegionEvent.valueOf(args[2].toUpperCase());
 		} catch(IllegalArgumentException e) {
 			exception = true;
 		}
 		// Check for a totally wrong event or a non matching event
 		if(exception) {
 			ArrayList<String> values = new ArrayList<>();
-			for(GeneralRegion.RegionEvent value : GeneralRegion.RegionEvent.values()) {
+			for(RegionEvent value : RegionEvent.values()) {
 				values.add(value.getValue().toLowerCase());
 			}
 			plugin.message(sender, "schemevent-wrongEvent", args[2], Utils.createCommaSeparatedList(values), region);
@@ -72,7 +73,7 @@ public class SchematiceventCommand extends CommandAreaShop {
 		if(toComplete == 2) {
 			result.addAll(plugin.getFileManager().getRegionNames());
 		} else if(toComplete == 3) {
-			GeneralRegion region = plugin.getFileManager().getRegion(start[2]);
+			LegacyGeneralRegion region = plugin.getFileManager().getRegion(start[2]);
 			if(region != null) {
 				if(region instanceof RentRegion) {
 					result.addAll(Arrays.asList("created", "deleted", "rented", "unrented"));

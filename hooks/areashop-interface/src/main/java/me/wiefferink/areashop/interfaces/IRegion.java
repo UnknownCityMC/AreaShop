@@ -3,10 +3,11 @@ package me.wiefferink.areashop.interfaces;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.World;
 
-public interface GeneralRegionInterface {
+public interface IRegion {
+
 	ProtectedRegion getRegion();
 
-	String getName();
+	String getRegionId();
 
 	World getWorld();
 
@@ -17,4 +18,5 @@ public interface GeneralRegionInterface {
 	int getDepth();
 
 	int getHeight();
+
 }
