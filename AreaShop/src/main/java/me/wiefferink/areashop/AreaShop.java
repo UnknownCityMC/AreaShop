@@ -51,7 +51,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String groupsFile = "groups.yml";
     public static final String defaultFile = "default.yml";
     public static final String configFile = "config.yml";
-    public static final String signLogFile = "signErrors.yml";
+    public static final String signLogFile = "signErrors.log";
     public static final String configFileHidden = "hiddenConfig.yml";
     public static final String versionFile = "versions";
     // Euro tag for in the config
