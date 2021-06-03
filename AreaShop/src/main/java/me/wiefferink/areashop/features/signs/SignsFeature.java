@@ -7,6 +7,7 @@ import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.features.RegionFeature;
 import me.wiefferink.areashop.managers.FileManager;
+import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
@@ -55,12 +56,14 @@ public class SignsFeature extends RegionFeature {
         signs = new HashMap<>();
         // Setup current signs
         ConfigurationSection signSection = region.getConfig().getConfigurationSection("general.signs");
+        SignErrorLogger errorLogger = AreaShop.getInstance().getSignErrorLogger();
         if (signSection != null) {
             for (String signKey : signSection.getKeys(false)) {
                 RegionSign sign = new RegionSign(this, signKey);
                 Location location = sign.getLocation();
                 if (location == null) {
-                    AreaShop.warn("Sign with key " + signKey + " of region " + region.getName() + " does not have a proper location");
+                    final String message = "Sign with key $1%s of region $2%s does not have a proper location";
+                    errorLogger.submitWarning(String.format(message, signKey,  region.getName()));
                     continue;
                 }
                 signs.put(sign.getStringLocation(), sign);
