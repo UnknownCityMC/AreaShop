@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import io.papermc.lib.PaperLib;
 import io.papermc.lib.features.blockstatesnapshot.BlockStateSnapshotResult;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.Utils;
@@ -11,6 +12,7 @@ import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -109,7 +111,7 @@ public class RegionSign {
     /**
      * Get the material of the sign as saved in the config.
      *
-     * @return Material of the sign, usually {@link Material#WALL_SIGN}, {@link Material#SIGN}, or one of the other wood types (different result for 1.13-), Material.AIR if none.
+     * @return Material of the sign, usually or one of the other wood types (different result for 1.13-), Material.AIR if none.
      */
     public Material getMaterial() {
         String name = getRegion().getConfig().getString("general.signs." + key + ".signType");
@@ -156,30 +158,31 @@ public class RegionSign {
             block.setType(Material.AIR);
             return true;
         }
-        final BlockStateSnapshotResult snapshotResult = PaperLib.getBlockState(block, true);
-        final BlockState blockState = snapshotResult.getState();
+        final BlockStateSnapshotResult snapshot = PaperLib.getBlockState(block, false);
+        final BlockState blockState = snapshot.getState();
+        final BlockData blockData = blockState.getBlockData();
+        final SignErrorLogger errorLogger = AreaShop.getInstance().getSignErrorLogger();
+        Material signType = getMaterial();
         // Place the sign back (with proper rotation and type) after it has been hidden or (indirectly) destroyed
-        if (!Materials.isSign(block.getType())) {
-            Material signType = getMaterial();
-            if (signType.name().contains("SIGN")) {
-                final BlockData data = blockState.getBlockData();
-                // Don't do physics here, we first need to update the direction
-                blockState.setType(signType);
-                if (data instanceof WallSign) {
-                    ((WallSign) data).setFacing(getFacing());
-                } else if (data instanceof Sign) {
-                    ((org.bukkit.block.data.type.Sign) data).setRotation(getFacing());
-                }
-                blockState.setBlockData(data);
-                blockState.update(false, false);
-                // Check if the sign has popped
-                if (!Materials.isSign(block.getType())) {
-                    AreaShop.warn("Setting sign", key, "of region", getRegion().getName(), "failed, could not set sign block back");
-                    return false;
-                }
-            } else {
-                AreaShop.warn("Setting sign", key, "of region", getRegion().getName(), "failed, RegionSign material was: " + signType.name());
+        if (!Tag.SIGNS.isTagged(blockState.getType())) {
+            // Don't do physics here, we first need to update the direction
+            blockState.setType(signType);
+            if (blockData instanceof WallSign) {
+                ((WallSign) blockData).setFacing(getFacing());
+            } else if (blockData instanceof Sign) {
+                ((org.bukkit.block.data.type.Sign) blockData).setRotation(getFacing());
             }
+            blockState.setBlockData(blockData);
+            blockState.update(false, true);
+            // Check if the sign has popped
+            if (!Materials.isSign(block.getType())) {
+                final String message = String.format("Setting sign of $1%s of region $2%s failed, could not set sign block back", key, getRegion().getName());
+                errorLogger.submitWarning(message);
+                return false;
+            }
+        } else {
+            final String message = "Setting sign $1%s of region $2%s failed, RegionSign material was: $3%s";
+            errorLogger.submitWarning(String.format(message, key, getRegion().getName(), signType.name()));
         }
 
         // Save current rotation and type
