@@ -1,4 +1,4 @@
-# Maven stuff
+### Maven ###
 target
 
 .project
@@ -14,12 +14,31 @@ local.properties
 .settings/
 .loadpath
 
-# Locally stored "Eclipse launch configurations"
+### Locally stored "Eclipse launch configurations" ###
 *.launch
 
-# IntelliJ IDEA
+### IntelliJ IDEA ###
 *.iml
 .idea
 dependency-reduced-pom.xml
 
 desktop.ini
+
+### Gradle ###
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+### Gradle Patch ###
+**/build/

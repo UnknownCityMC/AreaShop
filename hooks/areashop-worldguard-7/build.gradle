@@ -1,0 +1,8 @@
+dependencies {
+    implementation project(':areashop-interface')
+    compileOnly 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.4'
+}
+
+description = 'AreaShop WorldGuard 7'

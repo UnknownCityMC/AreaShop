@@ -1,32 +1,38 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+name : "build"
 
-name: Java CI with Maven
+on : [ "pull_request", "push" ]
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+jobs :
+  build :
+    strategy :
+      matrix :
+        java : [ 11 ]
+        # java: ["1.8", "11"]
+        os : [ "ubuntu-18.04" ]
+    runs-on : "${{ matrix.os }}"
+    steps :
+      - name : "Checkout Repository"
+        uses : "actions/checkout@v2.3.4"
 
-jobs:
-  build:
+      - name : "Checkout submodules"
+        uses : "srt32/git-actions@v0.0.3"
+        with :
+          args : "git submodule update --init --recursive"
 
-    runs-on: ubuntu-latest
+      - name : "Restore Gradle cache"
+        uses : "actions/cache@v2"
+        with :
+          path : "~/.gradle/caches"
+          key : "${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}"
+          restore-keys : |
+            ${{ runner.os }}-gradle-
+      - name : "Setup JDK ${{ matrix.java }}"
+        uses : "actions/setup-java@v1.4.3"
+        with :
+          java-version : "${{ matrix.java }}"
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-    - name: Cache local Maven repository
-      uses: actions/cache@v2
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
-      
+      - name : "Grant execute permission for gradlew"
+        run : "chmod +x gradlew"
+
+      - name : "Build with Gradle"
+        run : "./gradlew clean build"

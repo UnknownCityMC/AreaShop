@@ -51,9 +51,9 @@ public class RegionAccessSet {
 	 * Get this access set as a list of player UUIDs.
 	 * @return List of player UUIDs, first players already added by UUID, then players added by name, groups are not in the list
 	 */
+	@SuppressWarnings("deprecation")
 	public List<UUID> asUniqueIdList() {
-		List<UUID> result = new ArrayList<>();
-		result.addAll(playerUniqueIds);
+		List<UUID> result = new ArrayList<>(playerUniqueIds);
 		for(String playerName : playerNames) {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
 			if (offlinePlayer.hasPlayedBefore()) {

@@ -1,8 +1,8 @@
 package me.wiefferink.areashop.handlers.fawe.v1_15;
 
-import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.object.FaweLimit;
 import com.boydti.fawe.object.RelightMode;
+import com.boydti.fawe.util.EditSessionBuilder;
 import com.sk89q.jnbt.NBTInputStream;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.IncompleteRegionException;
@@ -11,7 +11,11 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.*;
+import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
+import com.sk89q.worldedit.extent.clipboard.io.FastSchematicReader;
 import com.sk89q.worldedit.extent.transform.BlockTransformExtent;
 import com.sk89q.worldedit.function.mask.Mask;
 import com.sk89q.worldedit.function.mask.Mask2D;
@@ -31,7 +35,12 @@ import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.entity.Player;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
 // Future: this class could use the schematic save/paste api of FAWE: https://github.com/boy0001/FastAsyncWorldedit/wiki/Pasting-a-schematic
@@ -95,7 +104,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
         }
         final FaweLimit limit = new FaweLimit();
         limit.MAX_CHANGES = pluginInterface.getConfig().getInt("maximumBlocks");
-        EditSession editSession = FaweAPI.getEditSessionBuilder(world).limit(limit).build();
+        EditSession editSession = new EditSessionBuilder(world).limit(limit).build();
         editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
         ProtectedRegion region = regionInterface.getRegion();
         // Get the origin and size of the region
@@ -185,7 +194,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
         }
         final FaweLimit limit = new FaweLimit();
         limit.MAX_CHANGES = pluginInterface.getConfig().getInt("maximumBlocks");
-        EditSession editSession = FaweAPI.getEditSessionBuilder(world).limit(limit).relightMode(RelightMode.OPTIMAL).build();
+        EditSession editSession = new EditSessionBuilder(world).limit(limit).relightMode(RelightMode.OPTIMAL).build();
 
         // Create a clipboard
         CuboidRegion selection =

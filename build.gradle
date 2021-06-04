@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+}
+
+subprojects {
+
+    plugins.apply('java')
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'paper-repo'
+            url = uri('https://papermc.io/repo/repository/maven-public/')
+        }
+        maven {
+            name = 'spigot-repo'
+            url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/')
+        }
+        maven {
+            name = 'jitpack'
+            url = uri('https://jitpack.io')
+            content {
+                includeGroupByRegex("com\\.github.*")
+            }
+        }
+        maven {
+            name = 'aikar-repo'
+            url = uri('https://repo.aikar.co/content/groups/aikar/')
+        }
+        maven {
+            name = 'enginehub-repo'
+            url = uri('https://maven.enginehub.org/repo/')
+        }
+        maven {
+            name = 'bstats-repo'
+            url = uri('https://repo.bstats.org/content/repositories/releases/')
+            content {
+                includeModule('org.bstats', 'bstats-bukkit')
+            }
+        }
+
+    }
+
+    tasks.withType(JavaCompile) {
+        tasks.withType(JavaCompile) {
+            Provider<JavaCompiler> compiler = javaToolchains.compilerFor {
+                JavaLanguageVersion.of(8)
+            }
+            if (compiler.isPresent() && compiler.get().metadata.languageVersion.asInt() > 9) {
+                options.release.set(8)
+            } else {
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility = JavaVersion.VERSION_1_8
+            }
+            options.encoding = 'UTF-8'
+            options.fork = true
+            options.deprecation = true
+        }
+    }
+}

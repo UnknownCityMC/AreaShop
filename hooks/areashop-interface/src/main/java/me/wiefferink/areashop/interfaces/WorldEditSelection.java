@@ -9,7 +9,7 @@ public class WorldEditSelection {
 	private final Location maximum;
 
 	/**
-	 * Craete a WorldEditSelection.
+	 * Create a WorldEditSelection.
 	 * @param world World the selection is in
 	 * @param a Primary selection location
 	 * @param b Secondary selection location

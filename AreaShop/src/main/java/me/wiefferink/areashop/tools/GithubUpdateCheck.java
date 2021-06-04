@@ -1,11 +1,12 @@
 package me.wiefferink.areashop.tools;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class GithubUpdateCheck {
 	public static final String API_LATEST_RELEASE = "releases/latest";
 	public static final String USER_AGENT = "GithubUpdateCheck by NLThijs48";
 	public static final boolean DEBUG = false;
+	private static final Gson GSON = new GsonBuilder().create();
 
 	private final String author;
 	private final String repository;
@@ -82,7 +84,7 @@ public class GithubUpdateCheck {
 	public GithubUpdateCheck checkUpdate(UpdateCallback callback) {
 		checking = true;
 		final GithubUpdateCheck self = this;
-		// Check for update on asyn thread
+		// Check for update on async thread
 		new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -111,17 +113,17 @@ public class GithubUpdateCheck {
 							String response = reader.readLine();
 							debug("Response:", response);
 
-							JSONObject latestRelease = (JSONObject)JSONValue.parse(response);
+							JsonObject latestRelease = GSON.fromJson(response, JsonObject.class);
 
-							if(latestRelease.isEmpty()) {
+							if(latestRelease.isJsonNull()) {
 								logger.warning("Failed to get api response from " + url);
 								error = true;
 								return;
 							}
-							debug("json: " + latestRelease.toJSONString());
+							debug("json: " + latestRelease.getAsString());
 
 							// Latest version
-							latestVersion = (String)latestRelease.get("tag_name");
+							latestVersion = latestRelease.get("tag_name").getAsString();
 							debug("Tag name:", latestVersion);
 
 							// Current version

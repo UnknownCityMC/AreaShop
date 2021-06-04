@@ -1,0 +1,11 @@
+rootProject.name = 'areashop-parent'
+include(':areashop-worldguard-7')
+include(':areashop-interface')
+include(':areashop-fawe-1-15')
+include(':areashop-worldedit-7')
+include(':areashop')
+project(":areashop-worldguard-7").projectDir = file('hooks/areashop-worldguard-7')
+project(":areashop-interface").projectDir = file('hooks/areashop-interface')
+project(":areashop-fawe-1-15").projectDir = file('hooks/areashop-fawe-1-15')
+project(":areashop-worldedit-7").projectDir = file('hooks/areashop-worldedit-7')
+project(":areashop").projectDir = file('AreaShop')

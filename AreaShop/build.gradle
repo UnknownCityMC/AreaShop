@@ -1,0 +1,58 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java-library'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+}
+
+description = 'AreaShop'
+
+dependencies {
+    // Spigot api
+    compileOnly 'org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT'
+
+    // Libs
+    implementation 'com.github.NLthijs48:InteractiveMessenger:e7749258ca'
+    implementation 'co.aikar:taskchain-bukkit:3.7.2'
+    implementation 'io.papermc:paperlib:1.0.6'
+    implementation('org.bstats:bstats-bukkit:1.1')
+
+    // Hooks
+    implementation project(':areashop-interface')
+    implementation project(':areashop-worldguard-7')
+    implementation project(':areashop-worldedit-7')
+    implementation project(':areashop-fawe-1-15')
+
+    // Runtime plugins
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.1.0-SNAPSHOT'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.3'
+    compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
+}
+
+processResources {
+
+    //filesMatching("plugin.yml") {
+    from (sourceSets.main.resources) {
+        filter ReplaceTokens, tokens: [version: project.version]
+        duplicatesStrategy(DuplicatesStrategy.INCLUDE)
+    }
+}
+
+assemble {
+    dependsOn(shadowJar)
+}
+
+jar {
+    archiveBaseName.set('AreaShop')
+    classifier('original')
+}
+
+shadowJar {
+    archiveBaseName.set('AreaShop')
+    String relocationBase = 'me.wiefferink.areashop.shaded'
+    classifier('')
+    relocate('co.aikar.taskchain', "${relocationBase}.taskchain")
+    relocate('me.wiefferink.interactivemessenger', "${relocationBase}.interactivemessenger")
+    relocate('org.bstats', "${relocationBase}.bstats")
+    relocate('io.papermc', "${relocationBase}.papermc")
+}
