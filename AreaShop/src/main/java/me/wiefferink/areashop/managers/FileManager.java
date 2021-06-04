@@ -154,6 +154,25 @@ public class FileManager extends Manager {
         return allRegions.get(name.toLowerCase());
     }
 
+    public CompletableFuture<GeneralRegion> getRegionUnsafe(String name) {
+        final GeneralRegion cached = allRegions.get(name);
+        if (cached != null) {
+            return CompletableFuture.completedFuture(cached);
+        }
+        final File file = new File(regionsPath, name + ".yml");
+        if (!file.exists()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        CompletableFuture<GeneralRegion> completableFuture = new CompletableFuture<>();
+        Utils.newChain()
+             .async(() -> {
+                 YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+                 completableFuture.complete(loadRegion(configuration));
+             })
+             .execute();
+        return completableFuture;
+    }
+
     /**
      * Get a rental region.
      *
@@ -880,6 +899,20 @@ public class FileManager extends Manager {
         }
     }
 
+    private GeneralRegion loadRegion(YamlConfiguration config) {
+        // Construct the correct type of region
+        String type = config.getString("general.type");
+        GeneralRegion region;
+        if (RegionType.RENT.getValue().equals(type)) {
+            region = new RentRegion(config);
+        } else if (RegionType.BUY.getValue().equals(type)) {
+            region = new BuyRegion(config);
+        } else {
+            return null;
+        }
+        return region;
+    }
+
     private void loadRegionFilesNow() {
         File file = new File(regionsPath);
         File[] regionFiles = file.listFiles();
@@ -911,17 +944,11 @@ public class FileManager extends Manager {
                 }
 
                 // Construct the correct type of region
-                String type = regionConfig.getString("general.type");
-                GeneralRegion region;
-                if (RegionType.RENT.getValue().equals(type)) {
-                    region = new RentRegion(regionConfig);
-                } else if (RegionType.BUY.getValue().equals(type)) {
-                    region = new BuyRegion(regionConfig);
-                } else {
+                GeneralRegion region = loadRegion(regionConfig);
+                if (region == null) {
                     noRegionType.add(regionFile.getPath());
                     continue;
                 }
-
                 // Check consistency
                 boolean added = false;
                 if (region.getName() == null) {

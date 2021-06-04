@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 
 public class DelCommand extends CommandAreaShop {
 
@@ -92,37 +93,41 @@ public class DelCommand extends CommandAreaShop {
 				plugin.message(sender, "del-cancelled", Utils.combinedMessage(regionsCancelled, "region"));
 			}
 		} else {
-			GeneralRegion region = plugin.getFileManager().getRegion(args[1]);
-			if(region == null) {
-				plugin.message(sender, "cmd-notRegistered", args[1]);
-				return;
-			}
-			boolean isLandlord = sender instanceof Player && region.isLandlord(((Player)sender).getUniqueId());
-			if(region instanceof RentRegion) {
-				// Remove the rent if the player has permission
-				if(sender.hasPermission("areashop.destroyrent") || (isLandlord && sender.hasPermission("areashop.destroyrent.landlord"))) {
-					DeletingRegionEvent event = plugin.getFileManager().deleteRegion(region, true);
-					if (event.isCancelled()) {
-						plugin.message(sender, "general-cancelled", event.getReason());
-					} else {
-						plugin.message(sender, "destroy-successRent", region);
-					}
-				} else {
-					plugin.message(sender, "destroy-noPermissionRent", region);
-				}
-			} else if(region instanceof BuyRegion) {
-				// Remove the buy if the player has permission
-				if(sender.hasPermission("areashop.destroybuy") || (isLandlord && sender.hasPermission("areashop.destroybuy.landlord"))) {
-					DeletingRegionEvent event = plugin.getFileManager().deleteRegion(region, true);
-					if (event.isCancelled()) {
-						plugin.message(sender, "general-cancelled", event.getReason());
-					} else {
-						plugin.message(sender, "destroy-successBuy", region);
-					}
-				} else {
-					plugin.message(sender, "destroy-noPermissionBuy", region);
-				}
-			}
+			CompletableFuture<GeneralRegion> future = plugin.getFileManager().getRegionUnsafe(args[1]);
+			Utils.newChain()
+				 .future(future)
+				 .syncLast(region -> {
+					 if(region == null) {
+						 plugin.message(sender, "cmd-notRegistered", args[1]);
+						 return;
+					 }
+					 boolean isLandlord = sender instanceof Player && region.isLandlord(((Player)sender).getUniqueId());
+					 if(region instanceof RentRegion) {
+						 // Remove the rent if the player has permission
+						 if(sender.hasPermission("areashop.destroyrent") || (isLandlord && sender.hasPermission("areashop.destroyrent.landlord"))) {
+							 DeletingRegionEvent event = plugin.getFileManager().deleteRegion(region, true);
+							 if (event.isCancelled()) {
+								 plugin.message(sender, "general-cancelled", event.getReason());
+							 } else {
+								 plugin.message(sender, "destroy-successRent", region);
+							 }
+						 } else {
+							 plugin.message(sender, "destroy-noPermissionRent", region);
+						 }
+					 } else if(region instanceof BuyRegion) {
+						 // Remove the buy if the player has permission
+						 if(sender.hasPermission("areashop.destroybuy") || (isLandlord && sender.hasPermission("areashop.destroybuy.landlord"))) {
+							 DeletingRegionEvent event = plugin.getFileManager().deleteRegion(region, true);
+							 if (event.isCancelled()) {
+								 plugin.message(sender, "general-cancelled", event.getReason());
+							 } else {
+								 plugin.message(sender, "destroy-successBuy", region);
+							 }
+						 } else {
+							 plugin.message(sender, "destroy-noPermissionBuy", region);
+						 }
+					 }
+			}).execute();
 		}
 	}
 

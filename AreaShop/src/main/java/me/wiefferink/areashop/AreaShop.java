@@ -30,6 +30,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +52,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String groupsFile = "groups.yml";
     public static final String defaultFile = "default.yml";
     public static final String configFile = "config.yml";
-    public static final String signLogFile = "signErrors.log";
+    public static final String signLogFileName = "signErrors.log";
     public static final String configFileHidden = "hiddenConfig.yml";
     public static final String versionFile = "versions";
     // Euro tag for in the config
@@ -588,7 +589,16 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             error("Vault plugin is not present or has not loaded correctly");
             error = true;
         }
-        signErrorLogger = new SignErrorLogger(new File(signLogFile));
+        File signLogFile = new File(getDataFolder(), signLogFileName);
+        signErrorLogger = new SignErrorLogger(signLogFile);
+        try {
+            if (!signLogFile.isFile()) {
+                signLogFile.createNewFile();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            AreaShop.error("Failed to create the sign error log file!");
+        }
         // Load all data from files and check versions
         fileManager = new FileManager();
         managers.add(fileManager);
