@@ -43,15 +43,10 @@ subprojects {
 
     tasks.withType(JavaCompile) {
         tasks.withType(JavaCompile) {
-            Provider<JavaCompiler> compiler = javaToolchains.compilerFor {
-                JavaLanguageVersion.of(8)
+            javaToolchains.compilerFor {
+                JavaLanguageVersion.of(16)
             }
-            if (compiler.isPresent() && compiler.get().metadata.languageVersion.asInt() > 9) {
-                options.release.set(8)
-            } else {
-                sourceCompatibility = JavaVersion.VERSION_1_8
-                targetCompatibility = JavaVersion.VERSION_1_8
-            }
+            options.release.set(16)
             options.encoding = 'UTF-8'
             options.fork = true
             options.deprecation = true
