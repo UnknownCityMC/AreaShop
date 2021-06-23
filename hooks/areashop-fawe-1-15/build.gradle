@@ -7,9 +7,9 @@ repositories {
 
 dependencies {
     compileOnly project(':areashop-interface')
-    compileOnly 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
-    compileOnly ('com.intellectualsites.fawe:FAWE-Bukkit:1.16-687')
-    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.4'
+    compileOnly 'org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT'
+    compileOnly ('com.intellectualsites.fawe:FAWE-Bukkit:1.16-725')
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.5'
 }
 
 description = 'AreaShop FastAsyncWorldEdit 1.15+'
