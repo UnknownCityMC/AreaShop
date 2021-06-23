@@ -156,19 +156,8 @@ public class Utils {
      *
      * @return Online players
      */
-    @SuppressWarnings("unchecked")
     public static Collection<? extends Player> getOnlinePlayers() {
-        try {
-            Method onlinePlayerMethod = Server.class.getMethod("getOnlinePlayers");
-            if (onlinePlayerMethod.getReturnType().equals(Collection.class)) {
-                return ((Collection<? extends Player>) onlinePlayerMethod.invoke(Bukkit.getServer()));
-            } else {
-                return Arrays.asList((Player[]) onlinePlayerMethod.invoke(Bukkit.getServer()));
-            }
-        } catch (Exception ex) {
-            AreaShop.debug("getOnlinePlayers error: " + ex.getMessage());
-        }
-        return new HashSet<>();
+        return Bukkit.getOnlinePlayers();
     }
 
     /**
