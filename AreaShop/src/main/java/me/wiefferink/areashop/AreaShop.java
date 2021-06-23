@@ -9,7 +9,6 @@ import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.listeners.PlayerLoginLogoutListener;
 import me.wiefferink.areashop.managers.*;
-import me.wiefferink.areashop.tools.Analytics;
 import me.wiefferink.areashop.tools.GithubUpdateCheck;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
@@ -626,11 +625,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             // Create a signLinkerManager
             signLinkerManager = new SignLinkerManager();
             managers.add(signLinkerManager);
-
-            // Enable Metrics if config allows it
-            if (getConfig().getBoolean("sendStats")) {
-                Analytics.start();
-            }
 
             // Register dynamic permission (things declared in config)
             registerDynamicPermissions();

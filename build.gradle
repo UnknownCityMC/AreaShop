@@ -31,14 +31,6 @@ subprojects {
             name = 'enginehub-repo'
             url = uri('https://maven.enginehub.org/repo/')
         }
-        maven {
-            name = 'bstats-repo'
-            url = uri('https://repo.bstats.org/content/repositories/releases/')
-            content {
-                includeModule('org.bstats', 'bstats-bukkit')
-            }
-        }
-
     }
 
     tasks.withType(JavaCompile) {
