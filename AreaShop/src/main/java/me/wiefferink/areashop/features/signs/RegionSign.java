@@ -204,7 +204,7 @@ public class RegionSign {
         final SignErrorLogger errorLogger = AreaShop.getInstance().getSignErrorLogger();
         Material signType = getMaterial();
         // Place the sign back (with proper rotation and type) after it has been hidden or (indirectly) destroyed
-        if (!Tag.SIGNS.isTagged(blockState.getType())) {
+        if (!Materials.isSign(blockState.getType())) {
             // Don't do physics here, we first need to update the direction
             blockState.setType(signType);
             if (blockData instanceof WallSign) {
