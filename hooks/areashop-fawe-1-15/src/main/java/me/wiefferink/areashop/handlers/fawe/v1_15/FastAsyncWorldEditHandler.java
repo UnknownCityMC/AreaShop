@@ -116,7 +116,7 @@ public class FastAsyncWorldEditHandler extends WorldEditInterface {
         final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
         final FaweLimit limit = new FaweLimit();
         limit.MAX_CHANGES = pluginInterface.getConfig().getInt("maximumBlocks");
-        EditSession editSession = FaweAPI.getEditSessionBuilder(world).limit(limit).relightMode(RelightMode.OPTIMAL).build();
+        EditSession editSession = new EditSessionBuilder(world).limit(limit).relightMode(RelightMode.OPTIMAL).build();
         editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
         ProtectedRegion region = regionInterface.getRegion();
         final RegionType regionType = region.getType();
