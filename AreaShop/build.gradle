@@ -20,19 +20,19 @@ dependencies {
     implementation project(':areashop-interface')
     implementation project(':areashop-worldguard-7')
     implementation project(':areashop-worldedit-7')
-    implementation project(':areashop-fawe-1-15')
+    implementation project(':areashop-fawe-1-16')
+    implementation project(':areashop-fawe-1-17')
     implementation project(':areashop-nms-1-16-5')
     implementation project(':areashop-nms-1-17')
 
     // Runtime plugins
-    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5-SNAPSHOT'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5'
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.5'
     compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
 }
 
 processResources {
 
-    //filesMatching("plugin.yml") {
     from (sourceSets.main.resources) {
         filter ReplaceTokens, tokens: [version: project.version]
         duplicatesStrategy(DuplicatesStrategy.INCLUDE)

@@ -1,4 +1,4 @@
-package me.wiefferink.areashop.handlers.fawe.v1_15;
+package me.wiefferink.areashop.handlers.fawe.v1_16;
 
 import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.object.FaweLimit;

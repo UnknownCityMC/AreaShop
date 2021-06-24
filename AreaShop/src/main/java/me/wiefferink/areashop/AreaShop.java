@@ -708,10 +708,20 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
         final Plugin fawe = getServer().getPluginManager().getPlugin("FastAsyncWorldEdit");
         if (fawe != null && fawe.isEnabled()) {
             final String version = fawe.getDescription().getVersion();
-            if (version.startsWith("1.15") || version.startsWith("1.16")) {
+            if (version.startsWith("1.16")) {
                 try {
-                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_15.FastAsyncWorldEditHandler")
-                            .getDeclaredConstructor(AreaShopInterface.class).newInstance(this);
+                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_16.FastAsyncWorldEditHandler")
+                                                                        .getDeclaredConstructor(AreaShopInterface.class)
+                                                                        .newInstance(this);
+                } catch (ReflectiveOperationException ex) {
+                    getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
+                    ex.printStackTrace();
+                }
+            } else if (version.startsWith("1.17")) {
+                try {
+                    this.worldEditInterface = (WorldEditInterface) Class.forName(packageName + "fawe.v1_17.FastAsyncWorldEditHandler")
+                            .getDeclaredConstructor(AreaShopInterface.class)
+                            .newInstance(this);
                 } catch (ReflectiveOperationException ex) {
                     getLogger().log(Level.SEVERE, "Failed to hook into FAWE!");
                     ex.printStackTrace();
