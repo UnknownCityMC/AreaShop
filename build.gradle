@@ -2,6 +2,9 @@ plugins {
     id 'java'
 }
 
+group = "me.wiefferink.areashop"
+version = '2.6.3'
+
 subprojects {
 
     plugins.apply('java')

@@ -6,6 +6,7 @@ plugins {
 }
 
 description = 'AreaShop'
+version = '2.6.3'
 
 dependencies {
     // Spigot api
