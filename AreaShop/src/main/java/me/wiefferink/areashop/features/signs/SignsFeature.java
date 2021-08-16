@@ -152,17 +152,17 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignBreak(BlockBreakEvent event) {
-        if (getRegion().invalidated()) {
+        Block block = event.getBlock();
+        RegionSign regionSign = SignsFeature.getSignByLocation(block.getLocation());
+        if (regionSign == null) {
+            return;
+        }
+        if (regionSign.getRegion().invalidated()) {
             AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
         }
-        Block block = event.getBlock();
         // Check if it is a sign
         if (Materials.isSign(block.getType())) {
             // Check if the rent sign is really the same as a saved rent
-            RegionSign regionSign = SignsFeature.getSignByLocation(block.getLocation());
-            if (regionSign == null) {
-                return;
-            }
             if (regionSign.getRegion().invalidated()) {
                 AreaShop.warn("SignsFeature: Sign feature for an invalidated region object is still active!");
             }
@@ -179,18 +179,19 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onIndirectSignBreak(BlockPhysicsEvent event) {
-        if (getRegion().invalidated()) {
-            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
-        }
-        // Check if the block is a sign
-        if (!Materials.isSign(event.getBlock().getType())) {
-            return;
-        }
         final Block block = event.getBlock();
 
         // Check if the sign is really the same as a saved rent
         RegionSign regionSign = SignsFeature.getSignByLocation(event.getBlock().getLocation());
         if (regionSign == null) {
+            return;
+        }
+
+        if (regionSign.getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
+        }
+        // Check if the block is a sign
+        if (!Materials.isSign(event.getBlock().getType())) {
             return;
         }
         // If the block is in an invalid position then we remove the sign
@@ -206,12 +207,18 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignClick(PlayerInteractEvent event) {
-        if (getRegion().invalidated()) {
-            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
-        }
         Block block = event.getClickedBlock();
         if (block == null) {
             return;
+        }
+        // Check if this sign belongs to a region
+        RegionSign regionSign = SignsFeature.getSignByLocation(block.getLocation());
+        if (regionSign == null) {
+            return;
+        }
+
+        if (regionSign.getRegion().invalidated()) {
+            AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
         }
 
         // Only listen to left and right clicks on blocks
@@ -224,11 +231,6 @@ public class SignsFeature extends RegionFeature {
             return;
         }
 
-        // Check if this sign belongs to a region
-        RegionSign regionSign = SignsFeature.getSignByLocation(block.getLocation());
-        if (regionSign == null) {
-            return;
-        }
 
         // Ignore players that are in sign link mode (which will handle the event itself)
         Player player = event.getPlayer();
@@ -256,7 +258,13 @@ public class SignsFeature extends RegionFeature {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
-        if (getRegion().invalidated()) {
+
+        RegionSign regionSign = SignsFeature.getSignByLocation(event.getBlock().getLocation());
+        if (regionSign == null) {
+            return;
+        }
+
+        if (regionSign.getRegion().invalidated()) {
             AreaShop.warn("SignsFeature: Sign feature for an invalidated region is still active!");
         }
         Player player = event.getPlayer();

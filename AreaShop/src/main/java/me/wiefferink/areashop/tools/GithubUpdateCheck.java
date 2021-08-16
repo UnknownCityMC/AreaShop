@@ -120,7 +120,7 @@ public class GithubUpdateCheck {
                                         error = true;
                                         return;
                                     }
-                                    debug("json: " + latestRelease.getAsString());
+                                    debug("json: " + latestRelease.toString());
 
                                     // Latest version
                                     latestVersion = latestRelease.get("tag_name").getAsString();
