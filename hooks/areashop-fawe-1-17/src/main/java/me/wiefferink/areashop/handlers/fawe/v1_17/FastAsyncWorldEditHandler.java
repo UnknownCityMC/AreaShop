@@ -1,9 +1,10 @@
 package me.wiefferink.areashop.handlers.fawe.v1_17;
 
 import com.fastasyncworldedit.core.FaweAPI;
+import com.fastasyncworldedit.core.extent.clipboard.MemoryOptimizedClipboard;
+import com.fastasyncworldedit.core.extent.clipboard.io.FastSchematicReader;
+import com.fastasyncworldedit.core.extent.processor.lighting.RelightMode;
 import com.fastasyncworldedit.core.object.FaweLimit;
-import com.fastasyncworldedit.core.object.RelightMode;
-import com.fastasyncworldedit.core.object.clipboard.MemoryOptimizedClipboard;
 import com.fastasyncworldedit.core.util.EditSessionBuilder;
 import com.google.common.annotations.Beta;
 import com.sk89q.jnbt.NBTInputStream;
