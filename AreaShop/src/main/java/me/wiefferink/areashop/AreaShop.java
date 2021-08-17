@@ -648,7 +648,8 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                     if (!matcher0.find()) {
                         matcher0 = VERSION_MATCHER_2.matcher(latestVersion);
                         if (!matcher0.find()) {
-                            throw new IllegalArgumentException("Invalid Versions Detected!");
+                            // FIXME log invalid version
+                            return false;
                         }
                         dual0 = true;
                     }
@@ -657,7 +658,8 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
                     if (!matcher1.find()) {
                         matcher1 = VERSION_MATCHER_2.matcher(currentVersion);
                         if (!matcher1.find()) {
-                            throw new IllegalArgumentException("Invalid Versions Detected!");
+                            // FIXME log invalid version
+                            return false;
                         }
                         dual1 = true;
                     }
