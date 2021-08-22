@@ -29,6 +29,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +52,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
     public static final String configFile = "config.yml";
     public static final String configFileHidden = "hiddenConfig.yml";
     public static final String versionFile = "versions";
+    public static final String signErrorFile = "sign-errors.yml";
     // Euro tag for in the config
     public static final String currencyEuro = "%euro%";
     // Constants for handling file versions
@@ -604,6 +606,8 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
             error("Vault plugin is not present or has not loaded correctly");
             error = true;
         }
+
+        this.signErrorLogger = new SignErrorLogger(new File(getDataFolder(), signErrorFile));
 
         // Setup the NMS helper
         setupNMS();
