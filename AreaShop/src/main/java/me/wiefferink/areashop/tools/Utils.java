@@ -12,7 +12,10 @@ import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.interactivemessenger.Log;
 import me.wiefferink.interactivemessenger.processing.Message;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,10 +25,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -46,7 +45,6 @@ public class Utils {
     private static Set<String> weeks;
     private static Set<String> months;
     private static Set<String> years;
-    private static ScriptEngine scriptEngine;
     private static Map<Double, String> suffixes;
 
     // Not used
@@ -768,16 +766,11 @@ public class Utils {
             return Double.parseDouble(input);
         }
 
-        // Lazy init scriptEngine
-        if (scriptEngine == null) {
-            scriptEngine = new ScriptEngineManager().getEngineByName("JavaScript");
-        }
-
         // Evaluate expression
         Object result;
         try {
-            result = scriptEngine.eval(input);
-        } catch (ScriptException e) {
+            result = OperandParser.parse(input);
+        } catch (OperandParser.ParseException e) {
             AreaShop.warn("Price of region", region.getName(), "is set with an invalid expression: '" + input + "', exception:", ExceptionUtils.getStackTrace(e));
             return 99999999999.0; // High fallback for safety
         }
