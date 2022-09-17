@@ -7,6 +7,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import me.wiefferink.areashop.features.signs.SignManager;
+import me.wiefferink.areashop.hook.placeholders.PlaceholderHook;
 import me.wiefferink.areashop.interfaces.AreaShopInterface;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
@@ -272,6 +273,12 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		// Create a signLinkerManager
 		signLinkerManager = injector.getInstance(SignLinkerManager.class);
 		managers.add(signLinkerManager);
+
+		PlaceholderHook hook = new PlaceholderHook();
+		if (hook.tryEnable(this)) {
+			// PlaceholderAPI is present so we should register the hook
+			managers.add(hook);
+		}
 
 		// Register dynamic permission (things declared in config)
 		registerDynamicPermissions();

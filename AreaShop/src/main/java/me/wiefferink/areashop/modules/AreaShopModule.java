@@ -13,6 +13,7 @@ import me.wiefferink.areashop.managers.CommandManager;
 import me.wiefferink.areashop.managers.FeatureManager;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.managers.FileManager;
+import me.wiefferink.areashop.managers.IRegionContainer;
 import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.managers.SignLinkerManager;
 import me.wiefferink.areashop.nms.BlockBehaviourHelper;
@@ -64,6 +65,7 @@ public class AreaShopModule extends AbstractModule {
         bind(SignErrorLogger.class).toInstance(this.signErrorLogger);
         // Setup managers
         bind(IFileManager.class).to(FileManager.class).asEagerSingleton();
+        bind(IRegionContainer.class).to(FileManager.class).asEagerSingleton();
         bind(FeatureManager.class).in(Singleton.class);
         bind(CommandManager.class).in(Singleton.class);
         bind(SignLinkerManager.class).in(Singleton.class);

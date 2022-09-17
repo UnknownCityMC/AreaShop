@@ -22,19 +22,22 @@ dependencies {
     compileOnlyApi("com.github.MilkBowl:VaultAPI:1.7") {
         exclude("com.google.guava", "guava")
     }
+    compileOnlyApi("me.clip:placeholderapi:2.11.2")
 
     // 3rd party libraries
     implementation(libs.findbugs)
     implementation("io.papermc:paperlib:1.0.7")
     implementation("com.github.NLthijs48:InteractiveMessenger:e7749258ca")
     implementation("com.github.NLthijs48:BukkitDo:819d51ec2b")
-    implementation("io.github.baked-libs:dough-data:1.0.3")
+    implementation("io.github.baked-libs:dough-data:1.2.0")
     implementation("com.google.inject:guice:5.1.0") {
         exclude("com.google.guava", "guava")
     }
     implementation("com.google.inject.extensions:guice-assistedinject:5.1.0") {
         exclude("com.google.guava", "guava")
     }
+
+    implementation("org.jetbrains:annotations:23.0.0")
 
     // Project submodules
     implementation(projects.areashopInterface)
@@ -46,10 +49,21 @@ dependencies {
     runtimeOnly(project(":adapters:platform:bukkit-1-17", "reobf"))
     runtimeOnly(project(":adapters:platform:bukkit-1-18", "reobf"))
     runtimeOnly(project(":adapters:platform:bukkit-1-19", "reobf"))
+
+    testImplementation(platform("org.junit:junit-bom:5.9.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.119.3")
+    testImplementation("me.clip:placeholderapi:2.11.2")
+    testImplementation(libs.worldeditBukkit)
+    testImplementation(libs.worldguardBukkit)
 }
 
 repositories {
     mavenCentral()
+    maven {
+        name = "extendedclip-repo"
+        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    }
 }
 
 tasks {
@@ -90,5 +104,13 @@ tasks {
         relocate("org.aopalliance", "${base}.aopalliance")
         relocate("javax.annotation", "${base}.javax.annotation")
         relocate("javax.inject", "${base}.javax.inject")
+        relocate("org.jetbrains.annotation", "${base}.jetbrains.annotations")
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }

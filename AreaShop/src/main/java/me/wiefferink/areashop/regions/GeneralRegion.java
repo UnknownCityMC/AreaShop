@@ -636,7 +636,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 			case AreaShop.tagRegionName:
 				return getName();
 			case AreaShop.tagRegionType:
-				return getType().getValue().toLowerCase();
+				return getType().getValue().toLowerCase(Locale.ENGLISH);
 			case AreaShop.tagWorldName:
 				return getWorldName();
 			case AreaShop.tagWidth:
