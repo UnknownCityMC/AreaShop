@@ -13,7 +13,7 @@ import me.wiefferink.areashop.managers.CommandManager;
 import me.wiefferink.areashop.managers.FeatureManager;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.managers.FileManager;
-import me.wiefferink.areashop.managers.IRegionContainer;
+import me.wiefferink.areashop.regions.IRegionContainer;
 import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.managers.SignLinkerManager;
 import me.wiefferink.areashop.nms.BlockBehaviourHelper;

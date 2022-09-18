@@ -1,16 +1,14 @@
 package me.wiefferink.areashop.hook.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
-import me.wiefferink.areashop.managers.IRegionContainer;
+import me.wiefferink.areashop.regions.IRegionContainer;
 import me.wiefferink.interactivemessenger.processing.ReplacementProvider;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public class BuiltinRegionExpansion extends PlaceholderExpansion {

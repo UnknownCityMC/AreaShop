@@ -8,8 +8,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.interfaces.GeneralRegionInterface;
-import me.wiefferink.areashop.managers.IRegionContainer;
-import me.wiefferink.areashop.managers.MockRegionContainer;
+import me.wiefferink.areashop.regions.IRegionContainer;
+import me.wiefferink.areashop.regions.SimpleRegionContainer;
 import me.wiefferink.areashop.regions.MockRegionInterface;
 import org.bukkit.World;
 import org.junit.jupiter.api.AfterAll;
@@ -40,7 +40,7 @@ class TestPlaceholders {
     @Test
     void testPlaceholder() {
         // Setup mock regions
-        IRegionContainer regionContainer = new MockRegionContainer();
+        IRegionContainer regionContainer = new SimpleRegionContainer();
         final World world = server.addSimpleWorld("test");
         final String regionId = "test-region";
         final BlockVector3 location = BlockVector3.ZERO;

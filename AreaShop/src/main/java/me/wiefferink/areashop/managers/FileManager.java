@@ -16,9 +16,11 @@ import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.GeneralRegion.RegionEvent;
 import me.wiefferink.areashop.regions.GeneralRegion.RegionType;
+import me.wiefferink.areashop.regions.IRegionContainer;
 import me.wiefferink.areashop.regions.RegionFactory;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.regions.SimpleRegionContainer;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
 import org.bukkit.Bukkit;
@@ -29,6 +31,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -46,11 +49,9 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -61,10 +62,7 @@ public class FileManager extends Manager implements IFileManager {
 
 	private final AreaShop plugin;
 
-	private final Map<String, GeneralRegionInterface> regions = new HashMap<>();
-	private final Map<String, GeneralRegion> generalRegions = new HashMap<>();
-	private final Map<String, BuyRegion> buys = new HashMap<>();
-	private final Map<String, RentRegion> rents = new HashMap<>();
+	private final IRegionContainer regionContainer = new SimpleRegionContainer();
 	private final String regionsPath;
 	private final Map<String, RegionGroup> groups;
 	private final String configPath;
@@ -116,7 +114,7 @@ public class FileManager extends Manager implements IFileManager {
 	@Override
 	public void shutdown() {
 		// Update lastactive time for players that are online now
-		for(GeneralRegion region : this.generalRegions.values()) {
+		for(GeneralRegion region : this.regionContainer.getRegionsRef()) {
 			Player player = Bukkit.getPlayer(region.getOwner());
 			if(player != null) {
 				region.updateLastActiveTime();
@@ -189,17 +187,17 @@ public class FileManager extends Manager implements IFileManager {
 	@Nullable
 	@Override
 	public GeneralRegionInterface getRegionInterface(String name) {
-		return this.regions.get(name.toLowerCase(Locale.ENGLISH));
+		return this.regionContainer.getRegionInterface(name);
 	}
 
 	@Override
 	public List<GeneralRegionInterface> getRegionInterfaces() {
-		return new ArrayList<>(this.regions.values());
+		return this.regionContainer.getRegionInterfaces();
 	}
 
 	@Override
 	public Collection<GeneralRegionInterface> getRegionInterfacesRef() {
-		return Collections.unmodifiableCollection(this.regions.values());
+		return this.regionContainer.getRegionInterfacesRef();
 	}
 
 	/**
@@ -209,7 +207,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public @Nullable GeneralRegion getRegion(String name) {
-		return this.generalRegions.get(name.toLowerCase());
+		return this.regionContainer.getRegion(name);
 	}
 
 	/**
@@ -219,7 +217,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public @Nullable RentRegion getRent(String name) {
-		return this.rents.get(name.toLowerCase(Locale.ENGLISH));
+		return this.regionContainer.getRent(name);
 	}
 
 	/**
@@ -229,7 +227,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public @Nullable BuyRegion getBuy(String name) {
-		return this.buys.get(name.toLowerCase(Locale.ENGLISH));
+		return this.regionContainer.getBuy(name);
 	}
 
 	/**
@@ -237,8 +235,8 @@ public class FileManager extends Manager implements IFileManager {
 	 * @return List of all rental regions
 	 */
 	@Override
-	public Collection<RentRegion> getRents() {
-		return new ArrayList<>(this.rents.values());
+	public List<RentRegion> getRents() {
+		return this.regionContainer.getRents();
 	}
 
 	/**
@@ -247,7 +245,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public Collection<RentRegion> getRentsRef() {
-		return Collections.unmodifiableCollection(this.rents.values());
+		return this.regionContainer.getRentsRef();
 	}
 
 	/**
@@ -256,12 +254,12 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public List<BuyRegion> getBuys() {
-		return new ArrayList<>(this.buys.values());
+		return this.regionContainer.getBuys();
 	}
 
 	@Override
 	public Collection<BuyRegion> getBuysRef() {
-		return Collections.unmodifiableCollection(this.buys.values());
+		return this.regionContainer.getBuysRef();
 	}
 
 
@@ -271,7 +269,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public List<GeneralRegion> getRegions() {
-		return new ArrayList<>(this.generalRegions.values());
+		return this.regionContainer.getRegions();
 	}
 
 	/**
@@ -280,7 +278,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public Collection<GeneralRegion> getRegionsRef() {
-		return Collections.unmodifiableCollection(this.generalRegions.values());
+		return this.regionContainer.getRegionsRef();
 	}
 
 	/**
@@ -289,11 +287,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public List<String> getBuyNames() {
-		List<String> result = new ArrayList<>(buys.size());
-		for(BuyRegion region : buys.values()) {
-			result.add(region.getName());
-		}
-		return result;
+		return this.regionContainer.getBuyNames();
 	}
 
 	/**
@@ -302,11 +296,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public List<String> getRentNames() {
-		List<String> result = new ArrayList<>(rents.size());
-		for(RentRegion region : rents.values()) {
-			result.add(region.getName());
-		}
-		return result;
+		return this.regionContainer.getRentNames();
 	}
 
 	/**
@@ -315,11 +305,12 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public List<String> getRegionNames() {
-		List<String> result = new ArrayList<>(regions.size());
-		for(GeneralRegionInterface region : regions.values()) {
-			result.add(region.getName());
-		}
-		return result;
+		return this.regionContainer.getRegionNames();
+	}
+
+	@Override
+	public List<String> getRegionInterfaceNames() {
+		return this.regionContainer.getRegionInterfaceNames();
 	}
 
 	/**
@@ -368,7 +359,7 @@ public class FileManager extends Manager implements IFileManager {
 		if (event.isCancelled()) {
 			return event;
 		}
-		addRegionInterface(region);
+		this.regionContainer.addRegionInterface(region);
 		Bukkit.getPluginManager().callEvent(new AddedRegionEvent(region));
 		return event;
 	}
@@ -488,7 +479,7 @@ public class FileManager extends Manager implements IFileManager {
 
 		region.resetRegionFlags();
 		String name = region.getLowerCaseName();
-		removeRegion(name);
+		this.regionContainer.removeRegion(name);
 
 		// Remove file
 		File file = new File(plugin.getDataFolder() + File.separator + AreaShop.regionsFolder + File.separator + region.getLowerCaseName() + ".yml");
@@ -617,30 +608,18 @@ public class FileManager extends Manager implements IFileManager {
 	}
 
 	@Override
-	public void addRegionInterface(GeneralRegionInterface region) {
-		final String name = region.getName().toLowerCase(Locale.ENGLISH);
-		this.regions.put(name, region);
-		if (region instanceof GeneralRegion generalRegion) {
-			this.generalRegions.put(name, generalRegion);
-			if (region instanceof BuyRegion buyRegion) {
-				this.buys.put(name, buyRegion);
-			} else if (region instanceof RentRegion rentRegion) {
-				this.rents.put(name, rentRegion);
-			}
-		}
+	public void addRegionInterface(@NotNull GeneralRegionInterface region) {
+		this.regionContainer.addRegionInterface(region);
 	}
 
 	@Override
-	public void removeRegion(String region) {
-		this.regions.remove(region);
-		this.generalRegions.remove(region);
-		this.buys.remove(region);
-		this.regions.remove(region);
+	public void removeRegion(@NotNull String region) {
+		this.regionContainer.removeRegion(region);
 	}
 
 	@Override
-	public void removeRegion(GeneralRegionInterface region) {
-		removeRegion(region.getName());
+	public void removeRegion(@NotNull GeneralRegionInterface region) {
+		this.regionContainer.removeRegion(region);
 	}
 
 	/**
@@ -974,10 +953,7 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@Override
 	public void loadRegionFiles() {
-		regions.clear();
-		generalRegions.clear();
-		buys.clear();
-		rents.clear();
+		this.regionContainer.clearRegions();
 		final File file = new File(regionsPath);
 		if(!file.exists()) {
 			if(!file.mkdirs()) {
@@ -1434,6 +1410,11 @@ public class FileManager extends Manager implements IFileManager {
 	@Override
 	public void setGroupSetting(RegionGroup group, String path, Object setting) {
 		groupsConfig.set(group.getName().toLowerCase() + "." + path, setting);
+	}
+
+	@Override
+	public void clearRegions() {
+		this.regionContainer.clearRegions();
 	}
 }
 

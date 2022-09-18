@@ -10,8 +10,6 @@ import java.text.DateFormat;
 import java.util.Calendar;
 
 public record MockRegionInterface(ProtectedRegion region, String name, World world, Calendar calendar, DateFormat dateFormat) implements GeneralRegionInterface, ReplacementProvider {
-
-    
     
     @Override
     public ProtectedRegion getRegion() {
