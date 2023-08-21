@@ -5,8 +5,8 @@ import me.wiefferink.areashop.managers.AdventureLanguageManager;
 import me.wiefferink.interactivemessenger.processing.ReplacementProvider;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 
 import java.text.NumberFormat;
 import java.util.regex.Matcher;
@@ -46,6 +46,7 @@ public class AdventureMessageBridge implements MessageBridge {
     }
 
     private Component getReplaced(String message, Object... replacements) {
+        Bukkit.getConsoleSender().sendMessage(message);
         MiniMessage miniMessage = MiniMessage
                 .builder()
                 .preProcessor(string -> {
@@ -129,7 +130,6 @@ public class AdventureMessageBridge implements MessageBridge {
             return;
         }
         audience.sendMessage(getMessage(key, replacements));
-        //audience.sendMessage(Component.text(MiniMessage.miniMessage().serialize(getMessage(key, replacements))));
     }
 
     @Override
@@ -138,9 +138,9 @@ public class AdventureMessageBridge implements MessageBridge {
             return;
         }
         Component message = getMessage(key, replacements);
-        Component prefix = this.adventureLanguageManager.chatPrefix();
+        String rawPrefix = this.adventureLanguageManager.chatPrefix();
+        Component prefix = getReplaced(rawPrefix);
         Component prefixedMessage = prefix.append(message);
         audience.sendMessage(prefixedMessage);
-        //audience.sendMessage(Component.text(MiniMessage.miniMessage().serialize(prefixedMessage)));
     }
 }

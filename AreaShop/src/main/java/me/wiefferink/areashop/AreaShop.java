@@ -477,7 +477,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		AdventureLanguageManager languageManager = new AdventureLanguageManager(selectedLang, fallbackLang);
 		String rawPrefix = config.getString("chatPrefixMigrated", "");
 		if (!rawPrefix.isEmpty()) {
-			languageManager.chatPrefix(MiniMessage.miniMessage().deserialize(rawPrefix));
+			languageManager.chatPrefix(rawPrefix);
 		}
 		File migratedRoot = getDataFolder().toPath().resolve("lang-migrated").toFile();
 		if (!migratedRoot.isDirectory()) {

@@ -12,7 +12,7 @@ public class AdventureLanguageManager {
     private String currentLanguage;
     private String fallbackLanguage;
 
-    private Component chatPrefix = Component.empty();
+    private String chatPrefix = "";
 
     public AdventureLanguageManager(String currentLanguage, String fallbackLanguage) {
         this.currentLanguage = currentLanguage;
@@ -51,11 +51,11 @@ public class AdventureLanguageManager {
         return message;
     }
 
-    public void chatPrefix(Component prefix) {
+    public void chatPrefix(String prefix) {
         this.chatPrefix = prefix;
     }
 
-    public Component chatPrefix() {
+    public String chatPrefix() {
         return this.chatPrefix;
     }
 
