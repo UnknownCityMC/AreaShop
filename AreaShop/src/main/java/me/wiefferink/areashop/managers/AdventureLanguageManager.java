@@ -1,35 +1,18 @@
 package me.wiefferink.areashop.managers;
 
-import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Singleton
 public class AdventureLanguageManager {
 
     private final Map<String, LanguageRegistry> languageRegistryMap = new HashMap<>();
-
-    private static class LanguageRegistry {
-        private final Map<String, Component> messages = new HashMap<>();
-
-        public LanguageRegistry(Map<String, Component> messages) {
-            this.messages.putAll(messages);
-        }
-
-        public void messageFor(String key, Component message) {
-            this.messages.put(key, message);
-        }
-
-        public Component messageFor(String key) {
-            return this.messages.getOrDefault(key, Component.empty());
-        }
-    }
-
     private String currentLanguage;
     private String fallbackLanguage;
+
+    private Component chatPrefix = Component.empty();
 
     public AdventureLanguageManager(String currentLanguage, String fallbackLanguage) {
         this.currentLanguage = currentLanguage;
@@ -46,18 +29,54 @@ public class AdventureLanguageManager {
         return this;
     }
 
-    public AdventureLanguageManager loadValues(@NotNull String language, @NotNull Map<String, Component> values) {
+    public AdventureLanguageManager loadValues(@NotNull String language,
+                                               @NotNull Map<String, String> values) {
         this.languageRegistryMap.put(language, new LanguageRegistry(values));
         return this;
     }
 
-    public Component messageFor(String key) {
-        LanguageRegistry current = this.languageRegistryMap.get(this.currentLanguage);
-        Component message = current.messageFor(key);
-        if (message.equals(Component.empty()) && !this.currentLanguage.equals(fallbackLanguage)) {
-            return this.languageRegistryMap.get(this.fallbackLanguage).messageFor(key);
+    public String messageFor(String key, String lang) {
+        LanguageRegistry registry = this.languageRegistryMap.get(lang);
+        if (registry == null) {
+            return "";
+        }
+        return registry.messageFor(key);
+    }
+
+    public String messageFor(String key) {
+        String  message = messageFor(key, this.currentLanguage);
+        if (message.isEmpty() && !this.currentLanguage.equals(fallbackLanguage)) {
+            message = messageFor(key, this.fallbackLanguage);
         }
         return message;
+    }
+
+    public void chatPrefix(Component prefix) {
+        this.chatPrefix = prefix;
+    }
+
+    public Component chatPrefix() {
+        return this.chatPrefix;
+    }
+
+    private static class LanguageRegistry {
+        private final Map<String, String> messages = new HashMap<>();
+
+        public LanguageRegistry(Map<String, String> messages) {
+            this.messages.putAll(messages);
+        }
+
+        public void messageFor(String key, String message) {
+            this.messages.put(key, message);
+        }
+
+        public String messageFor(String key) {
+            return this.messages.getOrDefault(key, "");
+        }
+
+        public boolean isEmpty() {
+            return this.messages.isEmpty();
+        }
     }
 
 }

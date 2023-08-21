@@ -13,6 +13,9 @@ chatPrefix:
   - '  hover: %lang:action|Click to check the available commands|%'
   - '  command: /areashop help'
   - ' '
+
+chatPrefixMigrated: ''
+
 # The language file that should be used, check the 'lang' folder for build-in languages (use the filename without .yml here).
 # More information can be found here: https://github.com/NLthijs48/AreaShop/wiki/Language-support.
 language: EN

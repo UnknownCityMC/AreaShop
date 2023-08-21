@@ -2,6 +2,7 @@ package me.wiefferink.areashop;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 import com.google.inject.Stage;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -15,6 +16,7 @@ import me.wiefferink.areashop.interfaces.AreaShopInterface;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.listeners.PlayerLoginLogoutListener;
+import me.wiefferink.areashop.managers.AdventureLanguageManager;
 import me.wiefferink.areashop.managers.CommandManager;
 import me.wiefferink.areashop.managers.FeatureManager;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -27,12 +29,17 @@ import me.wiefferink.areashop.modules.BukkitModule;
 import me.wiefferink.areashop.modules.DependencyModule;
 import me.wiefferink.areashop.modules.PlatformModule;
 import me.wiefferink.areashop.nms.NMS;
+import me.wiefferink.areashop.tools.AdventureMessageBridge;
+import me.wiefferink.areashop.tools.ForwardingMessageBridge;
 import me.wiefferink.areashop.tools.GithubUpdateCheck;
 import me.wiefferink.areashop.tools.LegacyMessageBridge;
 import me.wiefferink.areashop.tools.SpigotPlatform;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.source.LanguageManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -48,14 +55,23 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationVisitor;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -258,7 +274,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 			return;
 		}
 
-		AreaShopModule asModule = new AreaShopModule(this, messageBridge, nms, worldEditInterface, worldGuardInterface, signErrorLogger, platformModule, dependencyModule);
+		AreaShopModule asModule = new AreaShopModule(this, nms, worldEditInterface, worldGuardInterface, signErrorLogger, platformModule, dependencyModule);
 		injector = Guice.createInjector(Stage.PRODUCTION, new BukkitModule(getServer()), asModule);
 
 		// Load all data from files and check versions
@@ -272,6 +288,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 
 		setupLanguageManager();
 		performLanguageMigrations();
+		setupNewLanguageSystem((ForwardingMessageBridge) injector.getInstance(MessageBridge.class), fileManager);
 
 		featureManager = injector.getInstance(FeatureManager.class);
 		featureManager.initializeFeatures(injector);
@@ -395,26 +412,35 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 
 	private void performLanguageMigrations() {
 		boolean migrateExisting = this.getConfig().getBoolean("migrateLanguages", false);
-		if (migrateExisting) {
-			getLogger().info("Performing language migration...");
-			File existingLanguages = getDataFolder().toPath().resolve(languageFolder).toFile();
-			File[] langFiles = existingLanguages.listFiles(file -> file.getName().endsWith(".yml"));
-			if (langFiles == null) {
-				return;
-			}
-			Path migrationPath = getDataFolder().toPath().resolve("lang-migrated");
-			migrationPath.toFile().mkdir();
-			for (File file : langFiles) {
-				File toMigrate = migrationPath.resolve(file.getName()).toFile();
-				try {
-					LanguageConverter.performConversion(file, toMigrate);
-				} catch (IOException ex) {
-					getLogger().log(Level.SEVERE, "Failed to perform migration for lang: " + file.getName(), ex);
-				}
-			}
-			getLogger().info("Language migration complete!");
+        if (!migrateExisting) {
+            return;
+        }
+        getLogger().info("Performing language migration");
+		List<String> chatPrefix = getConfig().getStringList("chatPrefix");
+		List<String> convertedChatPrefix = LanguageConverter.convertRawList(chatPrefix);
+		if (convertedChatPrefix.size() == 1) {
+			getConfig().set("chatPrefixMigrated", convertedChatPrefix.get(0));
+		} else {
+			getConfig().set("chatPrefixMigrated", convertedChatPrefix);
 		}
-	}
+		saveConfig();
+        File existingLanguages = getDataFolder().toPath().resolve(languageFolder).toFile();
+        File[] langFiles = existingLanguages.listFiles(file -> file.getName().endsWith(".yml"));
+        if (langFiles == null) {
+            return;
+        }
+        Path migrationPath = getDataFolder().toPath().resolve("lang-migrated");
+        migrationPath.toFile().mkdir();
+        for (File file : langFiles) {
+            File toMigrate = migrationPath.resolve(file.getName()).toFile();
+            try {
+                LanguageConverter.performConversion(file, toMigrate);
+            } catch (IOException ex) {
+                getLogger().log(Level.SEVERE, "Failed to perform migration for lang: " + file.getName(), ex);
+            }
+        }
+        getLogger().info("Language migration complete!");
+    }
 
 	/**
 	 * Setup a new LanguageManager.
@@ -429,6 +455,85 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 				chatprefix
 		);
 	}
+
+	private void setupNewLanguageSystem(ForwardingMessageBridge messageBridge, IFileManager fileManager) {
+		AdventureLanguageManager languageManager = setupAdventureLanguageManager(fileManager);
+		MessageBridge delegate = provideMessageBridge(fileManager, languageManager);
+		messageBridge.delegate(delegate);
+	}
+
+	private MessageBridge provideMessageBridge(IFileManager fileManager, AdventureLanguageManager languageManager) {
+		YamlConfiguration config = fileManager.getConfig();
+		if (!config.getBoolean("useMiniMessage", false)) {
+			return new LegacyMessageBridge();
+		}
+		return new AdventureMessageBridge(languageManager);
+	}
+
+	private AdventureLanguageManager setupAdventureLanguageManager(IFileManager fileManager) {
+		YamlConfiguration config = fileManager.getConfig();
+		String selectedLang = config.getString("language");
+		String fallbackLang = "EN";
+		AdventureLanguageManager languageManager = new AdventureLanguageManager(selectedLang, fallbackLang);
+		String rawPrefix = config.getString("chatPrefixMigrated", "");
+		if (!rawPrefix.isEmpty()) {
+			languageManager.chatPrefix(MiniMessage.miniMessage().deserialize(rawPrefix));
+		}
+		File migratedRoot = getDataFolder().toPath().resolve("lang-migrated").toFile();
+		if (!migratedRoot.isDirectory()) {
+			return languageManager;
+		}
+		File[] langFiles = migratedRoot.listFiles(file -> file.getName().endsWith(".yml"));
+		if (langFiles == null) {
+			return languageManager;
+		}
+		for (File langFile : langFiles) {
+			String language = langFile.getName().substring(0, 2);
+			Map<String, String> values;
+			try {
+				ConfigurationNode root = YamlConfigurationLoader.builder().file(langFile).build().load();
+				values = loadAdventureLanguage(root);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				error("Failed to setup adventure language manager");
+				getServer().getPluginManager().disablePlugin(this);
+				return languageManager;
+			}
+			languageManager.loadValues(language, values);
+		}
+		return languageManager;
+	}
+
+	private Map<String, String> loadAdventureLanguage(ConfigurationNode root) throws ConfigurateException {
+		Map<String, String> values = new HashMap<>();
+		root.visit((ConfigurationVisitor.Stateless<ConfigurateException>)(node) -> {
+			if (node.isMap()) {
+				return;
+			}
+			Object key = node.key();
+			if (key == null) {
+				return;
+			}
+			if (node.isList()) {
+				List<String> list = node.getList(String.class);
+				if (list == null) {
+					return;
+				}
+				StringJoiner joiner = new StringJoiner("\n");
+				for (String s : list) {
+					joiner.add(s);
+				}
+				values.put(key.toString(),joiner.toString());
+			}
+			String message = node.getString();
+			if (message == null) {
+				return;
+			}
+			values.put(key.toString(), message);
+		});
+		return values;
+	}
+
 	/**
 	 * Set the chatprefix to use in the chat (loaded from config normally).
 	 * @param chatprefix The string to use in front of chat messages (supports formatting codes)
@@ -703,6 +808,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 				AreaShop.debugTask("Updating all regions at startup...");
 			});
 		}
+	}
+
+	public @NotNull MessageBridge messageBridge() {
+		return this.messageBridge;
 	}
 
 

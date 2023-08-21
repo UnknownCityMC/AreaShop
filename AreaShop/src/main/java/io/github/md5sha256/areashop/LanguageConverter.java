@@ -9,10 +9,17 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,24 +44,18 @@ public class LanguageConverter {
     }
 
     public static void performConversion(File toConvert, File output) throws IOException {
-        YamlConfigurationLoader sourceLoader = YamlConfigurationLoader.builder()
-                .file(toConvert)
+        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                .source(() -> new BufferedReader(new FileReader(toConvert, StandardCharsets.UTF_8)))
+                .sink(() -> new BufferedWriter(new FileWriter(output, StandardCharsets.UTF_8)))
+                .headerMode(HeaderMode.PRESERVE)
+                .nodeStyle(NodeStyle.BLOCK)
                 .build();
-        YamlConfigurationLoader destinationLoader = YamlConfigurationLoader.builder()
-                .file(output)
-                .build();
-        ConfigurationNode root = sourceLoader.load();
+        ConfigurationNode root = loader.load();
         performConversion(root);
-        destinationLoader.save(root);
+        loader.save(root);
     }
 
-    private static void convertNode(ConfigurationNode node) throws ConfigurateException {
-        List<String> messages;
-        if (node.isList()) {
-            messages = node.getList(String.class, Collections.emptyList());
-        } else {
-            messages = Collections.singletonList(node.getString());
-        }
+    public static List<String> convertRawList(List<String> messages) {
         List<String> jsonMessages = TellrawGenerator.generate(YamlParser.parse(messages));
         List<String> converted = new ArrayList<>();
         for (String json : jsonMessages) {
@@ -65,6 +66,18 @@ public class LanguageConverter {
                     .serialize(convertedComponent);
             converted.add(miniMessage);
         }
+        return converted;
+    }
+
+    private static void convertNode(ConfigurationNode node) throws ConfigurateException {
+        boolean isList = node.isList();
+        List<String> messages;
+        if (isList) {
+            messages = node.getList(String.class, Collections.emptyList());
+        } else {
+            messages = Collections.singletonList(node.getString());
+        }
+        List<String> converted = convertRawList(messages);
         if (converted.size() == 1) {
             node.set(String.class, converted.get(0));
         } else {
