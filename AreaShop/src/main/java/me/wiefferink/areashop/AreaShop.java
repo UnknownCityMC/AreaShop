@@ -7,6 +7,7 @@ import com.google.inject.Stage;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import io.github.md5sha256.areashop.AdventureMessageRenderer;
 import io.github.md5sha256.areashop.LanguageConverter;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.adapters.platform.MinecraftPlatform;
@@ -37,9 +38,6 @@ import me.wiefferink.areashop.tools.SpigotPlatform;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.source.LanguageManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -458,16 +456,17 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 
 	private void setupNewLanguageSystem(ForwardingMessageBridge messageBridge, IFileManager fileManager) {
 		AdventureLanguageManager languageManager = setupAdventureLanguageManager(fileManager);
-		MessageBridge delegate = provideMessageBridge(fileManager, languageManager);
+		AdventureMessageRenderer messageRenderer = new AdventureMessageRenderer(languageManager);
+		MessageBridge delegate = provideMessageBridge(fileManager, messageRenderer);
 		messageBridge.delegate(delegate);
 	}
 
-	private MessageBridge provideMessageBridge(IFileManager fileManager, AdventureLanguageManager languageManager) {
+	private MessageBridge provideMessageBridge(IFileManager fileManager, AdventureMessageRenderer messageRenderer) {
 		YamlConfiguration config = fileManager.getConfig();
 		if (!config.getBoolean("useMiniMessage", false)) {
 			return new LegacyMessageBridge();
 		}
-		return new AdventureMessageBridge(languageManager);
+		return new AdventureMessageBridge(messageRenderer);
 	}
 
 	private AdventureLanguageManager setupAdventureLanguageManager(IFileManager fileManager) {
@@ -532,6 +531,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 			values.put(key.toString(), message);
 		});
 		return values;
+	}
+
+	public boolean useMiniMessage() {
+		return getConfig().getBoolean("useMiniMessage", false);
 	}
 
 	/**

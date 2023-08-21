@@ -1,6 +1,9 @@
 package me.wiefferink.areashop.commands;
 
 import io.github.bakedlibs.dough.blocks.BlockPosition;
+import io.github.md5sha256.areashop.CompositeMessage;
+import io.github.md5sha256.areashop.KeyedMessage;
+import io.github.md5sha256.areashop.MessageWrapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
@@ -10,13 +13,13 @@ import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
-import me.wiefferink.interactivemessenger.processing.Message;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -80,11 +83,12 @@ public class InfoCommand extends CommandAreaShop {
 				}
 			});
 			// Header
-			Message limitedToGroup = Message.empty();
 			if(filterGroup != null) {
-				limitedToGroup = Message.fromKey("info-limitedToGroup").replacements(filterGroup.getName());
+				KeyedMessage limitedToGroup = new KeyedMessage("info-limitedToGroup", filterGroup.getName());
+				messageBridge.message(sender, keyHeader, limitedToGroup);
+			} else {
+				messageBridge.message(sender, keyHeader);
 			}
-			messageBridge.message(sender, keyHeader, limitedToGroup);
 			// Page entries
 			int totalPages = (int)Math.ceil(regions.size() / (double)itemsPerPage); // Clip page to correct boundaries, not much need to tell the user
 			if(regions.size() == itemsPerPage + 1) { // 19 total items is mapped to 1 page of 19
@@ -114,31 +118,36 @@ public class InfoCommand extends CommandAreaShop {
 				messageBridge.messageNoPrefix(sender, "info-entry" + state, region);
 				linesPrinted++;
 			}
-			Message footer = Message.empty();
+			CompositeMessage footer = new CompositeMessage();
 			// Previous button
-			if(page > 1) {
-				footer.append(Message.fromKey("info-pagePrevious").replacements(baseCommand + " " + (page - 1)));
-			} else {
-				footer.append(Message.fromKey("info-pageNoPrevious"));
-			}
-			// Page status
+            MessageWrapper infoPage;
+            if(page > 1) {
+                infoPage = new KeyedMessage("info-pagePrevious",
+                        baseCommand + " " + (page - 1));
+            } else {
+                infoPage = new KeyedMessage("info-pageNoPrevious");
+            }
+            footer.appendMessage(infoPage);
+            // Page status
 			if(totalPages > 1) {
 				StringBuilder pageString = new StringBuilder("" + page);
 				for(int i = pageString.length(); i < (totalPages + "").length(); i++) {
 					pageString.insert(0, "0");
 				}
-				footer.append(Message.fromKey("info-pageStatus").replacements(page, totalPages));
-				if(page < totalPages) {
-					footer.append(Message.fromKey("info-pageNext").replacements(baseCommand + " " + (page + 1)));
-				} else {
-					footer.append(Message.fromKey("info-pageNoNext"));
-				}
-				// Fill up space if the page is not full (aligns header nicely)
-				for(int i = linesPrinted; i < maximumItems - 1; i++) {
-					sender.sendMessage(" ");
-				}
-				footer.send(sender);
+				MessageWrapper status = new KeyedMessage("info-pageStatus", page, totalPages);
+				footer.appendMessage(status);
+                MessageWrapper info;
+                if(page < totalPages) {
+                    info = new KeyedMessage("info-pageNext", baseCommand + " " + (page + 1));
+                } else {
+                    info = new KeyedMessage("info-pageNoNext");
+                }
+                footer.appendMessage(info);
+                // Fill up space if the page is not full (aligns header nicely)
+				String padding = " ".repeat(maximumItems - 1 - linesPrinted);
+				footer.appendText(padding);
 			}
+			messageBridge.message(sender, footer);
 		}
 	}
 
@@ -317,31 +326,36 @@ public class InfoCommand extends CommandAreaShop {
 							messageBridge.messageNoPrefix(sender, "info-regionInactiveUnrent", rent);
 						}
 						// Teleport
-						Message tp = Message.fromKey("info-prefix");
+						CompositeMessage tp = new CompositeMessage();
+						tp.appendMessage("info-prefix");
 						boolean foundSomething = false;
 						if(TeleportCommand.canUse(sender, rent)) {
 							foundSomething = true;
-							tp.append(Message.fromKey("info-regionTeleport").replacements(rent));
+							tp.appendMessage("info-regionTeleport", rent);
 						}
 						if(SetteleportCommand.canUse(sender, rent)) {
 							if(foundSomething) {
-								tp.append(", ");
+								tp.appendText(", ");
 							}
 							foundSomething = true;
-							tp.append(Message.fromKey("info-setRegionTeleport").replacements(rent));
+							tp.appendMessage("info-setRegionTeleport", rent);
 						}
 						if(foundSomething) {
-							tp.append(".");
-							tp.send(sender);
+							tp.appendText(".");
+							messageBridge.message(sender, tp);
 						}
 						// Signs
-						List<String> signLocations = new ArrayList<>();
-						for(BlockPosition location : rent.getSignsFeature().signManager().allSignLocations()) {
-							signLocations.add(Message.fromKey("info-regionSignLocation").replacements(location.getWorld().getName(), location.getX(), location.getY(), location.getZ()).getPlain());
+						CompositeMessage signLocations = new CompositeMessage();
+						Iterator<BlockPosition> signPositions = rent.getSignsFeature().signManager().allSignLocations().iterator();
+						while (signPositions.hasNext()) {
+							BlockPosition location = signPositions.next();
+							MessageWrapper signInfo = new KeyedMessage("info-regionSignLocation", location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
+							signLocations.appendMessage(signInfo);
+							if (signPositions.hasNext()) {
+								signLocations.appendText(", ");
+							}
 						}
-						if(!signLocations.isEmpty()) {
-							messageBridge.messageNoPrefix(sender, "info-regionSigns", Utils.createCommaSeparatedList(signLocations));
-						}
+						messageBridge.message(sender, "info-regionSigns", signLocations);
 						// Groups
 						if(sender.hasPermission("areashop.groupinfo") && !rent.getGroupNames().isEmpty()) {
 							messageBridge.messageNoPrefix(sender, "info-regionGroups", Utils.createCommaSeparatedList(rent.getGroupNames()));
@@ -394,31 +408,35 @@ public class InfoCommand extends CommandAreaShop {
 							messageBridge.messageNoPrefix(sender, "info-regionInactiveSell", buy);
 						}
 						// Teleport
-						Message tp = Message.fromKey("info-prefix");
+						CompositeMessage tp = new CompositeMessage();
+						tp.appendMessage("info-prefix");
 						boolean foundSomething = false;
 						if(TeleportCommand.canUse(sender, buy)) {
 							foundSomething = true;
-							tp.append(Message.fromKey("info-regionTeleport").replacements(buy));
+							tp.appendMessage("info-regionTeleport",buy);
 						}
 						if(SetteleportCommand.canUse(sender, buy)) {
 							if(foundSomething) {
-								tp.append(", ");
+								tp.appendText(", ");
 							}
 							foundSomething = true;
-							tp.append(Message.fromKey("info-setRegionTeleport").replacements(buy));
+							tp.appendMessage("info-setRegionTeleport", buy);
 						}
 						if(foundSomething) {
-							tp.append(".");
-							tp.send(sender);
+							tp.appendText(".");
+							messageBridge.message(sender, tp);
 						}
 						// Signs
-						List<String> signLocations = new ArrayList<>();
-						for(BlockPosition location : buy.getSignsFeature().signManager().allSignLocations()) {
-							signLocations.add(Message.fromKey("info-regionSignLocation").replacements(location.getWorld().getName(), location.getX(), location.getY(), location.getZ()).getPlain());
+						CompositeMessage signLocations = new CompositeMessage();
+						Iterator<BlockPosition> signPositions = buy.getSignsFeature().signManager().allSignLocations().iterator();
+						while (signPositions.hasNext()) {
+							BlockPosition location = signPositions.next();
+							signLocations.appendMessage("info-regionSignLocation", location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
+							if (signPositions.hasNext()) {
+								signLocations.appendText(", ");
+							}
 						}
-						if(!signLocations.isEmpty()) {
-							messageBridge.messageNoPrefix(sender, "info-regionSigns", Utils.createCommaSeparatedList(signLocations));
-						}
+						messageBridge.messageNoPrefix(sender, "info-regionSigns", signLocations);
 						// Groups
 						if(sender.hasPermission("areashop.groupinfo") && !buy.getGroupNames().isEmpty()) {
 							messageBridge.messageNoPrefix(sender, "info-regionGroups", Utils.createCommaSeparatedList(buy.getGroupNames()));

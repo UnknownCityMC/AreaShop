@@ -1,5 +1,7 @@
 package me.wiefferink.areashop;
 
+import io.github.md5sha256.areashop.MessageWrapper;
+
 public interface MessageBridge {
     /**
      * Send a message to a target without a prefix.
@@ -18,4 +20,6 @@ public interface MessageBridge {
      * @param replacements The replacements to insert in the message
      */
     void message(Object target, String key, Object... replacements);
+
+    void message(Object target, MessageWrapper message);
 }

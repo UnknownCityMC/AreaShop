@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.tools;
 
+import io.github.md5sha256.areashop.MessageWrapper;
 import me.wiefferink.areashop.MessageBridge;
 
 public class ForwardingMessageBridge implements MessageBridge {
@@ -27,5 +28,13 @@ public class ForwardingMessageBridge implements MessageBridge {
             return;
         }
         this.delegate.message(target, key, replacements);
+    }
+
+    @Override
+    public void message(Object target, MessageWrapper message) {
+        if (this.delegate == null) {
+            return;
+        }
+        this.delegate.message(target, message);
     }
 }
