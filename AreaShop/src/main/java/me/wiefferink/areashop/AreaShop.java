@@ -6,6 +6,7 @@ import com.google.inject.Stage;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import io.github.md5sha256.areashop.LanguageConverter;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.adapters.platform.MinecraftPlatform;
 import me.wiefferink.areashop.adapters.platform.paper.PaperPlatform;
@@ -27,7 +28,7 @@ import me.wiefferink.areashop.modules.DependencyModule;
 import me.wiefferink.areashop.modules.PlatformModule;
 import me.wiefferink.areashop.nms.NMS;
 import me.wiefferink.areashop.tools.GithubUpdateCheck;
-import me.wiefferink.areashop.tools.SimpleMessageBridge;
+import me.wiefferink.areashop.tools.LegacyMessageBridge;
 import me.wiefferink.areashop.tools.SpigotPlatform;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
@@ -50,11 +51,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 /**
  * Main class for the AreaShop plugin.
@@ -168,7 +172,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		AreaShop.instance = this;
 		Do.init(this);
 		managers = new HashSet<>();
-		messageBridge = new SimpleMessageBridge();
+		messageBridge = new LegacyMessageBridge();
 		signErrorLogger = new SignErrorLogger(new File(getDataFolder(), signLogFile));
 
 		// Setup NMS Impl
@@ -267,6 +271,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		}
 
 		setupLanguageManager();
+		performLanguageMigrations();
 
 		featureManager = injector.getInstance(FeatureManager.class);
 		featureManager.initializeFeatures(injector);
@@ -388,19 +393,42 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		this.debug = debug;
 	}
 
+	private void performLanguageMigrations() {
+		boolean migrateExisting = this.getConfig().getBoolean("migrateLanguages", false);
+		if (migrateExisting) {
+			getLogger().info("Performing language migration...");
+			File existingLanguages = getDataFolder().toPath().resolve(languageFolder).toFile();
+			File[] langFiles = existingLanguages.listFiles(file -> file.getName().endsWith(".yml"));
+			if (langFiles == null) {
+				return;
+			}
+			Path migrationPath = getDataFolder().toPath().resolve("lang-migrated");
+			migrationPath.toFile().mkdir();
+			for (File file : langFiles) {
+				File toMigrate = migrationPath.resolve(file.getName()).toFile();
+				try {
+					LanguageConverter.performConversion(file, toMigrate);
+				} catch (IOException ex) {
+					getLogger().log(Level.SEVERE, "Failed to perform migration for lang: " + file.getName(), ex);
+				}
+			}
+			getLogger().info("Language migration complete!");
+		}
+	}
+
 	/**
 	 * Setup a new LanguageManager.
 	 */
 	private void setupLanguageManager() {
+		String language = getConfig().getString("language");
 		languageManager = new LanguageManager(
 				this,
 				languageFolder,
-				getConfig().getString("language"),
+				language,
 				"EN",
 				chatprefix
 		);
 	}
-
 	/**
 	 * Set the chatprefix to use in the chat (loaded from config normally).
 	 * @param chatprefix The string to use in front of chat messages (supports formatting codes)

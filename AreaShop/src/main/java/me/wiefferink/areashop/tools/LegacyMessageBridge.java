@@ -5,7 +5,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.interactivemessenger.processing.Message;
 
 @Singleton
-public class SimpleMessageBridge implements MessageBridge {
+public class LegacyMessageBridge implements MessageBridge {
 
     /**
      * Send a message to a target without a prefix.

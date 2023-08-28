@@ -16,6 +16,12 @@ chatPrefix:
 # The language file that should be used, check the 'lang' folder for build-in languages (use the filename without .yml here).
 # More information can be found here: https://github.com/NLthijs48/AreaShop/wiki/Language-support.
 language: EN
+# Whether to use MiniMessage for languages
+# the new lang files will be under lang-migrated
+useMiniMessage: false
+# Whether to migrate existing language files to adventure MiniMessage
+migrateLanguages: false
+
 # The tags that need to be written on the first line of a sign to add it to AreaShop.
 signTags:
   # Add a rental region.
