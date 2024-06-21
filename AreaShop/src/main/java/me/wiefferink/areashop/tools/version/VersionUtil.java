@@ -2,7 +2,7 @@ package me.wiefferink.areashop.tools.version;
 
 public class VersionUtil {
 
-    public static VersionData MC_1_18_2 = new VersionData(1, 18, 2);
+    public static final VersionData MC_1_20_6 = new VersionData(1, 20, 6);
 
     public static Version parseMinecraftVersion(String minecraftVersion) {
         // Expecting 1.X.X-R0.1-SNAPSHOT
