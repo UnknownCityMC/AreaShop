@@ -106,9 +106,10 @@ public class WorldEditHandler extends WorldEditInterface {
 		try (InputStream is = new FileInputStream(finalFile);
 			 ClipboardReader reader = format.getReader(is)) {
 			Clipboard clipboard = reader.read();
-			if (!clipboard.getDimensions().equals(dimensions)) {
+			BlockVector3 clipboardDimensions = clipboard.getDimensions();
+			if (!clipboardDimensions.equals(dimensions)) {
 				pluginInterface.getLogger().warning(() -> "Size of the region " + regionInterface.getName() + " is not the same as the schematic to restore!");
-				pluginInterface.debugI("schematic|region, x:" + clipboard.getDimensions().getX() + "|" + regionInterface.getWidth() + ", y:" + clipboard.getDimensions().getY() + "|" + regionInterface.getHeight() + ", z:" + clipboard.getDimensions().getZ() + "|" + regionInterface.getDepth());
+				pluginInterface.debugI("schematic|region, x:" + clipboardDimensions.x() + "|" + regionInterface.getWidth() + ", y:" + clipboardDimensions.y() + "|" + regionInterface.getHeight() + ", z:" + clipboardDimensions.z() + "|" + regionInterface.getDepth());
 				return false;
 			}
 			final Operation operation = new ClipboardHolder(clipboard).createPaste(world)
@@ -131,7 +132,7 @@ public class WorldEditHandler extends WorldEditInterface {
 
 	@Override
 	public boolean saveRegionBlocks(File file, GeneralRegionInterface regionInterface) {
-		final ClipboardFormat format = BuiltInClipboardFormat.SPONGE_SCHEMATIC;
+		final ClipboardFormat format = BuiltInClipboardFormat.SPONGE_V3_SCHEMATIC;
 		final File targetFile = new File(file.getAbsolutePath() + "." + format.getPrimaryFileExtension());
 		ProtectedRegion wgRegion = regionInterface.getRegion();
 		Region region = new CuboidRegion(wgRegion.getMinimumPoint(), wgRegion.getMaximumPoint());
