@@ -7,6 +7,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -56,16 +58,16 @@ public class QuickDeleteCommand extends AreashopCommandBean {
 
     @Nonnull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("quickdelete", "quickdel")
                 .permission("areashop.quickdelete")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .handler(this::handleCommand);
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         GeneralRegion region = context.get(KEY_REGION);
         boolean giveMoneyBack = context.flags().isPresent(FLAG_RETURN_MONEY);
         DeletingRegionEvent event = this.fileManager.deleteRegion(region, giveMoneyBack);

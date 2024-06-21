@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RegionFactory;
@@ -65,7 +66,7 @@ public class GroupDelCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("groupdel")
                 .required(KEY_GROUP, StringParser.stringParser(), this::suggestGroupNames)
                 .flag(this.regionFlag)
@@ -77,8 +78,8 @@ public class GroupDelCommand extends AreashopCommandBean {
         return CommandProperties.of("groupdel");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("groupdel")) {
             throw new AreaShopCommandException("groupdel-noPermission");
         }
@@ -101,7 +102,7 @@ public class GroupDelCommand extends AreashopCommandBean {
             return;
         }
 
-        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, this.regionFlag);
+        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, sender, this.regionFlag);
         Set<GeneralRegion> regionsSuccess = new TreeSet<>();
         Set<GeneralRegion> regionsFailed = new TreeSet<>();
         for (GeneralRegion region : regions) {
@@ -129,7 +130,7 @@ public class GroupDelCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestGroupNames(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();

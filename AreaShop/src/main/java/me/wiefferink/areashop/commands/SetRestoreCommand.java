@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import org.bukkit.command.CommandSender;
@@ -18,7 +19,6 @@ import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.incendo.cloud.suggestion.Suggestion;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -56,9 +56,8 @@ public class SetRestoreCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("setrestore")
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .required(KEY_RESTORE, StringParser.stringParser(), this::suggestRestoreType)
@@ -71,8 +70,8 @@ public class SetRestoreCommand extends AreashopCommandBean {
         return CommandProperties.of("setrestore");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.setrestore")) {
             throw new AreaShopCommandException("setrestore-noPermission");
         }
@@ -101,7 +100,7 @@ public class SetRestoreCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestRestoreType(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();
@@ -113,7 +112,7 @@ public class SetRestoreCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestSchematicProfiles(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         ConfigurationSection schemProfiles = fileManager.getConfig().getConfigurationSection("schematicProfiles");

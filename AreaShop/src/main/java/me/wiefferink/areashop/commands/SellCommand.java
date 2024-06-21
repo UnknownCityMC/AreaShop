@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.BuyRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -19,7 +20,6 @@ import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -34,11 +34,11 @@ public class SellCommand extends AreashopCommandBean {
 
     @Inject
     public SellCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
-        ParserDescriptor<CommandSender, BuyRegion> regionParser =
+        ParserDescriptor<CommandSource<?>, BuyRegion> regionParser =
                 ParserDescriptor.of(new BuyRegionParser<>(fileManager, this::suggestBuyRegions), BuyRegion.class);
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        this.buyRegionFlag = CommandFlag.builder("region").withComponent(regionParser).build();
+        this.buyRegionFlag = CommandFlag.<CommandSource<?>>builder("region").withComponent(regionParser).build();
     }
 
     /**
@@ -63,9 +63,8 @@ public class SellCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("sell")
                 .flag(this.buyRegionFlag)
                 .handler(this::handleCommand);
@@ -84,13 +83,13 @@ public class SellCommand extends AreashopCommandBean {
         return null;
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.sell") && !sender.hasPermission("areashop.sellown")) {
             this.messageBridge.message(sender, "sell-noPermission");
             return;
         }
-        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, this.buyRegionFlag);
+        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender, this.buyRegionFlag);
         if (!buy.isSold()) {
             messageBridge.message(sender, "sell-notBought", buy);
             return;
@@ -99,7 +98,7 @@ public class SellCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestBuyRegions(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();

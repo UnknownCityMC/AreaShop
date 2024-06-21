@@ -13,6 +13,8 @@ import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.suggestion.BlockingSuggestionProvider;
 
+import java.util.Collections;
+
 public class ValidatedOfflinePlayerParser<C> implements ArgumentParser<C, OfflinePlayer>, BlockingSuggestionProvider.Strings<C> {
 
     public static <C> ParserDescriptor<C, OfflinePlayer> validatedOfflinePlayerParser() {
@@ -50,6 +52,9 @@ public class ValidatedOfflinePlayerParser<C> implements ArgumentParser<C, Offlin
             final @NonNull CommandContext<C> commandContext,
             final @NonNull CommandInput input
     ) {
+        if (!commandContext.contains(BukkitCommandContextKeys.BUKKIT_COMMAND_SENDER)) {
+            return Collections.emptyList();
+        }
         final CommandSender sender = commandContext.get(BukkitCommandContextKeys.BUKKIT_COMMAND_SENDER);
         return Bukkit.getOnlinePlayers().stream()
                 .filter(onlinePlayer -> !(sender instanceof Player player && !((Player) sender).canSee(player)))

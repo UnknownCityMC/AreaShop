@@ -5,6 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -60,14 +61,11 @@ public class InfoCommand extends AreashopCommandBean {
 
     @Override
     public String getHelpKey(CommandSender target) {
-        if(target.hasPermission("areashop.info")) {
-            return "help-info";
-        }
         return null;
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("info")
                 .required(KEY_TYPE, EnumParser.enumParser(RegionStateFilterType.class))
                 .flag(FLAG_PAGE)
@@ -80,8 +78,8 @@ public class InfoCommand extends AreashopCommandBean {
         return CommandProperties.of("info");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.info")) {
             messageBridge.message(sender, "info-noPermission");
             return;
@@ -90,7 +88,7 @@ public class InfoCommand extends AreashopCommandBean {
         processOtherFilters(context, filterType);
     }
 
-    private void processOtherFilters(@Nonnull CommandContext<CommandSender> context,
+    private void processOtherFilters(@Nonnull CommandContext<CommandSource<?>> context,
                                      @Nonnull RegionStateFilterType filterType) {
         RegionGroup filterGroup = context.flags().get(this.filterGroupFlag);
         int page = context.flags().getValue(FLAG_PAGE).orElse(1);
@@ -127,7 +125,7 @@ public class InfoCommand extends AreashopCommandBean {
             case RESELLING -> "info reselling";
             case NOGROUP -> "info nogroup";
         };
-        showSortedPagedList(context.sender(), toShow, filterGroup, header, page, baseCommand);
+        showSortedPagedList(context.sender().sender(), toShow, filterGroup, header, page, baseCommand);
     }
 
 

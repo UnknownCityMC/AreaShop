@@ -5,6 +5,8 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RentRegion;
 import org.bukkit.command.CommandSender;
@@ -46,20 +48,21 @@ public class RentCommand extends AreashopCommandBean {
 
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder
                 .literal("rent")
                 .flag(this.rentRegionFlag)
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .handler(this::handleCommand);
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         if (!context.hasPermission("areashop.rent")) {
             throw new AreaShopCommandException("rent-noPermission");
         }
-        RentRegion region = RegionParseUtil.getOrParseRentRegion(context, this.rentRegionFlag);
-        region.rent(context.sender());
+        Player sender = context.sender().sender();
+        RentRegion region = RegionParseUtil.getOrParseRentRegion(context, sender, this.rentRegionFlag);
+        region.rent(sender);
     }
 
 }

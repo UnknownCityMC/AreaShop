@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import org.bukkit.command.CommandSender;
@@ -16,7 +17,6 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.BooleanParser;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -49,9 +49,8 @@ public class SetTransferCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("settransfer")
                 .required(KEY_ENABLED, BooleanParser.booleanParser(true))
                 .flag(this.regionFlag)
@@ -63,12 +62,12 @@ public class SetTransferCommand extends AreashopCommandBean {
         return CommandProperties.of("settransfer");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.settransfer")) {
             throw new AreaShopCommandException("settransfer-noPermission");
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         boolean enabled = context.get(KEY_ENABLED);
         region.setTransferEnabled(enabled);
         messageBridge.message(sender, "settransfer-success", enabled, region);

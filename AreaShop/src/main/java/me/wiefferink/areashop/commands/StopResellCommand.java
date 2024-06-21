@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.BuyRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -19,7 +20,6 @@ import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -35,11 +35,11 @@ public class StopResellCommand extends AreashopCommandBean {
 
     @Inject
     public StopResellCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
-        ParserDescriptor<CommandSender, BuyRegion> regionParser =
+        ParserDescriptor<CommandSource<?>, BuyRegion> regionParser =
                 ParserDescriptor.of(new BuyRegionParser<>(fileManager, this::suggestBuyRegions), BuyRegion.class);
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        this.regionFlag = CommandFlag.builder("region")
+        this.regionFlag = CommandFlag.<CommandSource<?>>builder("region")
                 .withComponent(regionParser)
                 .build();
     }
@@ -57,9 +57,8 @@ public class StopResellCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("stopresell")
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
@@ -70,14 +69,14 @@ public class StopResellCommand extends AreashopCommandBean {
         return CommandProperties.of("stopresell");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.stopresell") && !sender.hasPermission("areashop.stopresellall")) {
             this.messageBridge.message(sender, "stopresell-noPermissionOther");
             return;
         }
 
-        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, this.regionFlag);
+        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender, this.regionFlag);
         if (!buy.isInResellingMode()) {
             this.messageBridge.message(sender, "stopresell-notResell", buy);
             return;
@@ -100,7 +99,7 @@ public class StopResellCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestBuyRegions(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();

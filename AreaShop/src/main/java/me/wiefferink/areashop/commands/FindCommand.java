@@ -6,6 +6,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -73,9 +75,9 @@ public class FindCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("find")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION_TYPE, EnumParser.enumParser(GeneralRegion.RegionType.class))
                 .optional(KEY_PRICE, DoubleParser.doubleParser(0))
                 .flag(this.regionGroupFlag)
@@ -87,8 +89,8 @@ public class FindCommand extends AreashopCommandBean {
         return CommandProperties.of("find");
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.find")) {
             throw new AreaShopCommandException("find-noPermission");
         }

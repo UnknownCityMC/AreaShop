@@ -1,6 +1,6 @@
 package me.wiefferink.areashop.commands.util;
 
-import org.bukkit.command.CommandSender;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandBean;
 import org.incendo.cloud.key.CloudKey;
@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * An extension of {@link CommandBean} which does extra pre-processing of the commands.
  * Adapted from <a href="https://github.com/Incendo/kitchensink">KitchenSink</a>
  */
-public abstract class AreashopCommandBean extends CommandBean<CommandSender> implements HelpProvider {
+public abstract class AreashopCommandBean extends CommandBean<CommandSource<?>> implements HelpProvider {
 
     private boolean requireConfirmation;
 
@@ -21,8 +21,8 @@ public abstract class AreashopCommandBean extends CommandBean<CommandSender> imp
     }
 
     @Override
-    protected final @Nonnull Command.Builder<? extends CommandSender> configure(
-            final @Nonnull Command.Builder<CommandSender> builder
+    protected final @Nonnull Command.Builder<? extends CommandSource<?>> configure(
+            final @Nonnull Command.Builder<CommandSource<?>> builder
     ) {
         return this.configureCommand(builder)
                 .meta(CloudKey.of("bukkit_description", String.class), this.stringDescription())
@@ -44,7 +44,7 @@ public abstract class AreashopCommandBean extends CommandBean<CommandSender> imp
      * @param builder builder to configure
      * @return the updated builder
      */
-    protected abstract @Nonnull Command.Builder<? extends CommandSender> configureCommand(
-            @Nonnull Command.Builder<CommandSender> builder
+    protected abstract @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(
+            @Nonnull Command.Builder<CommandSource<?>> builder
     );
 }

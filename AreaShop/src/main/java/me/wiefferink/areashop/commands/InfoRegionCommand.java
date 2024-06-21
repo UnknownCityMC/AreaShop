@@ -6,6 +6,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -46,14 +47,11 @@ public class InfoRegionCommand extends AreashopCommandBean {
 
     @Override
     public String getHelpKey(CommandSender target) {
-        if (target.hasPermission("areashop.info")) {
-            return "help-info";
-        }
         return null;
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("info").literal("region")
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
@@ -64,14 +62,14 @@ public class InfoRegionCommand extends AreashopCommandBean {
         return CommandProperties.of("info region");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.info")) {
             messageBridge.message(sender, "info-noPermission");
             return;
         }
         // Region info
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         if (region instanceof RentRegion rent) {
             handleRent(sender, rent);
         } else if (region instanceof BuyRegion buy) {

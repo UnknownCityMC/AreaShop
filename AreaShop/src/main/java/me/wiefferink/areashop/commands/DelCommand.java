@@ -8,6 +8,7 @@ import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.WorldSelection;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -21,7 +22,6 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
-import org.incendo.cloud.parser.ParserDescriptor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -70,18 +70,14 @@ public class DelCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
-        ParserDescriptor<CommandSender, GeneralRegion> regionParser = ParserDescriptor.of(
-                new GeneralRegionParser<>(this.fileManager),
-                GeneralRegion.class
-        );
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("del", "delete")
-                .optional(KEY_REGION, regionParser)
+                .optional(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .handler(this::handleCommand);
     }
 
-    public void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    public void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.destroybuy")
                 && !sender.hasPermission("areashop.destroybuy.landlord")
                 && !sender.hasPermission("areashop.destroyrent")

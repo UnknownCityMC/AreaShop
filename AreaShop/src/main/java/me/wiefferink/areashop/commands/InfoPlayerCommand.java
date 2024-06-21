@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionInfoUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -40,14 +41,11 @@ public class InfoPlayerCommand extends AreashopCommandBean {
 
     @Override
     public String getHelpKey(CommandSender target) {
-        if (target.hasPermission("areashop.info")) {
-            return "help-info";
-        }
         return null;
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("info").literal("player")
                 .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
                 .handler(this::handleCommand);
@@ -58,8 +56,8 @@ public class InfoPlayerCommand extends AreashopCommandBean {
         return CommandProperties.of("info region");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.info")) {
             messageBridge.message(sender, "info-noPermission");
             return;

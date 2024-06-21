@@ -7,6 +7,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -19,7 +21,6 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.flag.CommandFlag;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -65,11 +66,10 @@ public class SetTeleportCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("settp")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
@@ -79,13 +79,13 @@ public class SetTeleportCommand extends AreashopCommandBean {
         return CommandProperties.of("settp");
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         if (!player.hasPermission("areashop.setteleport") && !player.hasPermission("areashop.setteleportall")) {
             this.messageBridge.message(player, "setteleport-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, player, this.regionFlag);
 
         boolean owner;
         if (region instanceof RentRegion rentRegion) {

@@ -38,16 +38,16 @@ public class RegionCreationUtil {
     }
 
     public CompletableFuture<ProtectedRegion> createRegion(
-            @Nonnull CommandContext<Player> context,
+            @Nonnull CommandContext<?> context,
+            @Nonnull Player sender,
             @Nonnull CloudKey<String> regionKey
     ) {
-        Player player = context.sender();
-        World world = player.getWorld();
+        World world = sender.getWorld();
         String regionName = context.get(regionKey);
         if (this.fileManager.getRegion(regionName) != null) {
             return CompletableFuture.failedFuture(new AreaShopCommandException("add-failed", regionName));
         }
-        this.server.dispatchCommand(player, String.format("rg define %s", regionName));
+        this.server.dispatchCommand(sender, String.format("rg define %s", regionName));
         CompletableFuture<ProtectedRegion> future = new CompletableFuture<>();
         this.server.getScheduler().runTaskLater(this.plugin, () -> {
             ProtectedRegion region = this.worldGuardInterface.getRegionManager(world).getRegion(regionName);

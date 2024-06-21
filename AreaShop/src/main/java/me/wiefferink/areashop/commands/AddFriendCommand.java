@@ -6,6 +6,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -55,21 +57,21 @@ public class AddFriendCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("addfriend")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_FRIEND, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
 
-    private void handleCommand(CommandContext<Player> context) {
-        Player sender = context.sender();
+    private void handleCommand(CommandContext<PlayerCommandSource> context) {
+        Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.addfriend") && !sender.hasPermission("areashop.addfriendall")) {
            this.messageBridge.message(sender, "addfriend-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         OfflinePlayer friend = context.get(KEY_FRIEND);
         if (sender.hasPermission("areashop.addfriendall") && ((region instanceof RentRegion rentRegion && !rentRegion.isRented())
                 || (region instanceof BuyRegion buyRegion && !buyRegion.isSold()))) {

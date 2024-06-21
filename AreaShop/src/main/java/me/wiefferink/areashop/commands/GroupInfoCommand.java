@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.tools.Utils;
@@ -47,8 +48,8 @@ public class GroupInfoCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
-        ParserDescriptor<CommandSender, RegionGroup> regionGroupParser = ParserDescriptor.of(
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
+        ParserDescriptor<CommandSource<?>, RegionGroup> regionGroupParser = ParserDescriptor.of(
                 new RegionGroupParser<>(this.fileManager, "groupinfo-noGroup"),
                 RegionGroup.class);
         return builder
@@ -63,7 +64,7 @@ public class GroupInfoCommand extends AreashopCommandBean {
         return CommandProperties.of("groupinfo");
     }
 
-    public void handleCommand(@Nonnull CommandContext<CommandSender> context) {
+    public void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         if (!context.hasPermission("groupinfo")) {
             throw new AreaShopCommandException("groupinfo-noPermission");
         }

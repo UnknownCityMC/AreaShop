@@ -1,6 +1,5 @@
 package me.wiefferink.areashop.commands.util;
 
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -45,14 +44,14 @@ public final class SignProfileUtil {
     }
 
     @Nullable
-    public static String getOrParseProfile(@Nonnull CommandContext<? extends CommandSender> context,
+    public static String getOrParseProfile(@Nonnull CommandContext<?> context,
                                            @Nonnull Plugin plugin) {
         return getOrParseProfile(context, DEFAULT_FLAG, plugin);
     }
 
     @Nullable
     public static String getOrParseProfile(
-            @Nonnull CommandContext<? extends CommandSender> context,
+            @Nonnull CommandContext<?> context,
             @Nonnull CommandFlag<String> flag,
             @Nonnull Plugin plugin
     ) throws AreaShopCommandException {

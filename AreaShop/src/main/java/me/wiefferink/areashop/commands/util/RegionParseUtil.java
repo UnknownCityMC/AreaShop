@@ -33,10 +33,10 @@ public final class RegionParseUtil {
 
     @Nonnull
     public static Collection<GeneralRegion> getOrParseRegionsInSel(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<?> context,
+            @Nonnull CommandSender sender,
             @Nonnull CommandFlag<GeneralRegion> regionFlag
     ) {
-        CommandSender sender = context.sender();
         if (!(sender instanceof Player player)) {
             throw new AreaShopCommandException("cmd-weOnlyByPlayer");
         }
@@ -54,15 +54,15 @@ public final class RegionParseUtil {
     }
 
     @Nonnull
-    public static <C> GeneralRegion getOrParseRegion(
-            @Nonnull CommandContext<C> context,
+    public static GeneralRegion getOrParseRegion(
+            @Nonnull CommandContext<?> context,
+            @Nonnull CommandSender sender,
             @Nonnull CommandFlag<GeneralRegion> flag
     ) throws AreaShopCommandException {
         GeneralRegion region = context.flags().get(flag);
         if (region != null) {
             return region;
         }
-        C sender = context.sender();
         if (!(sender instanceof Entity entity)) {
             throw new AreaShopCommandException("cmd-automaticRegionOnlyByPlayer");
         }
@@ -74,21 +74,21 @@ public final class RegionParseUtil {
         } else if (regions.size() > 1) {
             errorMessageKey = "cmd-moreRegionsAtLocation";
         } else {
-            return regions.get(0);
+            return regions.getFirst();
         }
         throw new AreaShopCommandException(errorMessageKey);
     }
 
     @Nonnull
-    public static <C> GeneralRegion getOrParseRegion(
-            @Nonnull CommandContext<C> context,
+    public static GeneralRegion getOrParseRegion(
+            @Nonnull CommandContext<?> context,
+            @Nonnull CommandSender sender,
             @Nonnull CloudKey<GeneralRegion> key
     ) throws AreaShopCommandException {
         GeneralRegion region = context.getOrDefault(key, null);
         if (region != null) {
             return region;
         }
-        C sender = context.sender();
         if (!(sender instanceof Entity entity)) {
             throw new AreaShopCommandException("cmd-automaticRegionOnlyByPlayer");
         }
@@ -100,7 +100,7 @@ public final class RegionParseUtil {
         } else if (regions.size() > 1) {
             errorMessageKey = "cmd-moreRegionsAtLocation";
         } else {
-            return regions.get(0);
+            return regions.getFirst();
         }
         throw new AreaShopCommandException(errorMessageKey);
     }
@@ -121,12 +121,14 @@ public final class RegionParseUtil {
     }
 
     @Nonnull
-    public static BuyRegion getOrParseBuyRegion(@Nonnull CommandContext<? extends CommandSender> context, CommandFlag<BuyRegion> flag) {
+    public static BuyRegion getOrParseBuyRegion(
+            @Nonnull CommandContext<?> context,
+            @Nonnull CommandSender sender,
+            @Nonnull CommandFlag<BuyRegion> flag) {
         BuyRegion buyRegion = context.flags().get(flag);
         if (buyRegion != null) {
             return buyRegion;
         }
-        CommandSender sender = context.sender();
         if (!(sender instanceof Player player)) {
             throw new AreaShopCommandException("cmd-automaticRegionOnlyByPlayer");
         }
@@ -136,16 +138,18 @@ public final class RegionParseUtil {
         } else if (regions.size() != 1) {
             throw new AreaShopCommandException("cmd-moreRegionsAtLocation");
         }
-        return regions.get(0);
+        return regions.getFirst();
     }
 
     @Nonnull
-    public static RentRegion getOrParseRentRegion(@Nonnull CommandContext<? extends CommandSender> context, CommandFlag<RentRegion> flag) {
+    public static RentRegion getOrParseRentRegion(
+            @Nonnull CommandContext<?> context,
+            @Nonnull CommandSender sender,
+            @Nonnull CommandFlag<RentRegion> flag) {
         RentRegion rentRegion = context.flags().get(flag);
         if (rentRegion != null) {
             return rentRegion;
         }
-        CommandSender sender = context.sender();
         if (!(sender instanceof Player player)) {
             throw new AreaShopCommandException("cmd-automaticRegionOnlyByPlayer");
         }
@@ -155,7 +159,7 @@ public final class RegionParseUtil {
         } else if (regions.size() != 1) {
             throw new AreaShopCommandException("cmd-moreRegionsAtLocation");
         }
-        return regions.get(0);
+        return regions.getFirst();
     }
     
 }

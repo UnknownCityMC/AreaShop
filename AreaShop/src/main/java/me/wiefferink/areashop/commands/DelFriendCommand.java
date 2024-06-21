@@ -7,6 +7,7 @@ import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.features.FriendsFeature;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
@@ -81,19 +82,19 @@ public class DelFriendCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("delfriend", "deletefriend")
                 .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser(), this::suggestFriends)
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.delfriend") && !sender.hasPermission("areashop.delfriendall")) {
             throw new AreaShopCommandException("delfriend-noPermission");
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         OfflinePlayer friend = context.get(KEY_PLAYER);
         FriendsFeature friendsFeature = region.getFriendsFeature();
         if (sender.hasPermission("areashop.delfriendall")) {
@@ -128,16 +129,16 @@ public class DelFriendCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestFriends(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
-        CommandSender sender = context.sender();
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.delfriend")) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
         GeneralRegion region;
         try {
-            region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+            region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         } catch (AreaShopCommandException ignored) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }

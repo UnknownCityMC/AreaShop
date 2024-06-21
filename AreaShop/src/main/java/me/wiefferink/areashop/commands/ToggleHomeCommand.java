@@ -7,6 +7,7 @@ import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.features.homeaccess.HomeAccessFeature;
 import me.wiefferink.areashop.features.homeaccess.HomeAccessType;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -24,7 +25,6 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.incendo.cloud.suggestion.Suggestion;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -43,9 +43,9 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
     public ToggleHomeCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        this.regionFlag = CommandFlag.builder("region")
+        this.regionFlag = CommandFlag.<CommandSource<?>>builder("region")
                 .withComponent(
-                        new CommandComponent.Builder<CommandSender, GeneralRegion>()
+                        CommandComponent.<CommandSource<?>, GeneralRegion>builder()
                                 .name("region")
                                 .description(Description.EMPTY)
                                 .valueType(GeneralRegion.class)
@@ -69,9 +69,8 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("togglehome")
                 .required(KEY_ACCESS_TYPE, EnumParser.enumParser(HomeAccessType.class))
                 .flag(this.regionFlag)
@@ -83,13 +82,13 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
         return CommandProperties.of("togglehome");
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.togglehome")) {
             throw new AreaShopCommandException("togglehome-noPermission");
         }
         final HomeAccessType accessType = context.get(KEY_ACCESS_TYPE);
-        final GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        final GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         if (!(sender instanceof Player) && !sender.hasPermission("sethome.control.other")) {
             return;
         }
@@ -101,11 +100,11 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestRegions(
-            @Nonnull CommandContext<CommandSender> context,
+            @Nonnull CommandContext<CommandSource<?>> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();
-        CommandSender sender = context.sender();
+        CommandSender sender = context.sender().sender();
         Stream<GeneralRegion> regions;
         if (sender.hasPermission("sethome.control.other")) {
             regions = this.fileManager.getRegionsRef().stream();

@@ -19,20 +19,21 @@ public final class WorldFlagUtil {
     }
 
     @Nonnull
-    public static <C extends Entity> World parseOrDetectWorld(@Nonnull CommandContext<C> context) {
-        return parseOrDetectWorld(context, DEFAULT_WORLD_FLAG);
+    public static World parseOrDetectWorld(@Nonnull CommandContext<?> context, @Nonnull Entity sender) {
+        return parseOrDetectWorld(context, sender, DEFAULT_WORLD_FLAG);
     }
 
     @Nonnull
-    public static <C extends Entity> World parseOrDetectWorld(
-            @Nonnull CommandContext<C> context,
+    public static World parseOrDetectWorld(
+            @Nonnull CommandContext<?> context,
+            @Nonnull Entity sender,
             @Nonnull CommandFlag<World> flag
     ) {
         World world = context.flags().get(flag);
         if (world != null) {
             return world;
         }
-        return context.sender().getWorld();
+        return sender.getWorld();
     }
 
 }

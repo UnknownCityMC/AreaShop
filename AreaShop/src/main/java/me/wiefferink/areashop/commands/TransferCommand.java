@@ -8,6 +8,8 @@ import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import org.bukkit.OfflinePlayer;
@@ -22,7 +24,6 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -43,11 +44,11 @@ public class TransferCommand extends AreashopCommandBean {
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager
     ) {
-        ParserDescriptor<Player, GeneralRegion> regionParser =
+        ParserDescriptor<PlayerCommandSource, GeneralRegion> regionParser =
                 ParserDescriptor.of(new GeneralRegionParser<>(fileManager, this::suggestRegions), GeneralRegion.class);
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        this.regionFlag = CommandFlag.builder("region")
+        this.regionFlag = CommandFlag.<PlayerCommandSource>builder("region")
                 .withComponent(regionParser)
                 .build();
     }
@@ -65,11 +66,10 @@ public class TransferCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("transfer")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
@@ -80,12 +80,12 @@ public class TransferCommand extends AreashopCommandBean {
         return CommandProperties.of("transfer");
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.transfer")) {
             throw new AreaShopCommandException("transfer-noPermission");
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         if (!region.isTransferEnabled()) {
             throw new AreaShopCommandException("transfer-disabled");
         }
@@ -124,11 +124,11 @@ public class TransferCommand extends AreashopCommandBean {
     }
 
     private CompletableFuture<Iterable<Suggestion>> suggestRegions(
-            @Nonnull CommandContext<Player> context,
+            @Nonnull CommandContext<PlayerCommandSource> context,
             @Nonnull CommandInput input
     ) {
         String text = input.peekString();
-        UUID uuid = context.sender().getUniqueId();
+        UUID uuid = context.sender().sender().getUniqueId();
         List<Suggestion> suggestions = this.fileManager.getRegions()
                 .stream()
                 .filter(region -> region.isOwner(uuid) || region.isLandlord(uuid))

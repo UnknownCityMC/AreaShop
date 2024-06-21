@@ -2,6 +2,7 @@ package me.wiefferink.areashop.commands.util;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import me.wiefferink.areashop.commands.util.commandsource.EntityCommandSource;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -17,7 +18,7 @@ import org.incendo.cloud.suggestion.SuggestionProvider;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 
-public class WorldGuardRegionParser<C extends Entity> implements ArgumentParser<C, ProtectedRegion> {
+public class WorldGuardRegionParser<C extends EntityCommandSource> implements ArgumentParser<C, ProtectedRegion> {
     private final WorldGuardInterface worldGuardInterface;
     private final CommandFlag<World> worldFlag;
 
@@ -29,7 +30,7 @@ public class WorldGuardRegionParser<C extends Entity> implements ArgumentParser<
         this.worldGuardInterface = worldGuardInterface;
     }
 
-    public static <C extends Entity> ParserDescriptor<C, ProtectedRegion> worldGuardRegionParser(
+    public static <C extends EntityCommandSource> ParserDescriptor<C, ProtectedRegion> worldGuardRegionParser(
             @Nonnull CommandFlag<World> worldFlag,
             @Nonnull WorldGuardInterface worldGuardInterface
     ) {
@@ -39,7 +40,8 @@ public class WorldGuardRegionParser<C extends Entity> implements ArgumentParser<
     @Override
     public @Nonnull ArgumentParseResult<ProtectedRegion> parse(@Nonnull CommandContext<C> commandContext,
                                                                         @Nonnull CommandInput commandInput) {
-        World world = WorldFlagUtil.parseOrDetectWorld(commandContext, worldFlag);
+        Entity sender = commandContext.sender().sender();
+        World world = WorldFlagUtil.parseOrDetectWorld(commandContext, sender, worldFlag);
         String regionName = commandInput.peekString();
         RegionManager regionManager = this.worldGuardInterface.getRegionManager(world);
         if (regionManager == null) {
@@ -57,7 +59,7 @@ public class WorldGuardRegionParser<C extends Entity> implements ArgumentParser<
     @Override
     public @Nonnull SuggestionProvider<C> suggestionProvider() {
         return SuggestionProvider.blockingStrings((commandContext, input) -> {
-            C sender = commandContext.sender();
+            Entity sender = commandContext.sender().sender();
             if (!(sender instanceof Player player)) {
                 return Collections.emptyList();
             }

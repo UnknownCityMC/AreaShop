@@ -7,6 +7,8 @@ import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionInfoUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -16,7 +18,6 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -41,11 +42,10 @@ public class MeCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("me")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .optional(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
                 .handler(this::handleCommand);
     }
@@ -63,8 +63,8 @@ public class MeCommand extends AreashopCommandBean {
         return null;
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.me")) {
             throw new AreaShopCommandException("me-noPermission");
         }

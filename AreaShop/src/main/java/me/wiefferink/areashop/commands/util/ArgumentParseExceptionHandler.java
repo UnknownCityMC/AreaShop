@@ -1,13 +1,13 @@
 package me.wiefferink.areashop.commands.util;
 
 import me.wiefferink.areashop.MessageBridge;
-import org.bukkit.command.CommandSender;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import org.incendo.cloud.exception.handling.ExceptionContext;
 import org.incendo.cloud.exception.handling.ExceptionHandler;
 
 import javax.annotation.Nonnull;
 
-public class ArgumentParseExceptionHandler<C extends CommandSender> implements ExceptionHandler<C, AreaShopCommandException> {
+public class ArgumentParseExceptionHandler<C extends CommandSource<?>> implements ExceptionHandler<C, AreaShopCommandException> {
 
     private final MessageBridge messageBridge;
 
@@ -17,7 +17,7 @@ public class ArgumentParseExceptionHandler<C extends CommandSender> implements E
 
     public static void handleException(
             @Nonnull MessageBridge messageBridge,
-            @Nonnull CommandSender sender,
+            @Nonnull CommandSource<?> sender,
             @Nonnull AreaShopCommandException exception
     ) {
         String key = exception.messageKey();

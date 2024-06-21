@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import org.bukkit.command.CommandSender;
@@ -15,7 +16,6 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.EnumParser;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -39,9 +39,8 @@ public class SchematicEventCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("schemevent")
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .required(KEY_EVENT_TYPE, EnumParser.enumParser(GeneralRegion.RegionEvent.class))
@@ -61,8 +60,8 @@ public class SchematicEventCommand extends AreashopCommandBean {
         return null;
     }
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.schematicevents")) {
             throw new AreaShopCommandException("schemevent-noPermission");
         }

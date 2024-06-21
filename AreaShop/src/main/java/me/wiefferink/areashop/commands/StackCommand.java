@@ -7,6 +7,8 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
@@ -108,11 +110,10 @@ public class StackCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("stack")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_AMOUNT, IntegerParser.integerParser(0))
                 .required(KEY_GAP, IntegerParser.integerParser(0))
                 .required(KEY_NAME, StringParser.stringParser())
@@ -127,8 +128,8 @@ public class StackCommand extends AreashopCommandBean {
         return CommandProperties.of("stack");
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         if (!player.hasPermission("areashop.stack")) {
             throw new AreaShopCommandException("stack-noPermission");
         }

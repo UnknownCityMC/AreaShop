@@ -46,10 +46,10 @@ import me.wiefferink.areashop.commands.TeleportCommand;
 import me.wiefferink.areashop.commands.ToggleHomeCommand;
 import me.wiefferink.areashop.commands.TransferCommand;
 import me.wiefferink.areashop.commands.UnrentCommand;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSourceMapper;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
-import org.incendo.cloud.SenderMapper;
-import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
 import org.incendo.cloud.exception.ArgumentParseException;
 import org.incendo.cloud.exception.CommandExecutionException;
 import org.incendo.cloud.exception.InvalidCommandSenderException;
@@ -115,7 +115,7 @@ public class AreashopCommands {
     private final MessageBridge messageBridge;
 
     private final Injector injector;
-    private final PaperCommandManager<CommandSender> commandManager;
+    private final PaperCommandManager<CommandSource<?>> commandManager;
 
     private final List<AreashopCommandBean> commands = new ArrayList<>();
     private HelpRenderer helpRenderer;
@@ -123,11 +123,9 @@ public class AreashopCommands {
     @Inject
     AreashopCommands(@Nonnull Injector injector, @Nonnull Plugin plugin, @Nonnull MessageBridge messageBridge) {
         this.injector = injector;
-        this.commandManager = new PaperCommandManager<>(
-                plugin,
-                ExecutionCoordinator.simpleCoordinator(),
-                SenderMapper.identity()
-        );
+        this.commandManager = PaperCommandManager.builder(new CommandSourceMapper())
+                .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                .buildOnEnable(plugin);
         this.messageBridge = messageBridge;
     }
 
@@ -142,15 +140,12 @@ public class AreashopCommands {
             this.commandManager.command(configuredBuilder);
         }
         // Show help by default
-        this.commandManager.command(builder.handler(context -> showHelp(context.sender())));
+        this.commandManager.command(builder.handler(context -> showHelp(context.sender().sender())));
         this.helpRenderer = new HelpRenderer(this.messageBridge, this.commands);
     }
 
     private void initCommandManager() {
-        if (this.commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
-            this.commandManager.registerBrigadier();
-        }
-        ExceptionController<CommandSender> exceptionController = this.commandManager.exceptionController();
+        ExceptionController<CommandSource<?>> exceptionController = this.commandManager.exceptionController();
         // We need to unwrap ArgumentParseException because they wrap the custom exception messages
         exceptionController.registerHandler(ArgumentParseException.class,
                 ExceptionHandler.unwrappingHandler(AreaShopCommandException.class));
@@ -160,7 +155,7 @@ public class AreashopCommands {
                 new InvalidCommandSenderHandler(this.messageBridge));
         exceptionController.registerHandler(AreaShopCommandException.class,
                 new ArgumentParseExceptionHandler<>(this.messageBridge));
-        var confirmationConfiguration = ConfirmationConfiguration.<CommandSender>builder()
+        var confirmationConfiguration = ConfirmationConfiguration.<CommandSource<?>>builder()
                 .cache(GuavaCache.of(CacheBuilder.newBuilder().build()))
                 .noPendingCommandNotifier(x -> {
                 })

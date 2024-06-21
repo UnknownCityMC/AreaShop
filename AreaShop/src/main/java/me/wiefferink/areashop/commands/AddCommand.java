@@ -10,6 +10,8 @@ import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.WorldFlagUtil;
 import me.wiefferink.areashop.commands.util.WorldGuardRegionParser;
 import me.wiefferink.areashop.commands.util.WorldSelection;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.events.ask.BuyingRegionEvent;
 import me.wiefferink.areashop.events.ask.RentingRegionEvent;
@@ -28,13 +30,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
-import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.jetbrains.annotations.NotNull;
 
@@ -92,31 +92,29 @@ public class AddCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         // /as add <rent|buy> [region] [world]
-        ParserDescriptor<Entity, ProtectedRegion> wgRegionParser = ParserDescriptor.of(new WorldGuardRegionParser<>(
-                WorldFlagUtil.DEFAULT_WORLD_FLAG,
-                this.worldGuardInterface), ProtectedRegion.class);
+        var wgRegionParser = WorldGuardRegionParser.worldGuardRegionParser(WorldFlagUtil.DEFAULT_WORLD_FLAG, this.worldGuardInterface);
         return builder
                 .literal("add")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION_TYPE, EnumParser.enumParser(GeneralRegion.RegionType.class))
                 .optional(KEY_REGION, wgRegionParser)
                 .flag(WorldFlagUtil.DEFAULT_WORLD_FLAG)
                 .handler(this::handleCommand);
     }
 
-    private void handleCommand(CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         final GeneralRegion.RegionType regionType = context.get(KEY_REGION_TYPE);
-        World world = WorldFlagUtil.parseOrDetectWorld(context);
+        World world = WorldFlagUtil.parseOrDetectWorld(context, player);
         Map<String, ProtectedRegion> regions;
         Optional<ProtectedRegion> inputRegion = context.optional(KEY_REGION);
         if (inputRegion.isPresent()) {
             regions = new HashMap<>();
             regions.put(inputRegion.get().getId(), inputRegion.get());
         } else {
-            WorldSelection selection = WorldSelection.fromPlayer(context.sender(), this.worldEditInterface);
+            WorldSelection selection = WorldSelection.fromPlayer(player, this.worldEditInterface);
             regions = Utils.getWorldEditRegionsInSelection(selection.selection()).stream()
                     .collect(Collectors.toMap(ProtectedRegion::getId, region -> region));
         }

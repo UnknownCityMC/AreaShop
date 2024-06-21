@@ -8,6 +8,8 @@ import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.SignProfileUtil;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.features.signs.RegionSign;
 import me.wiefferink.areashop.features.signs.SignManager;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -66,16 +68,16 @@ public class AddSignCommand extends AreashopCommandBean {
 	}
 
 	@Override
-	protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+	protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
 		return builder.literal("addsign")
-				.senderType(Player.class)
+				.senderType(PlayerCommandSource.class)
 				.optional(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
 				.flag(SignProfileUtil.DEFAULT_FLAG)
 				.handler(this::handleCommand);
 	}
 
-	private void handleCommand(@Nonnull CommandContext<Player> context) {
-		Player sender = context.sender();
+	private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+		Player sender = context.sender().sender();
 		if (!sender.hasPermission("areashop.addsign")) {
 			throw new AreaShopCommandException("addsign-noPermission");
 		}
@@ -93,7 +95,7 @@ public class AddSignCommand extends AreashopCommandBean {
 			return;
 		}
 
-		GeneralRegion region = RegionParseUtil.getOrParseRegion(context, KEY_REGION);
+		GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, KEY_REGION);
 		String profile = SignProfileUtil.getOrParseProfile(context, this.plugin);
 		Optional<RegionSign> optionalRegionSign = this.signManager.signFromLocation(block.getLocation());
 		if(optionalRegionSign.isPresent()) {

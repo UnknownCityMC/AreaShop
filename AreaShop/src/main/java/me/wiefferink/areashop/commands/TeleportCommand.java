@@ -5,6 +5,8 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import org.bukkit.command.CommandSender;
@@ -15,7 +17,6 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -65,11 +66,10 @@ public class TeleportCommand extends AreashopCommandBean {
         return null;
     }
 
-    @NotNull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@NotNull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
         return builder.literal("tp", "teleport")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .handler(this::handleCommand);
     }
@@ -79,8 +79,8 @@ public class TeleportCommand extends AreashopCommandBean {
         return CommandProperties.of("teleport", "tp");
     }
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         if (!player.hasPermission("areashop.teleport") && !player.hasPermission("areashop.teleportall") && !player.hasPermission(
                 "areashop.teleportavailable") && !player.hasPermission("areashop.teleportavailablesign") && !player.hasPermission(
                 "areashop.teleportsign") && !player.hasPermission("areashop.teleportsignall") && !player.hasPermission(

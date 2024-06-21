@@ -6,6 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AcceptedValuesParser;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.regions.ImportJobFactory;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
@@ -50,7 +51,7 @@ public class ImportCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected @Nonnull Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         withConfirmation();
         var sourceParser = AcceptedValuesParser.ofConstant(List.of("RegionForSale"), "import-wrongSource", true);
         return builder.literal("import")
@@ -69,8 +70,8 @@ public class ImportCommand extends AreashopCommandBean {
     //  - Region flags?
     //  - Settings from the 'permissions' section in RegionForSale/config.yml?
 
-    private void handleCommand(@Nonnull CommandContext<CommandSender> context) {
-        CommandSender sender = context.sender();
+    private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
+        CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.import")) {
             this.messageBridge.message(sender, "import-noPermission");
             return;

@@ -1,8 +1,8 @@
 package me.wiefferink.areashop.commands.util;
 
 import me.wiefferink.areashop.MessageBridge;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.exception.InvalidCommandSenderException;
 import org.incendo.cloud.exception.handling.ExceptionContext;
@@ -10,7 +10,7 @@ import org.incendo.cloud.exception.handling.ExceptionHandler;
 
 import javax.annotation.Nonnull;
 
-public class InvalidCommandSenderHandler implements ExceptionHandler<CommandSender, InvalidCommandSenderException> {
+public class InvalidCommandSenderHandler implements ExceptionHandler<CommandSource<?>, InvalidCommandSenderException> {
 
     private final MessageBridge messageBridge;
 
@@ -19,9 +19,9 @@ public class InvalidCommandSenderHandler implements ExceptionHandler<CommandSend
     }
 
     @Override
-    public void handle(@NonNull ExceptionContext<CommandSender, InvalidCommandSenderException> context) throws Throwable {
+    public void handle(@NonNull ExceptionContext<CommandSource<?>, InvalidCommandSenderException> context) throws Throwable {
         InvalidCommandSenderException exception = context.exception();
-        if (exception.requiredSender().equals(Player.class)) {
+        if (exception.requiredSenderTypes().contains(PlayerCommandSource.class)) {
             this.messageBridge.message(exception.commandSender(), "cmd-onlyByPlayer");
             return;
         }

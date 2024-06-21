@@ -9,6 +9,8 @@ import me.wiefferink.areashop.commands.util.ArgumentParseExceptionHandler;
 import me.wiefferink.areashop.commands.util.DurationInputParser;
 import me.wiefferink.areashop.commands.util.RegionCreationUtil;
 import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
+import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
+import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionFactory;
 import me.wiefferink.areashop.regions.RentRegion;
@@ -65,10 +67,10 @@ public class QuickRentCommand extends AreashopCommandBean {
 
     @Nonnull
     @Override
-    protected Command.Builder<? extends CommandSender> configureCommand(@Nonnull Command.Builder<CommandSender> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("quickrent")
                 .permission("permission")
-                .senderType(Player.class)
+                .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION, StringParser.stringParser())
                 .required(KEY_PRICE, DoubleParser.doubleParser(0))
                 .required(KEY_DURATION, DurationInputParser.durationInputParser())
@@ -78,16 +80,16 @@ public class QuickRentCommand extends AreashopCommandBean {
 
     // /as quickrent <name> <price> <duration> <landlord>
 
-    private void handleCommand(@Nonnull CommandContext<Player> context) {
-        Player player = context.sender();
+    private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
+        Player player = context.sender().sender();
         if (!player.hasPermission("areashop.quickrent")) {
             player.sendMessage("Insufficient permission");
             return;
         }
-        this.regionCreationUtil.createRegion(context, KEY_REGION)
+        this.regionCreationUtil.createRegion(context, player, KEY_REGION)
                 .exceptionally(throwable -> {
                     if (throwable instanceof AreaShopCommandException exception) {
-                        ArgumentParseExceptionHandler.handleException(this.messageBridge, player, exception);
+                        ArgumentParseExceptionHandler.handleException(this.messageBridge, context.sender(), exception);
                     } else {
                         throw new CommandExecutionException(throwable, context);
                     }
