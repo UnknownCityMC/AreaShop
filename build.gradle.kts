@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "me.wiefferink"
-version = "2.9.0"
+version = "2.9.0-SNAPSHOT"
 
 val targetJavaVersion = 21
 val encoding = Charsets.UTF_8
