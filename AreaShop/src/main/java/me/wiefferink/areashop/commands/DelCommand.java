@@ -22,6 +22,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class DelCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.destroyrent") || target.hasPermission("areashop.destroybuy") || target.hasPermission(
                 "areashop.destroyrent.landlord") || target.hasPermission("areashop.destroybuy.landlord")) {
             return "help-del";
@@ -175,12 +176,9 @@ public class DelCommand extends AreashopCommandBean {
             return true;
 
         }
-        if (region instanceof BuyRegion
+        return region instanceof BuyRegion
                 && (!sender.hasPermission("areashop.destroybuy") && !(isLandlord && sender.hasPermission(
-                "areashop.destroybuy.landlord")))) {
-            return true;
-        }
-        return false;
+                "areashop.destroybuy.landlord")));
     }
 
 }

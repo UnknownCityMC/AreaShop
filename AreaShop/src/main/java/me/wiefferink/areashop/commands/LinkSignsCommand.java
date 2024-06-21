@@ -17,13 +17,13 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.flag.CommandFlag;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
 @Singleton
 public class LinkSignsCommand extends AreashopCommandBean {
 
-    private final MessageBridge messageBridge;
     private final SignLinkerManager signLinkerManager;
     private final AreaShop plugin;
 
@@ -35,7 +35,6 @@ public class LinkSignsCommand extends AreashopCommandBean {
             @Nonnull SignLinkerManager signLinkerManager,
             @Nonnull AreaShop plugin
     ) {
-        this.messageBridge = messageBridge;
         this.signLinkerManager = signLinkerManager;
         this.plugin = plugin;
         this.profileFlag = SignProfileUtil.createDefault(plugin);
@@ -48,7 +47,7 @@ public class LinkSignsCommand extends AreashopCommandBean {
 
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("linksign")
                 .senderType(PlayerCommandSource.class)
                 .flag(this.profileFlag)

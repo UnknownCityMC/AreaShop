@@ -1307,7 +1307,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		// Check all limitgroups the player has
 		List<String> groups = new ArrayList<>(plugin.getConfig().getConfigurationSection("limitGroups").getKeys(false));
 		while(!groups.isEmpty()) {
-			String group = groups.get(0);
+			String group = groups.getFirst();
 			if(plugin.hasPermission(offlinePlayer, "areashop.limits." + group) && this.matchesLimitGroup(group)) {
 				String pathPrefix = "limitGroups." + group + ".";
 				if(!plugin.getConfig().isInt(pathPrefix + "total")) {
@@ -1386,7 +1386,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	/**
 	 * Class to store the result of a limits check.
 	 */
-	public class LimitResult {
+	public static class LimitResult {
 		private final boolean actionAllowed;
 		private final LimitType limitingFactor;
 		private final int maximum;
@@ -1464,12 +1464,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	private boolean limitGroupsOfSameCategory(String firstGroup, String secondGroup) {
 		List<String> firstGroups = plugin.getConfig().getStringList("limitGroups." + firstGroup + ".groups");
 		List<String> secondGroups = plugin.getConfig().getStringList("limitGroups." + secondGroup + ".groups");
-		if(!firstGroups.containsAll(secondGroups) || !secondGroups.containsAll(firstGroups)) {
+		if(!new HashSet<>(firstGroups).containsAll(secondGroups) || !new HashSet<>(secondGroups).containsAll(firstGroups)) {
 			return false;
 		}
 		List<String> firstWorlds = plugin.getConfig().getStringList("limitGroups." + firstGroup + ".worlds");
 		List<String> secondWorlds = plugin.getConfig().getStringList("limitGroups." + secondGroup + ".worlds");
-		return !(!firstWorlds.containsAll(secondWorlds) || !secondWorlds.containsAll(firstWorlds));
+		return !(!new HashSet<>(firstWorlds).containsAll(secondWorlds) || !new HashSet<>(secondWorlds).containsAll(firstWorlds));
 	}
 
 	/**
@@ -1675,8 +1675,8 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 
 				x1 = points.get(numPoints - 1).getBlockX();
 				z1 = points.get(numPoints - 1).getBlockZ();
-				x2 = points.get(0).getBlockX();
-				z2 = points.get(0).getBlockZ();
+				x2 = points.getFirst().getBlockX();
+				z2 = points.getFirst().getBlockZ();
 
 				area += ((z1 + z2) * (x1 - x2));
 				area = Math.ceil(Math.abs(area) / 2);

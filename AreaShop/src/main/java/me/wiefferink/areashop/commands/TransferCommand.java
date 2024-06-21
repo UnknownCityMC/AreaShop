@@ -24,6 +24,7 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -54,7 +55,7 @@ public class TransferCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (!target.hasPermission("areashop.transfer")) {
             return null;
         }
@@ -67,7 +68,7 @@ public class TransferCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("transfer")
                 .senderType(PlayerCommandSource.class)
                 .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())

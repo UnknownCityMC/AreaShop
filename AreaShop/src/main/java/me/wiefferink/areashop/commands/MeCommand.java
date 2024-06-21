@@ -18,6 +18,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -43,7 +44,7 @@ public class MeCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("me")
                 .senderType(PlayerCommandSource.class)
                 .optional(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
@@ -56,7 +57,7 @@ public class MeCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.me")) {
             return "help-me";
         }

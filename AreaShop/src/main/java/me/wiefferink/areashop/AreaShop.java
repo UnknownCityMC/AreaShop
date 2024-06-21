@@ -271,7 +271,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 
 		AreaShopModule asModule = new AreaShopModule(this,
 				this.messageBridge,
-				this.platformAdapter,
 				this.worldEditInterface,
 				this.worldGuardInterface,
 				this.signErrorLogger,
@@ -454,7 +453,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		List<String> chatPrefix = getConfig().getStringList("chatPrefix");
 		List<String> convertedChatPrefix = LanguageConverter.convertRawList(chatPrefix);
 		if (convertedChatPrefix.size() == 1) {
-			getConfig().set("mmChatPrefix", convertedChatPrefix.get(0));
+			getConfig().set("mmChatPrefix", convertedChatPrefix.getFirst());
 		} else {
 			getConfig().set("mmChatPrefix", convertedChatPrefix);
 		}
@@ -605,7 +604,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	 * Function to get the Vault plugin.
 	 * @return Economy
 	 */
-	@Deprecated
 	private Economy getEconomy() {
 		RegisteredServiceProvider<Economy> economy = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
 		if(economy == null) {
@@ -619,7 +617,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	 * Get the Vault permissions provider.
 	 * @return Vault permissions provider
 	 */
-	@Deprecated
 	private net.milkbowl.vault.permission.Permission getPermissionProvider() {
 		RegisteredServiceProvider<net.milkbowl.vault.permission.Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
 		if (permissionProvider == null) {

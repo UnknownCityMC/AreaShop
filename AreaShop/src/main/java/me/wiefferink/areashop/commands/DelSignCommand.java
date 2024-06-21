@@ -18,6 +18,7 @@ import org.bukkit.util.BlockIterator;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -53,7 +54,7 @@ public class DelSignCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.delsign")) {
             return "help-delsign";
         }

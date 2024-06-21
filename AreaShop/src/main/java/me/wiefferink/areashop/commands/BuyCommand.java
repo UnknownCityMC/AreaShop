@@ -15,6 +15,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.flag.CommandFlag;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -29,7 +30,7 @@ public class BuyCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if(target.hasPermission("areashop.buy")) {
             return "help-buy";
         }

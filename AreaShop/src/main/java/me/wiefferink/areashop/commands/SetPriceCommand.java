@@ -19,6 +19,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.StringParser;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -50,7 +51,7 @@ public class SetPriceCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setprice")
                 .required(KEY_PRICE, StringParser.stringParser())
                 .flag(this.regionFlag)

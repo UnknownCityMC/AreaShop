@@ -79,7 +79,7 @@ public class LanguageConverter {
         }
         List<String> converted = convertRawList(messages);
         if (converted.size() == 1) {
-            node.set(String.class, converted.get(0));
+            node.set(String.class, converted.getFirst());
         } else {
             node.setList(String.class, converted);
         }

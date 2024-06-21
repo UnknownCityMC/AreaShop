@@ -38,7 +38,7 @@ public class SimpleMessageBridge implements MessageBridge {
         }
 
         if (message.get() == null || message.get().isEmpty() || (message.get().size() == 1 && message.get()
-                .get(0)
+                .getFirst()
                 .isEmpty())) {
             return;
         }

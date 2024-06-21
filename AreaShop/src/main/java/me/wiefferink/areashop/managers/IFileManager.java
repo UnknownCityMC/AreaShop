@@ -379,7 +379,7 @@ public interface IFileManager {
     void setGroupSetting(RegionGroup group, String path, Object setting);
 
     // Enum for region types
-    public enum AddResult {
+    enum AddResult {
         BLACKLISTED("blacklisted"),
         NOPERMISSION("nopermission"),
         ALREADYADDED("alreadyadded"),

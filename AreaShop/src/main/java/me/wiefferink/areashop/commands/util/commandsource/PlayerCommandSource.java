@@ -1,7 +1,6 @@
 package me.wiefferink.areashop.commands.util.commandsource;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 

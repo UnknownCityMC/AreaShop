@@ -296,7 +296,7 @@ public class ImportJob {
 
 				// First owner (or if none, the first member) will be the renter/buyer
 				if(!existing.isEmpty()) {
-					region.setOwner(existing.remove(0));
+					region.setOwner(existing.removeFirst());
 				}
 				// Add others as friends
 				for(UUID friend : existing) {

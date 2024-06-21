@@ -20,6 +20,7 @@ import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -58,7 +59,7 @@ public class StopResellCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("stopresell")
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);

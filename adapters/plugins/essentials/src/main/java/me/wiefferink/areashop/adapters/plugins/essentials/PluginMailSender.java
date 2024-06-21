@@ -1,7 +1,6 @@
 package me.wiefferink.areashop.adapters.plugins.essentials;
 
 import net.essentialsx.api.v2.services.mail.MailSender;
-import org.bukkit.plugin.Plugin;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;

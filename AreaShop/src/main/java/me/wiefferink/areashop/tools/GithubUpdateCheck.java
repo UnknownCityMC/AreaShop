@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
@@ -89,7 +90,7 @@ public class GithubUpdateCheck {
 				try {
 					try {
 						String rawUrl = API_HOST + "/" + author + "/" + repository + "/" + API_LATEST_RELEASE;
-						url = new URL(rawUrl);
+						url = URI.create(rawUrl).toURL();
 					} catch(MalformedURLException e) {
 						logger.severe("Invalid url: '" + url + "', are the author '" + author + "' and repository '" + repository + "' correct?");
 						error = true;

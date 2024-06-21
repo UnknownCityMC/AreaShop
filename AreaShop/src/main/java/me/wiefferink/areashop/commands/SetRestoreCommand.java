@@ -19,6 +19,7 @@ import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -44,7 +45,7 @@ public class SetRestoreCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.setrestore")) {
             return "help-setrestore";
         }
@@ -57,7 +58,7 @@ public class SetRestoreCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setrestore")
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))
                 .required(KEY_RESTORE, StringParser.stringParser(), this::suggestRestoreType)

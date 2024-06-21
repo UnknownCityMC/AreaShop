@@ -98,7 +98,7 @@ public class StackCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.stack")) {
             return "help-stack";
         }
@@ -111,7 +111,7 @@ public class StackCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("stack")
                 .senderType(PlayerCommandSource.class)
                 .required(KEY_AMOUNT, IntegerParser.integerParser(0))

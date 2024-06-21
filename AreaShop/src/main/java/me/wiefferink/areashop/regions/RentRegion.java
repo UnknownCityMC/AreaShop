@@ -230,7 +230,7 @@ public class RentRegion extends GeneralRegion {
 	 */
 	public String getPlayerName() {
 		String result = Utils.toName(getRenter());
-		if(result == null || result.isEmpty()) {
+		if(result.isEmpty()) {
 			result = config.getString("rent.renterName");
 			if(result == null || result.isEmpty()) {
 				result = "<UNKNOWN>";
@@ -252,11 +252,7 @@ public class RentRegion extends GeneralRegion {
 	 * @param rentedUntil The time until the region is rented
 	 */
 	public void setRentedUntil(Long rentedUntil) {
-		if(rentedUntil == null) {
-			setSetting("rent.rentedUntil", null);
-		} else {
-			setSetting("rent.rentedUntil", rentedUntil);
-		}
+        setSetting("rent.rentedUntil", rentedUntil);
 	}
 
 	/**
@@ -420,7 +416,7 @@ public class RentRegion extends GeneralRegion {
 
 		// Check if a warning needs to be send for each defined point in time
 		Player player = Bukkit.getPlayer(getRenter());
-		long sendUntil = Calendar.getInstance().getTimeInMillis() + (plugin.getConfig().getInt("expireWarning.delay") * 60 * 1000);
+		long sendUntil = Calendar.getInstance().getTimeInMillis() + (plugin.getConfig().getInt("expireWarning.delay") * 60 * 1000L);
 		for(String timeBefore : profileSection.getKeys(false)) {
 			long timeBeforeParsed = Utils.durationStringToLong(timeBefore);
 			if(timeBeforeParsed <= 0) {
@@ -489,12 +485,9 @@ public class RentRegion extends GeneralRegion {
 			message(offlinePlayer, "general-noRegion");
 			return false;
 		}
-		boolean extend = false;
-		if(getRenter() != null && offlinePlayer.getUniqueId().equals(getRenter())) {
-			extend = true;
-		}
+		boolean extend = getRenter() != null && offlinePlayer.getUniqueId().equals(getRenter());
 
-		// Check if available or extending
+        // Check if available or extending
 		if (isRented() && !extend) {
 			message(offlinePlayer, "rent-someoneElse");
 			return false;
@@ -714,7 +707,7 @@ public class RentRegion extends GeneralRegion {
 
 			// Give back the money
 			OfflinePlayer player = Bukkit.getOfflinePlayer(getRenter());
-			if(player != null && !noPayBack) {
+			if(!noPayBack) {
 				r = null;
 				boolean error = false;
 				try {

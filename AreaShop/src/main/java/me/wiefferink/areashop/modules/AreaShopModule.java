@@ -16,7 +16,6 @@ import me.wiefferink.areashop.managers.FileManager;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.managers.SignErrorLogger;
 import me.wiefferink.areashop.managers.SignLinkerManager;
-import me.wiefferink.areashop.platform.adapter.PlatformAdapter;
 import me.wiefferink.areashop.regions.ImportJobFactory;
 import me.wiefferink.areashop.regions.RegionModule;
 import me.wiefferink.areashop.services.ServiceManager;
@@ -32,7 +31,6 @@ public class AreaShopModule extends AbstractModule {
     private final AreaShop instance;
     private final WorldGuardInterface worldGuardInterface;
     private final WorldEditInterface worldEditInterface;
-    private final PlatformAdapter platformAdapter;
     private final MessageBridge messageBridge;
     private final SignErrorLogger signErrorLogger;
     private final AbstractModule[] extras;
@@ -41,7 +39,6 @@ public class AreaShopModule extends AbstractModule {
 
     public AreaShopModule(@Nonnull AreaShop instance,
                           @Nonnull MessageBridge messageBridge,
-                          @Nonnull PlatformAdapter platformAdapter,
                           @Nonnull WorldEditInterface worldEditInterface,
                           @Nonnull WorldGuardInterface worldGuardInterface,
                           @Nonnull SignErrorLogger signErrorLogger,
@@ -50,7 +47,6 @@ public class AreaShopModule extends AbstractModule {
     ) {
         this.instance = instance;
         this.messageBridge = messageBridge;
-        this.platformAdapter = platformAdapter;
         this.signErrorLogger = signErrorLogger;
         this.worldEditInterface = worldEditInterface;
         this.worldGuardInterface = worldGuardInterface;

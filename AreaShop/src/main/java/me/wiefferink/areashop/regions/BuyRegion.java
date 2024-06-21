@@ -147,7 +147,7 @@ public class BuyRegion extends GeneralRegion {
 	 */
 	public String getPlayerName() {
 		String result = Utils.toName(getBuyer());
-		if(result == null || result.isEmpty()) {
+		if(result.isEmpty()) {
 			result = getStringSetting("buy.buyerName");
 			if(result == null || result.isEmpty()) {
 				result = "<UNKNOWN>";
@@ -402,7 +402,7 @@ public class BuyRegion extends GeneralRegion {
 			r = null;
 			OfflinePlayer oldOwnerPlayer = Bukkit.getOfflinePlayer(oldOwner);
 			String oldOwnerName = getPlayerName();
-			if(oldOwnerPlayer != null && oldOwnerPlayer.getName() != null) {
+			if(oldOwnerPlayer.getName() != null) {
 				r = economy.depositPlayer(oldOwnerPlayer, getWorldName(), getResellPrice());
 				oldOwnerName = oldOwnerPlayer.getName();
 			} else if(oldOwnerName != null) {

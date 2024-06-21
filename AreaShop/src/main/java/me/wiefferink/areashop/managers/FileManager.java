@@ -1052,8 +1052,8 @@ public class FileManager extends Manager implements IFileManager {
 		boolean noWorldRegions = !noWorld.isEmpty();
 		while(!noWorld.isEmpty()) {
 			List<GeneralRegion> toDisplay = new ArrayList<>();
-			String missingWorld = noWorld.get(0).getWorldName();
-			toDisplay.add(noWorld.get(0));
+			String missingWorld = noWorld.getFirst().getWorldName();
+			toDisplay.add(noWorld.getFirst());
 			for(int i = 1; i < noWorld.size(); i++) {
 				if(noWorld.get(i).getWorldName().equalsIgnoreCase(missingWorld)) {
 					toDisplay.add(noWorld.get(i));

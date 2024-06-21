@@ -17,6 +17,7 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -54,7 +55,7 @@ public class TeleportCommand extends AreashopCommandBean {
     }
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (target.hasPermission("areashop.teleportall") || target.hasPermission("areashop.teleport")) {
             return "help-teleport";
         }
@@ -67,7 +68,7 @@ public class TeleportCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("tp", "teleport")
                 .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION, GeneralRegionParser.generalRegionParser(this.fileManager))

@@ -7,7 +7,7 @@ public record Version(String original, VersionData versionData) {
 
     /**
      * Semver pattern, cg1 = major, cg2 = minor, cg3 = patch, cg4 = prerelease and cg5 = buildmetadata
-     * Taken from https://semver.org/ and https://regex101.com/r/vkijKf/1/
+     * Taken from <a href="https://semver.<a href="org/">...</a>">and https://regex1</a>01.com/r/vkijKf/1/
      */
     public static final Pattern SEMVER_PATTERN = Pattern.compile(
             "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$");

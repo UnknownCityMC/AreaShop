@@ -1,10 +1,10 @@
 package me.wiefferink.areashop.adapters.platform.paper;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.profile.PlayerProfile;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,15 +22,14 @@ public class PaperOfflinePlayerHelper implements OfflinePlayerHelper {
 
     @Override
     public CompletableFuture<Optional<UUID>> lookupUuidAsync(String username) {
-        final PlayerProfile profile = this.server.createPlayerProfile(username);
-        return profile.update().thenApply(PlayerProfile::getUniqueId).thenApply(Optional::ofNullable);
+        final PlayerProfile profile = this.server.createProfile(username);
+        return profile.update().thenApply(PlayerProfile::getId).thenApply(Optional::ofNullable);
     }
 
     @Override
     public CompletableFuture<OfflinePlayer> lookupOfflinePlayerAsync(String username) {
         final CompletableFuture<OfflinePlayer> future = new CompletableFuture<>();
         this.server.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            @SuppressWarnings("deprecation")
             OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(username);
             future.complete(offlinePlayer);
         });

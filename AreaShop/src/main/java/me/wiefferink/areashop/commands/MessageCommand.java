@@ -15,6 +15,7 @@ import org.incendo.cloud.bukkit.parser.PlayerParser;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.StringParser;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
@@ -24,7 +25,7 @@ public class MessageCommand extends AreashopCommandBean {
 	private static final CloudKey<Player> KEY_PLAYER = CloudKey.of("player", Player.class);
 	private static final CloudKey<String> KEY_MESSAGE = CloudKey.of("message", String.class);
 
-	public String getHelpKey(CommandSender target) {
+	public String getHelpKey(@NotNull CommandSender target) {
 		// Internal command, no need to show in the help list
 		return null;
 	}
@@ -35,7 +36,7 @@ public class MessageCommand extends AreashopCommandBean {
 	}
 
 	@Override
-	protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+	protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
 		return builder.literal("message")
 				.required(KEY_PLAYER, PlayerParser.playerParser())
 				.required(KEY_MESSAGE, StringParser.greedyStringParser())

@@ -25,6 +25,7 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -57,7 +58,7 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
 
 
     @Override
-    public String getHelpKey(CommandSender target) {
+    public String getHelpKey(@NotNull CommandSender target) {
         if (!target.hasPermission("sethomecontrol.control")) {
             return null;
         }
@@ -70,7 +71,7 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
     }
 
     @Override
-    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.Builder<CommandSource<?>> builder) {
+    protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("togglehome")
                 .required(KEY_ACCESS_TYPE, EnumParser.enumParser(HomeAccessType.class))
                 .flag(this.regionFlag)

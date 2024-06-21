@@ -316,7 +316,7 @@ public class AddCommand extends AreashopCommandBean {
 
         // Add existing owners/members if any
         if (!landlord && !existing.isEmpty()) {
-            UUID rentBy = existing.remove(0);
+            UUID rentBy = existing.removeFirst();
             OfflinePlayer rentByPlayer = Bukkit.getOfflinePlayer(rentBy);
 
             RentingRegionEvent rentingRegionEvent = new RentingRegionEvent(rent,
@@ -376,7 +376,7 @@ public class AddCommand extends AreashopCommandBean {
 
         // Add existing owners/members if any
         if (!landlord && !existing.isEmpty()) {
-            UUID buyBy = existing.remove(0);
+            UUID buyBy = existing.removeFirst();
             OfflinePlayer buyByPlayer = Bukkit.getOfflinePlayer(buyBy);
 
             BuyingRegionEvent buyingRegionEvent = new BuyingRegionEvent(buy,

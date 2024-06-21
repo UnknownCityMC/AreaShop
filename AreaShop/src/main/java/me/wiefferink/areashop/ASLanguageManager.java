@@ -100,7 +100,7 @@ public class ASLanguageManager extends LanguageManager {
             Log.error("Failed to find location of jar file:", ExceptionUtils.getStackTrace(e));
             return;
         }
-        try (ZipFile jar = new ZipFile(jarPath);) {
+        try (ZipFile jar = new ZipFile(jarPath)) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
 
             // Each entry is a file or directory
