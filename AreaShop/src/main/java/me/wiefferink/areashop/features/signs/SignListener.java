@@ -142,6 +142,20 @@ public class SignListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSignEdit(SignChangeEvent event) {
+        Block block = event.getBlock();
+        Player player = event.getPlayer();
+        Optional<RegionSign> optionalRegionSign = getRegionSign(block, event.getPlayer());
+        if (optionalRegionSign.isEmpty()) {
+            return;
+        }
+        RegionSign regionSign = optionalRegionSign.get();
+        GeneralRegion.ClickType clickType = player.isSneaking() ? GeneralRegion.ClickType.SHIFTRIGHTCLICK : GeneralRegion.ClickType.RIGHTCLICK;
+        boolean ran = regionSign.runSignCommands(player, clickType);
+        event.setCancelled(ran);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignClick(PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
         if (block == null) {
@@ -152,24 +166,13 @@ public class SignListener implements Listener {
         if (!(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK)) {
             return;
         }
-
-        // Only care about clicking blocks
-        if(!Materials.isSign(block.getType())) {
+        Optional<RegionSign> optionalRegionSign = getRegionSign(block, event.getPlayer());
+        if (optionalRegionSign.isEmpty()) {
             return;
         }
+        RegionSign regionSign = optionalRegionSign.get();
 
-        // Check if this sign belongs to a region
-        Optional<RegionSign> optional = signManager.signFromLocation(block.getLocation());
-        if(optional.isEmpty()) {
-            return;
-        }
-        RegionSign regionSign = optional.get();
-
-        // Ignore players that are in sign link mode (which will handle the event itself)
         Player player = event.getPlayer();
-        if(signLinkerManager.isInSignLinkMode(player)) {
-            return;
-        }
 
         // Get the clicktype
         GeneralRegion.ClickType clickType = null;
@@ -187,6 +190,21 @@ public class SignListener implements Listener {
 
         // Only cancel event if at least one command has been executed
         event.setCancelled(ran);
+    }
+
+    private Optional<RegionSign> getRegionSign(@Nonnull Block block, @Nonnull Player player) {
+        // Only care about clicking blocks
+        if(!Materials.isSign(block.getType())) {
+            return Optional.empty();
+        }
+
+        // Ignore players that are in sign link mode (which will handle the event itself)
+        if(signLinkerManager.isInSignLinkMode(player)) {
+            return Optional.empty();
+        }
+
+        // Check if this sign belongs to a region
+        return signManager.signFromLocation(block.getLocation());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
