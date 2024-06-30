@@ -10,7 +10,6 @@ import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.managers.SignLinkerManager;
-import me.wiefferink.areashop.platform.adapter.BlockBehaviourHelper;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RegionFactory;
@@ -42,7 +41,6 @@ import java.util.Set;
 
 public class SignListener implements Listener {
 
-    private final BlockBehaviourHelper behaviourHelper;
     private final AreaShop plugin;
     private final MessageBridge messageBridge;
     private final SignManager signManager;
@@ -53,7 +51,6 @@ public class SignListener implements Listener {
 
     public SignListener(
                         @Nonnull AreaShop plugin,
-                        @Nonnull BlockBehaviourHelper behaviourHelper,
                         @Nonnull RegionFactory regionFactory,
                         @Nonnull MessageBridge messageBridge,
                         @Nonnull SignLinkerManager signLinkerManager,
@@ -64,7 +61,6 @@ public class SignListener implements Listener {
         this.signManager = signManager;
         this.signLinkerManager = signLinkerManager;
         this.regionFactory = regionFactory;
-        this.behaviourHelper = behaviourHelper;
         this.plugin = plugin;
         this.worldGuardInterface = worldGuardInterface;
         this.messageBridge = messageBridge;
@@ -96,8 +92,9 @@ public class SignListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onIndirectSignBreak(BlockPhysicsEvent event) {
+        Block block = event.getBlock();
         // Check if the block is a sign
-        if(!Materials.isSign(event.getBlock().getType()) || behaviourHelper.isBlockValid(event.getBlock())) {
+        if(!Materials.isSign(block.getType()) || block.canPlace(block.getBlockData())) {
             return;
         }
 

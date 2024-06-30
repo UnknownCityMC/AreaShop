@@ -15,7 +15,6 @@ rootProject.name = "areashop-parent"
 
 // Interfaces
 include(":areashop-interface")
-include(":areashop-nms")
 
 // Adapters
 include(":adapters:platform:paper")
@@ -26,8 +25,6 @@ include(":adapters:plugins:worldguard")
 include(":adapters:plugins:fastasyncworldedit")
 
 include(":adapters:plugins:essentials")
-
-include(":adapters:platform:bukkit-modern")
 
 
 // Main project

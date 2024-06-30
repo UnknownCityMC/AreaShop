@@ -26,7 +26,6 @@ import me.wiefferink.areashop.modules.AreaShopModule;
 import me.wiefferink.areashop.modules.BukkitModule;
 import me.wiefferink.areashop.modules.DependencyModule;
 import me.wiefferink.areashop.modules.PlatformModule;
-import me.wiefferink.areashop.platform.adapter.PlatformAdapter;
 import me.wiefferink.areashop.services.ServiceManager;
 import me.wiefferink.areashop.tools.GithubUpdateCheck;
 import me.wiefferink.areashop.tools.LanguageConverter;
@@ -79,7 +78,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	private WorldGuardInterface worldGuardInterface = null;
 	private WorldEditPlugin worldEdit = null;
 	private WorldEditInterface worldEditInterface = null;
-	private PlatformAdapter platformAdapter;
 	private MessageBridge messageBridge;
 	private IFileManager fileManager = null;
 	private LanguageManager languageManager = null;
@@ -189,16 +187,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 			return;
 		}
 
-		try {
-			Class<?> adapterImpl = Class.forName("me.wiefferink.areashop.adapters.platform.modern.ModernPlatformAdapter");
-			this.platformAdapter = adapterImpl.asSubclass(PlatformAdapter.class).getConstructor().newInstance();
-		} catch (ReflectiveOperationException ex) {
-			ex.printStackTrace();
-			error("Failed to initialize modern PlatformAdapter implementation!");
-			shutdownOnError();
-			return;
-		}
-
 		final MinecraftPlatform platform;
 		if (PaperLib.isPaper()) {
 			platform = new PaperPlatform(this);
@@ -207,7 +195,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 			platform = new SpigotPlatform(this);
 			info("Detected Spigot; using the SpigotPlatform impl");
 		}
-		final PlatformModule platformModule = new PlatformModule(platform, this.platformAdapter);
+		final PlatformModule platformModule = new PlatformModule(platform);
 
 		// Check if Vault is present
 		if(getServer().getPluginManager().getPlugin("Vault") == null) {
@@ -500,10 +488,6 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	 */
 	public void setChatprefix(List<String> chatprefix) {
 		this.chatprefix = chatprefix;
-	}
-
-	public PlatformAdapter getPlatformAdapter() {
-		return platformAdapter;
 	}
 
 	public SignErrorLogger getSignErrorLogger() {

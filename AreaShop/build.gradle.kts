@@ -43,7 +43,6 @@ dependencies {
 
     // Project submodules
     api(projects.areashopInterface)
-    api(projects.areashopNms)
     api(projects.adapters.platform.platformInterface)
     api(projects.adapters.platform.paper)
 
@@ -53,7 +52,6 @@ dependencies {
         runtimeOnly(projects.adapters.plugins.worldguard)
         runtimeOnly(projects.adapters.plugins.fastasyncworldedit)
         runtimeOnly(projects.adapters.plugins.essentials)
-        runtimeOnly(projects.adapters.platform.bukkitModern)
     }
     testImplementation("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
     testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.86.1")
