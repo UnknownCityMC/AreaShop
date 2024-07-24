@@ -278,7 +278,7 @@ public class RegionSign {
 		for(String command : stateConfig.getStringList(clickType.getValue() + "Console")) {
 			consoleCommands.add(command.replace(Message.VARIABLE_START + AreaShop.tagClicker + Message.VARIABLE_END, clicker.getName()));
 		}
-		getRegion().runCommands(Bukkit.getConsoleSender(), consoleCommands);
+		getRegion().runCommands(this.server.getConsoleSender(), consoleCommands);
 
 		return !playerCommands.isEmpty() || !consoleCommands.isEmpty();
 	}

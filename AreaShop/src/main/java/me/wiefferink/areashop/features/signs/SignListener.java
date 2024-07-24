@@ -139,20 +139,6 @@ public class SignListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onSignEdit(SignChangeEvent event) {
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-        Optional<RegionSign> optionalRegionSign = getRegionSign(block, event.getPlayer());
-        if (optionalRegionSign.isEmpty()) {
-            return;
-        }
-        RegionSign regionSign = optionalRegionSign.get();
-        GeneralRegion.ClickType clickType = player.isSneaking() ? GeneralRegion.ClickType.SHIFTRIGHTCLICK : GeneralRegion.ClickType.RIGHTCLICK;
-        boolean ran = regionSign.runSignCommands(player, clickType);
-        event.setCancelled(ran);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignClick(PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
         if (block == null) {
