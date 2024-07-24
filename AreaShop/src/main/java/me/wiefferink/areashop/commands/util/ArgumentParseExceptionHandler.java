@@ -23,11 +23,11 @@ public class ArgumentParseExceptionHandler<C extends CommandSource<?>> implement
         String key = exception.messageKey();
         Object[] replacements = exception.replacements();
         if (replacements.length == 0) {
-            messageBridge.message(sender, key);
+            messageBridge.message(sender.sender(), key);
             return;
         }
         // Pass the values as a var-args and not as a string[]
-        messageBridge.message(sender, key, replacements);
+        messageBridge.message(sender.sender(), key, replacements);
     }
 
     @Override

@@ -98,8 +98,8 @@ public class QuickBuyCommand extends AreashopCommandBean {
                     double price = context.get(KEY_PRICE);
 
                     OfflinePlayer landlord = context.get(KEY_LANDLORD);
-                    if (!landlord.hasPlayedBefore()) {
-                        this.messageBridge.message(player, "me-noPlayer");
+                    if (!landlord.isOnline() && !landlord.hasPlayedBefore()) {
+                        this.messageBridge.message(player, "me-noPlayer", landlord.getName());
                         return;
                     }
                     String regionName = region.getId();

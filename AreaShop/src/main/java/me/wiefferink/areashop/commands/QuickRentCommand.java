@@ -104,7 +104,7 @@ public class QuickRentCommand extends AreashopCommandBean {
                     DurationInput duration = context.get(KEY_DURATION);
 
                     OfflinePlayer landlord = context.get(KEY_LANDLORD);
-                    if (!landlord.hasPlayedBefore()) {
+                    if (!landlord.isOnline() && !landlord.hasPlayedBefore()) {
                         this.messageBridge.message(player, "me-noPlayer");
                         return;
                     }
