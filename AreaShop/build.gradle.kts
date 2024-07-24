@@ -31,7 +31,7 @@ dependencies {
     api("com.google.inject.extensions:guice-assistedinject:7.0.0") {
         exclude("com.google.guava")
     }
-    implementation("org.incendo:cloud-paper:2.0.0-SNAPSHOT") {
+    implementation("org.incendo:cloud-paper:2.0.0-beta.8") {
         exclude("com.google.guava")
     }
     implementation("org.incendo:cloud-processors-confirmation:1.0.0-beta.3") {

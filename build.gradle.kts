@@ -5,7 +5,6 @@ plugins {
     java
     `java-library`
     `maven-publish`
-    id("io.papermc.paperweight.userdev") version "1.7.0" apply false
     id("com.github.spotbugs") version "5.1.3"
     idea
     eclipse
