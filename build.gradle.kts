@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "me.wiefferink"
-version = "2.9.1"
+version = "2.9.2-SNAPSHOT"
 
 val targetJavaVersion = 21
 val encoding = Charsets.UTF_8
@@ -32,7 +32,7 @@ subprojects {
         plugin<MavenPublishPlugin>()
         // plugin<SpotBugsPlugin>()
     }
-    
+
     repositories {
         mavenCentral()
         maven("https://oss.sonatype.org/content/groups/public/")
