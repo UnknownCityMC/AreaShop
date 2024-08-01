@@ -3,14 +3,14 @@ package me.wiefferink.areashop.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
+import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
-import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.Command;
@@ -25,18 +25,21 @@ import javax.annotation.Nonnull;
 @Singleton
 public class SetLandlordCommand extends AreashopCommandBean {
 
-    private static final CloudKey<OfflinePlayer> KEY_PLAYER = CloudKey.of("player", OfflinePlayer.class);
+    private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
 
     private final MessageBridge messageBridge;
     private final CommandFlag<GeneralRegion> regionFlag;
+    private final OfflinePlayerHelper offlinePlayerHelper;
 
     @Inject
     public SetLandlordCommand(
             @Nonnull MessageBridge messageBridge,
-            @Nonnull IFileManager fileManager
+            @Nonnull IFileManager fileManager,
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper
     ) {
         this.messageBridge = messageBridge;
         this.regionFlag = RegionParseUtil.createDefault(fileManager);
+        this.offlinePlayerHelper = offlinePlayerHelper;
     }
 
 
@@ -56,7 +59,7 @@ public class SetLandlordCommand extends AreashopCommandBean {
     @Override
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setlandlord")
-                .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
+                .required(KEY_PLAYER, OfflinePlayerParser.parser())
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
@@ -72,11 +75,22 @@ public class SetLandlordCommand extends AreashopCommandBean {
             throw new AreaShopCommandException("setlandlord-noPermission");
         }
         GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
-        OfflinePlayer player = context.get(KEY_PLAYER);
-        String playerName = player.getName();
-        region.setLandlord(player.getUniqueId(), playerName);
-        region.update();
-        this.messageBridge.message(sender, "setlandlord-success", playerName, region);
+        this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
+                .whenComplete((landlord, exception) -> {
+                    if (exception != null) {
+                        sender.sendMessage("failed to lookup offline player!");
+                        exception.printStackTrace();
+                        return;
+                    }
+                    if (!landlord.hasPlayedBefore()) {
+                        this.messageBridge.message(sender, "cmd-invalidPlayer", landlord.getName());
+                        return;
+                    }
+                    String playerName = landlord.getName();
+                    region.setLandlord(landlord.getUniqueId(), playerName);
+                    region.update();
+                    this.messageBridge.message(sender, "setlandlord-success", playerName, region);
+                });
     }
 
 }

@@ -3,18 +3,18 @@ package me.wiefferink.areashop.commands;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
+import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.ArgumentParseExceptionHandler;
+import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionCreationUtil;
-import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.RegionFactory;
 import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,12 +34,13 @@ public class QuickBuyCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_REGION = CloudKey.of("region", String.class);
     private static final CloudKey<Double> KEY_PRICE = CloudKey.of("price", Double.class);
-    private static final CloudKey<OfflinePlayer> KEY_LANDLORD = CloudKey.of("landlord", OfflinePlayer.class);
+    private static final CloudKey<String> KEY_LANDLORD = CloudKey.of("landlord", String.class);
     private final RegionFactory regionFactory;
     private final IFileManager fileManager;
     private final MessageBridge messageBridge;
     private final RegionCreationUtil regionCreationUtil;
     private final BukkitSchedulerExecutor executor;
+    private final OfflinePlayerHelper offlinePlayerHelper;
 
     @Inject
     public QuickBuyCommand(
@@ -47,13 +48,15 @@ public class QuickBuyCommand extends AreashopCommandBean {
             @Nonnull RegionFactory regionFactory,
             @Nonnull IFileManager fileManager,
             @Nonnull RegionCreationUtil regionCreationUtil,
-            @Nonnull BukkitSchedulerExecutor executor
+            @Nonnull BukkitSchedulerExecutor executor,
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper
     ) {
         this.messageBridge = messageBridge;
         this.regionFactory = regionFactory;
         this.fileManager = fileManager;
         this.regionCreationUtil = regionCreationUtil;
         this.executor = executor;
+        this.offlinePlayerHelper = offlinePlayerHelper;
     }
 
     @Override
@@ -69,7 +72,7 @@ public class QuickBuyCommand extends AreashopCommandBean {
                 .senderType(PlayerCommandSource.class)
                 .required(KEY_REGION, StringParser.stringParser())
                 .required(KEY_PRICE, DoubleParser.doubleParser(0))
-                .required(KEY_LANDLORD, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
+                .required(KEY_LANDLORD, OfflinePlayerParser.parser())
                 .handler(this::handleCommand);
     }
 
@@ -96,20 +99,27 @@ public class QuickBuyCommand extends AreashopCommandBean {
                         return;
                     }
                     double price = context.get(KEY_PRICE);
+                    this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_LANDLORD))
+                            .whenComplete((landlord, exception) -> {
+                                if (exception != null) {
+                                    player.sendMessage("failed to lookup offline player!");
+                                    exception.printStackTrace();
+                                    return;
+                                }
+                                if (!landlord.isOnline() && !landlord.hasPlayedBefore()) {
+                                    this.messageBridge.message(player, "me-noPlayer", landlord.getName());
+                                    return;
+                                }
+                                String regionName = region.getId();
+                                World world = player.getWorld();
 
-                    OfflinePlayer landlord = context.get(KEY_LANDLORD);
-                    if (!landlord.isOnline() && !landlord.hasPlayedBefore()) {
-                        this.messageBridge.message(player, "me-noPlayer", landlord.getName());
-                        return;
-                    }
-                    String regionName = region.getId();
-                    World world = player.getWorld();
+                                BuyRegion buyRegion = this.regionFactory.createBuyRegion(regionName, world);
+                                buyRegion.setPrice(price);
+                                buyRegion.setLandlord(landlord.getUniqueId(), landlord.getName());
+                                this.fileManager.addRegion(buyRegion);
+                                this.messageBridge.message(player, "add-success", "buy", regionName);
+                            });
 
-                    BuyRegion buyRegion = this.regionFactory.createBuyRegion(regionName, world);
-                    buyRegion.setPrice(price);
-                    buyRegion.setLandlord(landlord.getUniqueId(), landlord.getName());
-                    this.fileManager.addRegion(buyRegion);
-                    this.messageBridge.message(player, "add-success", "buy", regionName);
                 }, this.executor);
     }
 

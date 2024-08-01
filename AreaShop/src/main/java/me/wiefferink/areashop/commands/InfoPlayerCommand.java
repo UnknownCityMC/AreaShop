@@ -3,12 +3,12 @@ package me.wiefferink.areashop.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
+import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionInfoUtil;
-import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
@@ -20,18 +20,21 @@ import javax.annotation.Nonnull;
 @Singleton
 public class InfoPlayerCommand extends AreashopCommandBean {
 
-    private static final CloudKey<OfflinePlayer> KEY_PLAYER = CloudKey.of("player", OfflinePlayer.class);
+    private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
 
     private final MessageBridge messageBridge;
     private final IFileManager fileManager;
+    private final OfflinePlayerHelper offlinePlayerHelper;
 
     @Inject
     public InfoPlayerCommand(
             @Nonnull MessageBridge messageBridge,
-            @Nonnull IFileManager fileManager
+            @Nonnull IFileManager fileManager,
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper
     ) {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
+        this.offlinePlayerHelper = offlinePlayerHelper;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class InfoPlayerCommand extends AreashopCommandBean {
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("info").literal("player")
-                .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
+                .required(KEY_PLAYER, OfflinePlayerParser.parser())
                 .handler(this::handleCommand);
     }
 
@@ -62,8 +65,19 @@ public class InfoPlayerCommand extends AreashopCommandBean {
             messageBridge.message(sender, "info-noPermission");
             return;
         }
-        OfflinePlayer offlinePlayer = context.get(KEY_PLAYER);
-        RegionInfoUtil.showRegionInfo(this.messageBridge, this.fileManager, sender, offlinePlayer);
+        this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
+                .whenComplete((offlinePlayer, exception) -> {
+                    if (exception != null) {
+                        sender.sendMessage("failed to lookup offline player!");
+                        exception.printStackTrace();
+                        return;
+                    }
+                    if (!offlinePlayer.hasPlayedBefore()) {
+                        this.messageBridge.message(sender, "cmd-invalidPlayer", offlinePlayer.getName());
+                        return;
+                    }
+                    RegionInfoUtil.showRegionInfo(this.messageBridge, this.fileManager, sender, offlinePlayer);
+                });
     }
 
 }

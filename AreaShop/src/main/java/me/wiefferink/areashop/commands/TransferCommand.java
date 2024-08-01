@@ -3,11 +3,12 @@ package me.wiefferink.areashop.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
+import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
-import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -35,15 +36,17 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class TransferCommand extends AreashopCommandBean {
 
-    private static final CloudKey<OfflinePlayer> KEY_PLAYER = CloudKey.of("player", OfflinePlayer.class);
+    private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
     private final MessageBridge messageBridge;
     private final IFileManager fileManager;
     private final CommandFlag<GeneralRegion> regionFlag;
+    private final OfflinePlayerHelper offlinePlayerHelper;
 
     @Inject
     public TransferCommand(
             @Nonnull MessageBridge messageBridge,
-            @Nonnull IFileManager fileManager
+            @Nonnull IFileManager fileManager,
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper
     ) {
         ParserDescriptor<PlayerCommandSource, GeneralRegion> regionParser =
                 ParserDescriptor.of(new GeneralRegionParser<>(fileManager, this::suggestRegions), GeneralRegion.class);
@@ -52,6 +55,7 @@ public class TransferCommand extends AreashopCommandBean {
         this.regionFlag = CommandFlag.<PlayerCommandSource>builder("region")
                 .withComponent(regionParser)
                 .build();
+        this.offlinePlayerHelper = offlinePlayerHelper;
     }
 
     @Override
@@ -71,7 +75,7 @@ public class TransferCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("transfer")
                 .senderType(PlayerCommandSource.class)
-                .required(KEY_PLAYER, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
+                .required(KEY_PLAYER, OfflinePlayerParser.parser())
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
@@ -90,7 +94,27 @@ public class TransferCommand extends AreashopCommandBean {
         if (!region.isTransferEnabled()) {
             throw new AreaShopCommandException("transfer-disabled");
         }
-        OfflinePlayer targetPlayer = context.get(KEY_PLAYER);
+        this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
+                .whenComplete((offlinePlayer, exception) -> {
+                    if (exception != null) {
+                        sender.sendMessage("failed to lookup offline player!");
+                        exception.printStackTrace();
+                        return;
+                    }
+                    if (!offlinePlayer.hasPlayedBefore()) {
+                        this.messageBridge.message(sender, "cmd-invalidPlayer", offlinePlayer.getName());
+                        return;
+                    }
+                    performTransfer(sender, offlinePlayer, region);
+                });
+
+    }
+
+    private void performTransfer(
+            @Nonnull Player sender,
+            @Nonnull OfflinePlayer targetPlayer,
+            @Nonnull GeneralRegion region
+    ) {
         String targetPlayerName = targetPlayer.getName();
         if (Objects.equals(sender, targetPlayer)) {
             throw new AreaShopCommandException("transfer-transferSelf");

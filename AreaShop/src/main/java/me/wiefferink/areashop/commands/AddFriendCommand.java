@@ -3,15 +3,17 @@ package me.wiefferink.areashop.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
+import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
-import me.wiefferink.areashop.commands.util.ValidatedOfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -28,20 +30,26 @@ import javax.annotation.Nonnull;
 @Singleton
 public class AddFriendCommand extends AreashopCommandBean {
 
-    private static final CloudKey<OfflinePlayer> KEY_FRIEND = CloudKey.of("friend", OfflinePlayer.class);
+    private static final CloudKey<String> KEY_FRIEND = CloudKey.of("friend", String.class);
     private final CommandFlag<GeneralRegion> regionFlag;
     private final MessageBridge messageBridge;
     private final Plugin plugin;
+    private final BukkitSchedulerExecutor executor;
+    private final OfflinePlayerHelper offlinePlayerHelper;
 
     @Inject
     public AddFriendCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull Plugin plugin
+            @Nonnull Plugin plugin,
+            @Nonnull BukkitSchedulerExecutor executor,
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper
     ) {
         this.messageBridge = messageBridge;
         this.plugin = plugin;
         this.regionFlag = RegionParseUtil.createDefault(fileManager);
+        this.executor = executor;
+        this.offlinePlayerHelper = offlinePlayerHelper;
     }
 
     @Override
@@ -61,7 +69,7 @@ public class AddFriendCommand extends AreashopCommandBean {
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("addfriend")
                 .senderType(PlayerCommandSource.class)
-                .required(KEY_FRIEND, ValidatedOfflinePlayerParser.validatedOfflinePlayerParser())
+                .required(KEY_FRIEND, OfflinePlayerParser.parser())
                 .flag(this.regionFlag)
                 .handler(this::handleCommand);
     }
@@ -73,31 +81,49 @@ public class AddFriendCommand extends AreashopCommandBean {
             return;
         }
         GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
-        OfflinePlayer friend = context.get(KEY_FRIEND);
+        this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_FRIEND))
+                .whenComplete((offlinePlayer, exception) -> {
+                    if (exception != null) {
+                        sender.sendMessage("failed to lookup offline player!");
+                        exception.printStackTrace();
+                        return;
+                    }
+                    if (!offlinePlayer.hasPlayedBefore()) {
+                        this.messageBridge.message(sender, "cmd-invalidPlayer", offlinePlayer.getName());
+                        return;
+                    }
+                    processWithFriend(sender, region, offlinePlayer);
+                });
+    }
+
+    private void processWithFriend(@Nonnull Player sender,
+                                   @Nonnull GeneralRegion region,
+                                   @Nonnull OfflinePlayer friend
+    ) {
         if (sender.hasPermission("areashop.addfriendall") && ((region instanceof RentRegion rentRegion && !rentRegion.isRented())
                 || (region instanceof BuyRegion buyRegion && !buyRegion.isSold()))) {
-           this.messageBridge.message(sender, "addfriend-noOwner", region);
+            this.messageBridge.message(sender, "addfriend-noOwner", region);
             return;
 
         }
         if (!sender.hasPermission("areashop.addfriend")) {
-           this.messageBridge.message(sender, "addfriend-noPermission", region);
+            this.messageBridge.message(sender, "addfriend-noPermission", region);
             return;
         }
         if (!region.isOwner(sender)) {
-           this.messageBridge.message(sender, "addfriend-noPermissionOther", region);
+            this.messageBridge.message(sender, "addfriend-noPermissionOther", region);
             return;
         }
         if (!friend.hasPlayedBefore() && !friend.isOnline() && !plugin.getConfig()
                 .getBoolean("addFriendNotExistingPlayers")) {
-           this.messageBridge.message(sender, "addfriend-notVisited", friend.getName(), region);
+            this.messageBridge.message(sender, "addfriend-notVisited", friend.getName(), region);
         } else if (region.getFriendsFeature().getFriends().contains(friend.getUniqueId())) {
-           this.messageBridge.message(sender, "addfriend-alreadyAdded", friend.getName(), region);
+            this.messageBridge.message(sender, "addfriend-alreadyAdded", friend.getName(), region);
         } else if (region.isOwner(friend.getUniqueId())) {
-           this.messageBridge.message(sender, "addfriend-self", friend.getName(), region);
+            this.messageBridge.message(sender, "addfriend-self", friend.getName(), region);
         } else if (region.getFriendsFeature().addFriend(friend.getUniqueId(), sender)) {
             region.update();
-           this.messageBridge.message(sender, "addfriend-success", friend.getName(), region);
+            this.messageBridge.message(sender, "addfriend-success", friend.getName(), region);
         }
     }
 
