@@ -100,7 +100,7 @@ public class QuickBuyCommand extends AreashopCommandBean {
                     }
                     double price = context.get(KEY_PRICE);
                     this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_LANDLORD))
-                            .whenComplete((landlord, exception) -> {
+                            .whenCompleteAsync((landlord, exception) -> {
                                 if (exception != null) {
                                     player.sendMessage("failed to lookup offline player!");
                                     exception.printStackTrace();
@@ -118,8 +118,7 @@ public class QuickBuyCommand extends AreashopCommandBean {
                                 buyRegion.setLandlord(landlord.getUniqueId(), landlord.getName());
                                 this.fileManager.addRegion(buyRegion);
                                 this.messageBridge.message(player, "add-success", "buy", regionName);
-                            });
-
+                            }, this.executor);
                 }, this.executor);
     }
 

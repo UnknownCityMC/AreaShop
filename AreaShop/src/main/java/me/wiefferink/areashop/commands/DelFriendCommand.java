@@ -14,6 +14,7 @@ import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -39,16 +40,19 @@ public class DelFriendCommand extends AreashopCommandBean {
     private final MessageBridge messageBridge;
     private final CommandFlag<GeneralRegion> regionFlag;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final BukkitSchedulerExecutor executor;
 
     @Inject
     public DelFriendCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull OfflinePlayerHelper offlinePlayerHelper
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper,
+            @Nonnull BukkitSchedulerExecutor executor
     ) {
         this.messageBridge = messageBridge;
         this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.executor = executor;
     }
 
     /**
@@ -101,7 +105,7 @@ public class DelFriendCommand extends AreashopCommandBean {
         }
         GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
-                .whenComplete((offlinePlayer, exception) -> {
+                .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -112,7 +116,7 @@ public class DelFriendCommand extends AreashopCommandBean {
                         return;
                     }
                     processWithSender(sender, region, offlinePlayer);
-                });
+                }, this.executor);
     }
 
     private void processWithSender(@Nonnull CommandSender sender,

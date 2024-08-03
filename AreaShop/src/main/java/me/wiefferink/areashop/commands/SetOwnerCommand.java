@@ -12,6 +12,7 @@ import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -34,16 +35,19 @@ public class SetOwnerCommand extends AreashopCommandBean {
 
     private final MessageBridge messageBridge;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final BukkitSchedulerExecutor executor;
 
     @Inject
     public SetOwnerCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull OfflinePlayerHelper offlinePlayerHelper
-    ) {
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper,
+            @Nonnull BukkitSchedulerExecutor executor
+            ) {
         this.messageBridge = messageBridge;
         this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.executor = executor;
     }
 
     @Override
@@ -88,7 +92,7 @@ public class SetOwnerCommand extends AreashopCommandBean {
             return;
         }
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
-                .whenComplete((offlinePlayer, exception) -> {
+                .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -99,7 +103,7 @@ public class SetOwnerCommand extends AreashopCommandBean {
                         return;
                     }
                     setOwner(sender, offlinePlayer, region);
-                });
+                }, this.executor);
     }
 
     private void setOwner(@Nonnull CommandSender sender, @Nonnull OfflinePlayer player, GeneralRegion region) {

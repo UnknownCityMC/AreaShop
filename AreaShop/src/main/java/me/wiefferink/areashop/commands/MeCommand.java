@@ -11,6 +11,7 @@ import me.wiefferink.areashop.commands.util.RegionInfoUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -29,16 +30,19 @@ public class MeCommand extends AreashopCommandBean {
     private final IFileManager fileManager;
     private final MessageBridge messageBridge;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final BukkitSchedulerExecutor executor;
 
     @Inject
     public MeCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull OfflinePlayerHelper offlinePlayerHelper
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper,
+            @Nonnull BukkitSchedulerExecutor executor
     ) {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.executor = executor;
     }
 
     @Override
@@ -73,7 +77,7 @@ public class MeCommand extends AreashopCommandBean {
             throw new AreaShopCommandException("me-noPermission");
         }
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
-                .whenComplete((offlinePlayer, exception) -> {
+                .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -84,7 +88,7 @@ public class MeCommand extends AreashopCommandBean {
                         return;
                     }
                     RegionInfoUtil.showRegionInfo(this.messageBridge, this.fileManager, sender, offlinePlayer);
-                });
+                }, this.executor);
     }
 
 }

@@ -9,6 +9,7 @@ import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionInfoUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
@@ -25,16 +26,19 @@ public class InfoPlayerCommand extends AreashopCommandBean {
     private final MessageBridge messageBridge;
     private final IFileManager fileManager;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final BukkitSchedulerExecutor executor;
 
     @Inject
     public InfoPlayerCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull OfflinePlayerHelper offlinePlayerHelper
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper,
+            @Nonnull BukkitSchedulerExecutor executor
     ) {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.executor = executor;
     }
 
     @Override
@@ -66,7 +70,7 @@ public class InfoPlayerCommand extends AreashopCommandBean {
             return;
         }
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
-                .whenComplete((offlinePlayer, exception) -> {
+                .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -77,7 +81,7 @@ public class InfoPlayerCommand extends AreashopCommandBean {
                         return;
                     }
                     RegionInfoUtil.showRegionInfo(this.messageBridge, this.fileManager, sender, offlinePlayer);
-                });
+                }, this.executor);
     }
 
 }

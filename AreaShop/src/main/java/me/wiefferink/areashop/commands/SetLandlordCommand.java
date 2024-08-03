@@ -11,6 +11,7 @@ import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
+import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
 import org.bukkit.command.CommandSender;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.Command;
@@ -30,16 +31,19 @@ public class SetLandlordCommand extends AreashopCommandBean {
     private final MessageBridge messageBridge;
     private final CommandFlag<GeneralRegion> regionFlag;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final BukkitSchedulerExecutor executor;
 
     @Inject
     public SetLandlordCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
-            @Nonnull OfflinePlayerHelper offlinePlayerHelper
+            @Nonnull OfflinePlayerHelper offlinePlayerHelper,
+            @Nonnull BukkitSchedulerExecutor executor
     ) {
         this.messageBridge = messageBridge;
         this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.executor = executor;
     }
 
 
@@ -76,7 +80,7 @@ public class SetLandlordCommand extends AreashopCommandBean {
         }
         GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
-                .whenComplete((landlord, exception) -> {
+                .whenCompleteAsync((landlord, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -90,7 +94,7 @@ public class SetLandlordCommand extends AreashopCommandBean {
                     region.setLandlord(landlord.getUniqueId(), playerName);
                     region.update();
                     this.messageBridge.message(sender, "setlandlord-success", playerName, region);
-                });
+                }, this.executor);
     }
 
 }

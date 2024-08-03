@@ -82,7 +82,7 @@ public class AddFriendCommand extends AreashopCommandBean {
         }
         GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_FRIEND))
-                .whenComplete((offlinePlayer, exception) -> {
+                .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
                         sender.sendMessage("failed to lookup offline player!");
                         exception.printStackTrace();
@@ -93,7 +93,7 @@ public class AddFriendCommand extends AreashopCommandBean {
                         return;
                     }
                     processWithFriend(sender, region, offlinePlayer);
-                });
+                }, this.executor);
     }
 
     private void processWithFriend(@Nonnull Player sender,

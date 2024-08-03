@@ -107,7 +107,7 @@ public class QuickRentCommand extends AreashopCommandBean {
                     DurationInput duration = context.get(KEY_DURATION);
 
                     this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_LANDLORD))
-                            .whenComplete((landlord, exception) -> {
+                            .whenCompleteAsync((landlord, exception) -> {
                                 if (exception != null) {
                                     player.sendMessage("failed to lookup offline player!");
                                     exception.printStackTrace();
@@ -126,8 +126,7 @@ public class QuickRentCommand extends AreashopCommandBean {
                                 rentRegion.setDuration(duration.toTinySpacedString());
                                 this.fileManager.addRegion(rentRegion);
                                 this.messageBridge.message(player, "add-success", "rent", regionName);
-                            });
-
+                            }, this.executor);
                 }, this.executor);
     }
 
