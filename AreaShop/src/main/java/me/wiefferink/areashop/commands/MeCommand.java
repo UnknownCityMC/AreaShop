@@ -76,6 +76,10 @@ public class MeCommand extends AreashopCommandBean {
         if (!sender.hasPermission("areashop.me")) {
             throw new AreaShopCommandException("me-noPermission");
         }
+        if (!context.contains(KEY_PLAYER)) {
+            RegionInfoUtil.showRegionInfo(this.messageBridge, this.fileManager, sender, sender);
+            return;
+        }
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
                 .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
