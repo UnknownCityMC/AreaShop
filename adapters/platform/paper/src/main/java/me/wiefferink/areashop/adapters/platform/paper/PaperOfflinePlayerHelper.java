@@ -29,6 +29,11 @@ public class PaperOfflinePlayerHelper implements OfflinePlayerHelper {
     @Override
     public CompletableFuture<OfflinePlayer> lookupOfflinePlayerAsync(String username) {
         final CompletableFuture<OfflinePlayer> future = new CompletableFuture<>();
+        OfflinePlayer onlinePlayer = this.server.getPlayerExact(username);
+        if (onlinePlayer != null) {
+            future.complete(onlinePlayer);
+            return future;
+        }
         OfflinePlayer cachedPlayer = this.server.getOfflinePlayerIfCached(username);
         if (cachedPlayer != null) {
             return CompletableFuture.completedFuture(cachedPlayer);

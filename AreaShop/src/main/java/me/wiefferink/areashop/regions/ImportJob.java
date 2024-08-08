@@ -279,7 +279,7 @@ public class ImportJob {
 				if(owner != null) {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(owner);
-					if(offlinePlayer.hasPlayedBefore()) {
+					if(offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
 						existing.add(offlinePlayer.getUniqueId());
 					}
 				}

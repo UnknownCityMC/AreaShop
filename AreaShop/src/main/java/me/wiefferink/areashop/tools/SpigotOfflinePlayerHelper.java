@@ -21,7 +21,7 @@ public class SpigotOfflinePlayerHelper implements OfflinePlayerHelper {
     @Override
     public CompletableFuture<Optional<UUID>> lookupUuidAsync(String username) {
         return lookupOfflinePlayerAsync(username).thenApply(player -> {
-            if (player.hasPlayedBefore()) {
+            if (player.hasPlayedBefore() || player.isOnline()) {
                 return Optional.of(player.getUniqueId());
             }
             return Optional.empty();
@@ -31,6 +31,11 @@ public class SpigotOfflinePlayerHelper implements OfflinePlayerHelper {
     @Override
     public CompletableFuture<OfflinePlayer> lookupOfflinePlayerAsync(String username) {
         final CompletableFuture<OfflinePlayer> future = new CompletableFuture<>();
+        OfflinePlayer onlinePlayer = this.plugin.getServer().getPlayerExact(username);
+        if (onlinePlayer != null) {
+            future.complete(onlinePlayer);
+            return future;
+        }
         final Server server = this.plugin.getServer();
         server.getScheduler().runTaskAsynchronously(this.plugin, () -> {
             @SuppressWarnings("deprecation")

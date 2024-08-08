@@ -86,7 +86,7 @@ public class SetLandlordCommand extends AreashopCommandBean {
                         exception.printStackTrace();
                         return;
                     }
-                    if (!landlord.hasPlayedBefore()) {
+                    if (!landlord.hasPlayedBefore() && !landlord.isOnline()) {
                         this.messageBridge.message(sender, "cmd-invalidPlayer", landlord.getName());
                         return;
                     }

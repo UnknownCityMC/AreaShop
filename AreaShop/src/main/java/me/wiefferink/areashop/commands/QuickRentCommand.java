@@ -113,7 +113,7 @@ public class QuickRentCommand extends AreashopCommandBean {
                                     exception.printStackTrace();
                                     return;
                                 }
-                                if (!landlord.hasPlayedBefore()) {
+                                if (!landlord.hasPlayedBefore() && !landlord.isOnline()) {
                                     this.messageBridge.message(player, "cmd-invalidPlayer", landlord.getName());
                                     return;
                                 }

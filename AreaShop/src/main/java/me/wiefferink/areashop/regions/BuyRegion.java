@@ -31,7 +31,7 @@ import java.util.UUID;
 public class BuyRegion extends GeneralRegion {
 
 	private final Economy economy;
-	
+
 	@AssistedInject
 	BuyRegion(
 			@Nonnull AreaShop plugin,
@@ -424,7 +424,7 @@ public class BuyRegion extends GeneralRegion {
 
 			// Resell is done, disable that now
 			disableReselling();
-			
+
 			// Send message to the player
 			message(offlinePlayer, "buy-successResale", oldOwnerName);
 			Player seller = Bukkit.getPlayer(oldOwner);
@@ -542,7 +542,7 @@ public class BuyRegion extends GeneralRegion {
 
 			// Give back the money
 			OfflinePlayer player = Bukkit.getOfflinePlayer(getBuyer());
-			if(player.hasPlayedBefore() && !noPayBack) {
+			if((player.hasPlayedBefore() || player.isOnline()) && !noPayBack) {
 				EconomyResponse response = null;
 				boolean error = false;
 				try {

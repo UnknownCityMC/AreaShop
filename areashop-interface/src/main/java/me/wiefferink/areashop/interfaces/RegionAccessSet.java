@@ -56,7 +56,7 @@ public class RegionAccessSet {
 		for(String playerName : playerNames) {
 			@SuppressWarnings("deprecation")
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-			if(offlinePlayer.hasPlayedBefore()) {
+			if(offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
 				result.add(offlinePlayer.getUniqueId());
 			}
 		}

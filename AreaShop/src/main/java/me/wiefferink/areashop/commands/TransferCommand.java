@@ -101,7 +101,7 @@ public class TransferCommand extends AreashopCommandBean {
                         exception.printStackTrace();
                         return;
                     }
-                    if (!offlinePlayer.hasPlayedBefore()) {
+                    if (!offlinePlayer.hasPlayedBefore() &&!offlinePlayer.isOnline()) {
                         this.messageBridge.message(sender, "cmd-invalidPlayer", offlinePlayer.getName());
                         return;
                     }
@@ -119,7 +119,7 @@ public class TransferCommand extends AreashopCommandBean {
         if (Objects.equals(sender, targetPlayer)) {
             throw new AreaShopCommandException("transfer-transferSelf");
         }
-        if (!targetPlayer.hasPlayedBefore()) {
+        if (!targetPlayer.hasPlayedBefore() && !targetPlayer.isOnline()) {
             // Unknown player
             throw new AreaShopCommandException("transfer-noPlayer", targetPlayerName);
         }

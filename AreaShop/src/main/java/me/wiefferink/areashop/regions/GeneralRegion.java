@@ -472,7 +472,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		if(landlordName != null && !landlordName.isEmpty()) {
 			@SuppressWarnings("deprecation")
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(landlordName);
-			if(offlinePlayer.hasPlayedBefore()) {
+			if(offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
 				return offlinePlayer.getUniqueId();
 			}
 		}

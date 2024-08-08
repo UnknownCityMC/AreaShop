@@ -76,7 +76,7 @@ public class InfoPlayerCommand extends AreashopCommandBean {
                         exception.printStackTrace();
                         return;
                     }
-                    if (!offlinePlayer.hasPlayedBefore()) {
+                    if (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline()) {
                         this.messageBridge.message(sender, "cmd-invalidPlayer", offlinePlayer.getName());
                         return;
                     }
