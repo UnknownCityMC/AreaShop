@@ -18,7 +18,9 @@ dependencies {
     compileOnlyApi(libs.worldeditBukkit)
     compileOnlyApi(libs.worldguardCore)
     compileOnlyApi(libs.worldguardBukkit)
-    compileOnlyApi("com.github.MilkBowl:VaultAPI:1.7")
+    compileOnlyApi(libs.vault)
+
+    compileOnly(libs.astralib.paper)
 
     // 3rd party libraries
     api("io.papermc:paperlib:1.0.8")
@@ -135,10 +137,8 @@ tasks {
         downloadPlugins {
             github("EssentialsX", "essentials", "2.20.1", "EssentialsX-2.20.1.jar")
             github("MilkBowl", "Vault", "1.7.3", "Vault.jar")
-            // WorldEdit 7.3.3
-            url("https://mediafilez.forgecdn.net/files/5400/331/worldedit-bukkit-7.3.3.jar")
-            // WorldGuard 7.0.10
-            url("https://mediafilez.forgecdn.net/files/5344/377/worldguard-bukkit-7.0.10-dist.jar")
+            modrinth("WorldGuard", "7.0.12")
+            url("https://cdn.modrinth.com/data/1u6JkXh5/versions/ecqqLKUO/worldedit-bukkit-7.3.8.jar")
         }
     }
 }

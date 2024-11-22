@@ -3,6 +3,7 @@ package me.wiefferink.areashop.regions;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.Constants;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.events.NotifyRegionEvent;
 import me.wiefferink.areashop.events.notify.UpdateRegionEvent;
@@ -626,69 +627,69 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		switch (variable) {
 
 			// Basics
-			case AreaShop.tagRegionName -> {
+			case Constants.tagRegionName -> {
 				return getName();
 			}
-			case AreaShop.tagRegionType -> {
+			case Constants.tagRegionType -> {
 				return getType().getValue().toLowerCase();
 			}
-			case AreaShop.tagWorldName -> {
+			case Constants.tagWorldName -> {
 				return getWorldName();
 			}
-			case AreaShop.tagWidth -> {
+			case Constants.tagWidth -> {
 				return getWidth();
 			}
-			case AreaShop.tagDepth -> {
+			case Constants.tagDepth -> {
 				return getDepth();
 			}
-			case AreaShop.tagHeight -> {
+			case Constants.tagHeight -> {
 				return getHeight();
 			}
-			case AreaShop.tagFriends -> {
+			case Constants.tagFriends -> {
 				return Utils.createCommaSeparatedList(getFriendsFeature().getFriendNames());
 			}
-			case AreaShop.tagFriendsUUID -> {
+			case Constants.tagFriendsUUID -> {
 				return Utils.createCommaSeparatedList(getFriendsFeature().getFriends());
 			}
-			case AreaShop.tagLandlord -> {
+			case Constants.tagLandlord -> {
 				return getLandlordName();
 			}
-			case AreaShop.tagLandlordUUID -> {
+			case Constants.tagLandlordUUID -> {
 				return getLandlord();
 			}
-			case AreaShop.tagVolume -> {
+			case Constants.tagVolume -> {
 				return getVolume();
 			}
 
 			// Date/time
-			case AreaShop.tagEpoch -> {
+			case Constants.tagEpoch -> {
 				return Calendar.getInstance().getTimeInMillis();
 			}
-			case AreaShop.tagMillisecond -> {
+			case Constants.tagMillisecond -> {
 				return Calendar.getInstance().get(Calendar.MILLISECOND);
 			}
-			case AreaShop.tagSecond -> {
+			case Constants.tagSecond -> {
 				return Calendar.getInstance().get(Calendar.SECOND);
 			}
-			case AreaShop.tagMinute -> {
+			case Constants.tagMinute -> {
 				return Calendar.getInstance().get(Calendar.MINUTE);
 			}
-			case AreaShop.tagHour -> {
+			case Constants.tagHour -> {
 				return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
 			}
-			case AreaShop.tagDay -> {
+			case Constants.tagDay -> {
 				return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
 			}
-			case AreaShop.tagMonth -> {
+			case Constants.tagMonth -> {
 				return Calendar.getInstance().get(Calendar.MONTH) + 1;
 			}
-			case AreaShop.tagYear -> {
+			case Constants.tagYear -> {
 				return Calendar.getInstance().get(Calendar.YEAR);
 			}
-			case AreaShop.tagDateTime -> {
+			case Constants.tagDateTime -> {
 				return new SimpleDateFormat(plugin.getConfig().getString("timeFormatChat")).format(Calendar.getInstance().getTime());
 			}
-			case AreaShop.tagDateTimeShort -> {
+			case Constants.tagDateTimeShort -> {
 				return new SimpleDateFormat(plugin.getConfig().getString("timeFormatSign")).format(Calendar.getInstance().getTime());
 			}
 
@@ -699,17 +700,17 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 					return null;
 				}
 				return switch (variable) {
-					case AreaShop.tagTeleportBlockX -> tp.getBlockX();
-					case AreaShop.tagTeleportBlockY -> tp.getBlockY();
-					case AreaShop.tagTeleportBlockZ -> tp.getBlockZ();
-					case AreaShop.tagTeleportX -> tp.getX();
-					case AreaShop.tagTeleportY -> tp.getY();
-					case AreaShop.tagTeleportZ -> tp.getZ();
-					case AreaShop.tagTeleportPitch -> tp.getPitch();
-					case AreaShop.tagTeleportYaw -> tp.getYaw();
-					case AreaShop.tagTeleportPitchRound -> Math.round(tp.getPitch());
-					case AreaShop.tagTeleportYawRound -> Math.round(tp.getYaw());
-					case AreaShop.tagTeleportWorld -> tp.getWorld().getName();
+					case Constants.tagTeleportBlockX -> tp.getBlockX();
+					case Constants.tagTeleportBlockY -> tp.getBlockY();
+					case Constants.tagTeleportBlockZ -> tp.getBlockZ();
+					case Constants.tagTeleportX -> tp.getX();
+					case Constants.tagTeleportY -> tp.getY();
+					case Constants.tagTeleportZ -> tp.getZ();
+					case Constants.tagTeleportPitch -> tp.getPitch();
+					case Constants.tagTeleportYaw -> tp.getYaw();
+					case Constants.tagTeleportPitchRound -> Math.round(tp.getPitch());
+					case Constants.tagTeleportYawRound -> Math.round(tp.getYaw());
+					case Constants.tagTeleportWorld -> tp.getWorld().getName();
 					default -> null;
 				};
 			}

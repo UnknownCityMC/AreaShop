@@ -3,6 +3,7 @@ package me.wiefferink.areashop.regions;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.Constants;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.events.ask.BuyingRegionEvent;
 import me.wiefferink.areashop.events.ask.ResellingRegionEvent;
@@ -256,17 +257,17 @@ public class BuyRegion extends GeneralRegion {
 	@Override
 	public Object provideReplacement(String variable) {
         return switch (variable) {
-            case AreaShop.tagPrice -> getFormattedPrice();
-            case AreaShop.tagRawPrice -> getPrice();
-            case AreaShop.tagPlayerName -> getPlayerName();
-            case AreaShop.tagPlayerUUID -> getBuyer();
-            case AreaShop.tagResellPrice -> getFormattedResellPrice();
-            case AreaShop.tagRawResellPrice -> getResellPrice();
-            case AreaShop.tagMoneyBackAmount -> getFormattedMoneyBackAmount();
-            case AreaShop.tagRawMoneyBackAmount -> getMoneyBackAmount();
-            case AreaShop.tagMoneyBackPercentage ->
+            case Constants.tagPrice -> getFormattedPrice();
+            case Constants.tagRawPrice -> getPrice();
+            case Constants.tagPlayerName -> getPlayerName();
+            case Constants.tagPlayerUUID -> getBuyer();
+            case Constants.tagResellPrice -> getFormattedResellPrice();
+            case Constants.tagRawResellPrice -> getResellPrice();
+            case Constants.tagMoneyBackAmount -> getFormattedMoneyBackAmount();
+            case Constants.tagRawMoneyBackAmount -> getMoneyBackAmount();
+            case Constants.tagMoneyBackPercentage ->
                     getMoneyBackPercentage() % 1.0 == 0.0 ? (int) getMoneyBackPercentage() : getMoneyBackPercentage();
-            case AreaShop.tagMaxInactiveTime -> this.getFormattedInactiveTimeUntilSell();
+            case Constants.tagMaxInactiveTime -> this.getFormattedInactiveTimeUntilSell();
             default -> super.provideReplacement(variable);
         };
 	}

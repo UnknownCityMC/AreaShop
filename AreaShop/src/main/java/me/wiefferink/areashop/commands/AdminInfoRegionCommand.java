@@ -26,14 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
-public class InfoRegionCommand extends AreashopCommandBean {
+public class AdminInfoRegionCommand extends AreashopCommandBean {
 
     private final CommandFlag<GeneralRegion> regionFlag;
 
     private final MessageBridge messageBridge;
 
     @Inject
-    public InfoRegionCommand(
+    public AdminInfoRegionCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager
     ) {

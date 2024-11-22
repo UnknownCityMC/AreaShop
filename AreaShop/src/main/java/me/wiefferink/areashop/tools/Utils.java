@@ -4,6 +4,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import jakarta.inject.Inject;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.Constants;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.regions.BuyRegion;
@@ -517,9 +518,9 @@ public class Utils {
 	 */
 	public static String formatCurrency(double amount) {
 		String before = config.getString("moneyCharacter");
-		before = before.replace(AreaShop.currencyEuro, "€");
+		before = before.replace(Constants.currencyEuro, "€");
 		String after = config.getString("moneyCharacterAfter");
-		after = after.replace(AreaShop.currencyEuro, "€");
+		after = after.replace(Constants.currencyEuro, "€");
 		String result;
 		// Check for infinite and NaN
 		if(Double.isInfinite(amount)) {

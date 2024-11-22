@@ -14,12 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 
 @Singleton
-public class InfoBaseCommand extends AreashopCommandBean {
+public class AdminInfoBaseCommand extends AreashopCommandBean {
 
     private final MessageBridge messageBridge;
 
     @Inject
-    public InfoBaseCommand(
+    public AdminInfoBaseCommand(
             @Nonnull MessageBridge messageBridge
     ) {
         this.messageBridge = messageBridge;
@@ -32,7 +32,7 @@ public class InfoBaseCommand extends AreashopCommandBean {
 
     @Override
     public String getHelpKey(@NotNull CommandSender target) {
-        if (target.hasPermission("areashop.info")) {
+        if (target.hasPermission("areashop.admininfo")) {
             return "help-info";
         }
         return null;
@@ -40,7 +40,7 @@ public class InfoBaseCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("info").handler(this::handleCommand);
+        return builder.literal("admininfo").handler(this::handleCommand);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class InfoBaseCommand extends AreashopCommandBean {
 
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
-        if (!sender.hasPermission("areashop.info")) {
+        if (!sender.hasPermission("areashop.admininfo")) {
             messageBridge.message(sender, "info-noPermission");
             return;
         }

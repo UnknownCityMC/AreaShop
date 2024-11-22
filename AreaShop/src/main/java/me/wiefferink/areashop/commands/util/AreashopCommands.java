@@ -18,10 +18,10 @@ import me.wiefferink.areashop.commands.GroupDelCommand;
 import me.wiefferink.areashop.commands.GroupInfoCommand;
 import me.wiefferink.areashop.commands.GroupListCommand;
 import me.wiefferink.areashop.commands.HelpCommand;
-import me.wiefferink.areashop.commands.InfoBaseCommand;
-import me.wiefferink.areashop.commands.InfoCommand;
-import me.wiefferink.areashop.commands.InfoPlayerCommand;
-import me.wiefferink.areashop.commands.InfoRegionCommand;
+import me.wiefferink.areashop.commands.AdminInfoBaseCommand;
+import me.wiefferink.areashop.commands.AdminInfoCommand;
+import me.wiefferink.areashop.commands.AdminInfoPlayerCommand;
+import me.wiefferink.areashop.commands.AdminInfoRegionCommand;
 import me.wiefferink.areashop.commands.LinkSignsCommand;
 import me.wiefferink.areashop.commands.MeCommand;
 import me.wiefferink.areashop.commands.MessageCommand;
@@ -82,10 +82,10 @@ public class AreashopCommands {
             GroupInfoCommand.class,
             GroupListCommand.class,
             HelpCommand.class,
-            InfoCommand.class,
-            InfoBaseCommand.class,
-            InfoPlayerCommand.class,
-            InfoRegionCommand.class,
+            AdminInfoCommand.class,
+            AdminInfoBaseCommand.class,
+            AdminInfoPlayerCommand.class,
+            AdminInfoRegionCommand.class,
             LinkSignsCommand.class,
             MeCommand.class,
             MessageCommand.class,
@@ -132,7 +132,7 @@ public class AreashopCommands {
     public void registerCommands() {
         this.commands.clear();
         initCommandManager();
-        var builder = this.commandManager.commandBuilder("areashop", "as");
+        var builder = this.commandManager.commandBuilder("plot", "p");
         for (Class<? extends AreashopCommandBean> commandClass : COMMAND_CLASSES) {
             AreashopCommandBean commandBean = injector.getInstance(commandClass);
             this.commands.add(commandBean);

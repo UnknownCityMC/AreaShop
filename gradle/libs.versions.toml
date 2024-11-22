@@ -3,9 +3,11 @@
 minecraft = "1.21-R0.1-SNAPSHOT"
 
 # Minecraft Plugins
-worldedit = "7.3.3"
-worldguard = "7.0.10"
+worldedit = "7.3.8"
+worldguard = "7.0.12"
 fawe = "2.10.0"
+vault = "1.7"
+astralib = "0.5.0-SNAPSHOT"
 
 [libraries]
 # Platform
@@ -19,3 +21,5 @@ worldguardBukkit = { group = "com.sk89q.worldguard", name = "worldguard-bukkit",
 worldguardCore = { group = "com.sk89q.worldguard", name = "worldguard-core", version.ref = "worldguard" }
 fastasyncworldeditBukkit = { group = "com.fastasyncworldedit", name = "FastAsyncWorldEdit-Bukkit", version.ref = "fawe" }
 fastasyncworldeditCore = { group = "com.fastasyncworldedit", name = "FastAsyncWorldEdit-Core", version.ref = "fawe" }
+vault = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vault" }
+astralib-paper = { group = "de.unknowncity.astralib", name = "astralib-paper-api", version.ref = "astralib" }

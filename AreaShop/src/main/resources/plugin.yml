@@ -2,7 +2,7 @@ name: AreaShop
 main: me.wiefferink.areashop.AreaShop
 version: "${version}"
 description: "Selling and renting WorldGuard regions to your players, highly configurable."
-depend: [Vault, WorldGuard, WorldEdit]
+depend: [Vault, WorldGuard, WorldEdit, AstraLib]
 softdepend: [Multiverse-Core, FastAsyncWorldEdit, Essentials]
 authors: [NLThijs48, md5sha256, Dartanman]
 website: https://github.com/md5sha256/AreaShop

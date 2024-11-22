@@ -53,10 +53,18 @@ subprojects {
         }
         maven("https://repo.aikar.co/content/groups/aikar/")
         maven("https://maven.enginehub.org/repo/")
+
+        // UC START
+        maven("https://repo.unknowncity.de/snapshots")
+        // UC END
     }
 
     dependencies {
         implementation("org.jetbrains:annotations:24.0.1")
+
+        // UC START
+        compileOnly("de.unknowncity.astralib:astralib-paper:0.4.0-SNAPSHOT")
+        // UC END
     }
 
     java.toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))

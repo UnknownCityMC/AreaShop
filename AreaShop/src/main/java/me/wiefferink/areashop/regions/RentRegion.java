@@ -3,6 +3,7 @@ package me.wiefferink.areashop.regions;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.Constants;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.events.ask.RentingRegionEvent;
 import me.wiefferink.areashop.events.ask.UnrentingRegionEvent;
@@ -193,25 +194,25 @@ public class RentRegion extends GeneralRegion {
 	@Override
 	public Object provideReplacement(String variable) {
 		return switch (variable) {
-			case AreaShop.tagPrice -> getFormattedPrice();
-			case AreaShop.tagRawPrice -> getPrice();
-			case AreaShop.tagDuration -> getDurationString();
-			case AreaShop.tagPlayerName -> getPlayerName();
-			case AreaShop.tagPlayerUUID -> getRenter();
-			case AreaShop.tagRentedUntil ->
+			case Constants.tagPrice -> getFormattedPrice();
+			case Constants.tagRawPrice -> getPrice();
+			case Constants.tagDuration -> getDurationString();
+			case Constants.tagPlayerName -> getPlayerName();
+			case Constants.tagPlayerUUID -> getRenter();
+			case Constants.tagRentedUntil ->
 					new SimpleDateFormat(plugin.getConfig().getString("timeFormatChat")).format(new Date(getRentedUntil()));
-			case AreaShop.tagRentedUntilShort ->
+			case Constants.tagRentedUntilShort ->
 					new SimpleDateFormat(plugin.getConfig().getString("timeFormatSign")).format(new Date(getRentedUntil()));
-			case AreaShop.tagTimeLeft -> getTimeLeftString();
-			case AreaShop.tagMoneyBackAmount -> getFormattedMoneyBackAmount();
-			case AreaShop.tagRawMoneyBackAmount -> getMoneyBackAmount();
-			case AreaShop.tagMoneyBackPercentage ->
+			case Constants.tagTimeLeft -> getTimeLeftString();
+			case Constants.tagMoneyBackAmount -> getFormattedMoneyBackAmount();
+			case Constants.tagRawMoneyBackAmount -> getMoneyBackAmount();
+			case Constants.tagMoneyBackPercentage ->
 					(getMoneyBackPercentage() % 1.0) == 0.0 ? (int) getMoneyBackPercentage() : getMoneyBackPercentage();
-			case AreaShop.tagTimesExtended -> this.getTimesExtended();
-			case AreaShop.tagMaxExtends -> this.getMaxExtends();
-			case AreaShop.tagExtendsLeft -> getMaxExtends() - getTimesExtended();
-			case AreaShop.tagMaxRentTime -> millisToHumanFormat(getMaxRentTime());
-			case AreaShop.tagMaxInactiveTime -> this.getFormattedInactiveTimeUntilUnrent();
+			case Constants.tagTimesExtended -> this.getTimesExtended();
+			case Constants.tagMaxExtends -> this.getMaxExtends();
+			case Constants.tagExtendsLeft -> getMaxExtends() - getTimesExtended();
+			case Constants.tagMaxRentTime -> millisToHumanFormat(getMaxRentTime());
+			case Constants.tagMaxInactiveTime -> this.getFormattedInactiveTimeUntilUnrent();
 			default -> super.provideReplacement(variable);
 		};
 	}

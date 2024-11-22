@@ -6,6 +6,11 @@ import com.google.inject.Stage;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import de.unknowncity.astralib.common.message.lang.Language;
+import de.unknowncity.astralib.common.message.lang.Localization;
+import de.unknowncity.astralib.paper.api.hook.defaulthooks.PlaceholderApiHook;
+import de.unknowncity.astralib.paper.api.message.PaperMessenger;
+import de.unknowncity.astralib.paper.api.plugin.PaperAstraPlugin;
 import io.papermc.lib.PaperLib;
 import me.wiefferink.areashop.adapters.platform.MinecraftPlatform;
 import me.wiefferink.areashop.adapters.platform.paper.PaperPlatform;
@@ -50,7 +55,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -68,7 +72,7 @@ import java.util.logging.Level;
  * Main class for the AreaShop plugin.
  * Contains methods to get parts of the plugins functionality and definitions for constants.
  */
-public final class AreaShop extends JavaPlugin implements AreaShopApi {
+public final class AreaShop extends PaperAstraPlugin implements AreaShopApi {
 	// Statically available instance
 	private static AreaShop instance = null;
 
@@ -93,91 +97,34 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 
 	private final ServiceManager serviceManager = new ServiceManager();
 
-	// Folders and file names
-	public static final String languageFolder = "lang";
-	public static final String schematicFolder = "schem";
-	public static final String regionsFolder = "regions";
-	public static final String groupsFile = "groups.yml";
-	public static final String defaultFile = "default.yml";
-	public static final String configFile = "config.yml";
-	public static final String configFileHidden = "hiddenConfig.yml";
-	public static final String signLogFile = "sign-errors.log";
-	public static final String versionFile = "versions";
-
-	// Euro tag for in the config
-	public static final String currencyEuro = "%euro%";
-
-	// Constants for handling file versions
-	public static final String versionFiles = "files";
-	public static final int versionFilesCurrent = 3;
-
-	// Keys for replacing parts of flags, commands, strings
-	public static final String tagPlayerName = "player";
-	public static final String tagPlayerUUID = "uuid";
-	public static final String tagWorldName = "world";
-	public static final String tagRegionName = "region";
-	public static final String tagRegionType = "type";
-	public static final String tagPrice = "price";
-	public static final String tagRawPrice = "rawprice";
-	public static final String tagDuration = "duration";
-	public static final String tagRentedUntil = "until";
-	public static final String tagRentedUntilShort = "untilshort";
-	public static final String tagWidth = "width"; // x-axis
-	public static final String tagHeight = "height"; // y-axis
-	public static final String tagDepth = "depth"; // z-axis
-	public static final String tagVolume = "volume"; // Number of blocks in the region (accounting for polygon regions)
-	public static final String tagTimeLeft = "timeleft";
-	public static final String tagClicker = "clicker";
-	public static final String tagResellPrice = "resellprice";
-	public static final String tagRawResellPrice = "rawresellprice";
-	public static final String tagFriends = "friends";
-	public static final String tagFriendsUUID = "friendsuuid";
-	public static final String tagMoneyBackPercentage = "moneybackpercent";
-	public static final String tagMoneyBackAmount = "moneyback";
-	public static final String tagRawMoneyBackAmount = "rawmoneyback";
-	public static final String tagTimesExtended = "timesExtended";
-	public static final String tagMaxExtends = "maxextends";
-	public static final String tagExtendsLeft = "extendsleft";
-	public static final String tagMaxRentTime = "maxrenttime";
-	public static final String tagMaxInactiveTime = "inactivetime";
-	public static final String tagLandlord = "landlord";
-	public static final String tagLandlordUUID = "landlorduuid";
-	public static final String tagDateTime = "datetime";
-	public static final String tagDateTimeShort = "datetimeshort";
-	public static final String tagYear = "year";
-	public static final String tagMonth = "month";
-	public static final String tagDay = "day";
-	public static final String tagHour = "hour";
-	public static final String tagMinute = "minute";
-	public static final String tagSecond = "second";
-	public static final String tagMillisecond = "millisecond";
-	public static final String tagEpoch = "epoch";
-	public static final String tagTeleportX = "tpx";
-	public static final String tagTeleportY = "tpy";
-	public static final String tagTeleportZ = "tpz";
-	public static final String tagTeleportBlockX = "tpblockx";
-	public static final String tagTeleportBlockY = "tpblocky";
-	public static final String tagTeleportBlockZ = "tpblockz";
-	public static final String tagTeleportPitch = "tppitch";
-	public static final String tagTeleportYaw = "tpyaw";
-	public static final String tagTeleportPitchRound = "tppitchround";
-	public static final String tagTeleportYawRound = "tpyawround";
-	public static final String tagTeleportWorld = "tpworld";
-
 	public static AreaShop getInstance() {
 		return AreaShop.instance;
 	}
+
+	// UC START
+	private PaperMessenger messenger;
+	// UC END
 
 	/**
 	 * Called on start or reload of the server.
 	 */
 	@Override
-	public void onEnable() {
+	public void onPluginEnable() {
 		AreaShop.instance = this;
+
+		// UC START
+
+		var localization = Localization.builder(getDataFolder().toPath().resolve("uc-lang")).buildAndLoad();
+		this.messenger = PaperMessenger.builder(localization)
+				.withDefaultLanguage(Language.GERMAN)
+				.withPlaceHolderAPI(hookRegistry.getRegistered(PlaceholderApiHook.class))
+				.build();
+		// UC END
+
 		Do.init(this);
 		managers = new HashSet<>();
 		messageBridge = new SimpleMessageBridge(this.serviceManager);
-		signErrorLogger = new SignErrorLogger(new File(getDataFolder(), signLogFile));
+		signErrorLogger = new SignErrorLogger(new File(getDataFolder(), Constants.signLogFile));
 
 		// Setup NMS Impl
 		Version currentServerVersion = VersionUtil.parseMinecraftVersion(Bukkit.getBukkitVersion());
@@ -311,10 +258,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 					"md5sha256",
 					"AreaShop"
 			).withVersionComparator((latestVersion, currentVersion) -> {
-				Version latest = Version.parse(cleanVersion(latestVersion));
-				Version current = Version.parse(cleanVersion(currentVersion));
-				return latest.versionData().isNewerThan(current.versionData());
-			}
+						Version latest = Version.parse(cleanVersion(latestVersion));
+						Version current = Version.parse(cleanVersion(currentVersion));
+						return latest.versionData().isNewerThan(current.versionData());
+					}
 			).checkUpdate(result -> {
 				AreaShop.debug("Update check result:", result);
 				if(!result.hasUpdate()) {
@@ -388,7 +335,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	 * Called on shutdown or reload of the server.
 	 */
 	@Override
-	public void onDisable() {
+	public void onPluginDisable() {
 
 		Bukkit.getServer().getScheduler().cancelTasks(this);
 
@@ -446,7 +393,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 			getConfig().set("mmChatPrefix", convertedChatPrefix);
 		}
 		saveConfig();
-		File existingLanguages = getDataFolder().toPath().resolve(languageFolder).toFile();
+		File existingLanguages = getDataFolder().toPath().resolve(Constants.languageFolder).toFile();
 		File[] langFiles = existingLanguages.listFiles(file -> file.getName().endsWith(".yml"));
 		if (langFiles == null) {
 			return;
@@ -474,7 +421,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 	private void setupLanguageManager() {
 		languageManager = new ASLanguageManager(
 				this,
-				languageFolder,
+				Constants.languageFolder,
 				useMiniMessage() ? getConfig().getString("mmLanguage") : getConfig().getString("language"),
 				"EN",
 				useMiniMessage() ? getConfig().getStringList("mmChatPrefix") : chatprefix,
@@ -838,6 +785,12 @@ public final class AreaShop extends JavaPlugin implements AreaShopApi {
 		reload(null);
 	}
 
+
+	// UC Start
+	public PaperMessenger messenger() {
+		return messenger;
+	}
+	// UC End
 }
 
 

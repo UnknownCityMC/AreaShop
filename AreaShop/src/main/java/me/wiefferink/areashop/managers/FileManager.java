@@ -7,6 +7,7 @@ import io.github.bakedlibs.dough.blocks.BlockPosition;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.Constants;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.events.ask.AddingRegionEvent;
 import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
@@ -104,13 +105,13 @@ public class FileManager extends Manager implements IFileManager {
 		regions = new HashMap<>();
 		buys = new HashMap<>();
 		rents = new HashMap<>();
-		regionsPath = plugin.getDataFolder() + File.separator + AreaShop.regionsFolder;
+		regionsPath = plugin.getDataFolder() + File.separator + Constants.regionsFolder;
 		configPath = plugin.getDataFolder() + File.separator + "config.yml";
 		groups = new HashMap<>();
-		groupsPath = plugin.getDataFolder() + File.separator + AreaShop.groupsFile;
-		defaultPath = plugin.getDataFolder() + File.separator + AreaShop.defaultFile;
-		versionPath = plugin.getDataFolder().getPath() + File.separator + AreaShop.versionFile;
-		schemFolder = plugin.getDataFolder() + File.separator + AreaShop.schematicFolder;
+		groupsPath = plugin.getDataFolder() + File.separator + Constants.groupsFile;
+		defaultPath = plugin.getDataFolder() + File.separator + Constants.defaultFile;
+		versionPath = plugin.getDataFolder().getPath() + File.separator + Constants.versionFile;
+		schemFolder = plugin.getDataFolder() + File.separator + Constants.schematicFolder;
 		worldRegionsRequireSaving = new HashSet<>();
 		File schemFile = new File(schemFolder);
 		if(!schemFile.exists() & !schemFile.mkdirs()) {
@@ -496,7 +497,7 @@ public class FileManager extends Manager implements IFileManager {
 		rents.remove(name);
 
 		// Remove file
-		File file = new File(plugin.getDataFolder() + File.separator + AreaShop.regionsFolder + File.separator + region.getLowerCaseName() + ".yml");
+		File file = new File(plugin.getDataFolder() + File.separator + Constants.regionsFolder + File.separator + region.getLowerCaseName() + ".yml");
 		if(file.exists()) {
 			boolean deleted;
 			try {
@@ -771,7 +772,7 @@ public class FileManager extends Manager implements IFileManager {
 		}
 		if(versions == null || versions.isEmpty()) {
 			versions = new HashMap<>();
-			versions.put(AreaShop.versionFiles, 0);
+			versions.put(Constants.versionFiles, 0);
 			this.saveVersions();
 		}
 	}
@@ -835,7 +836,7 @@ public class FileManager extends Manager implements IFileManager {
 		// Safe the file from the jar to disk if it does not exist
 		if(!defaultFile.exists()) {
 			try(
-                    InputStream input = plugin.getResource(AreaShop.defaultFile);
+                    InputStream input = plugin.getResource(Constants.defaultFile);
                     OutputStream output = new FileOutputStream(defaultFile)
 			) {
 				int read;
@@ -851,7 +852,7 @@ public class FileManager extends Manager implements IFileManager {
 		// Load default.yml from the plugin folder, and as backup the default one
 		try(
 				InputStreamReader custom = new InputStreamReader(new FileInputStream(defaultFile), StandardCharsets.UTF_8);
-				InputStreamReader normal = new InputStreamReader(plugin.getResource(AreaShop.defaultFile), StandardCharsets.UTF_8)
+				InputStreamReader normal = new InputStreamReader(plugin.getResource(Constants.defaultFile), StandardCharsets.UTF_8)
 		) {
 			defaultConfig = YamlConfiguration.loadConfiguration(custom);
 			if(defaultConfig.getKeys(false).isEmpty()) {
@@ -876,7 +877,7 @@ public class FileManager extends Manager implements IFileManager {
 		// Safe the file from the jar to disk if it does not exist
 		if(!configFile.exists()) {
 			try(
-                    InputStream input = plugin.getResource(AreaShop.configFile);
+                    InputStream input = plugin.getResource(Constants.configFile);
                     OutputStream output = new FileOutputStream(configFile)
 			) {
 				int read;
@@ -892,8 +893,8 @@ public class FileManager extends Manager implements IFileManager {
 		// Load config.yml from the plugin folder
 		try(
                 InputStreamReader custom = new InputStreamReader(new FileInputStream(configFile), StandardCharsets.UTF_8);
-                InputStreamReader normal = new InputStreamReader(plugin.getResource(AreaShop.configFile), StandardCharsets.UTF_8);
-                InputStreamReader hidden = new InputStreamReader(plugin.getResource(AreaShop.configFileHidden), StandardCharsets.UTF_8)
+                InputStreamReader normal = new InputStreamReader(plugin.getResource(Constants.configFile), StandardCharsets.UTF_8);
+                InputStreamReader hidden = new InputStreamReader(plugin.getResource(Constants.configFileHidden), StandardCharsets.UTF_8)
 		) {
 			config = YamlConfiguration.loadConfiguration(custom);
 			if(config.getKeys(false).isEmpty()) {
@@ -1087,10 +1088,10 @@ public class FileManager extends Manager implements IFileManager {
 	 */
 	@SuppressWarnings("unchecked")
 	private void preUpdateFiles() {
-		Integer fileStatus = versions.get(AreaShop.versionFiles);
+		Integer fileStatus = versions.get(Constants.versionFiles);
 
 		// If the the files are already the current version
-		if(fileStatus != null && fileStatus == AreaShop.versionFilesCurrent) {
+		if(fileStatus != null && fileStatus == Constants.versionFilesCurrent) {
 			return;
 		}
 		AreaShop.info("Updating AreaShop data to the latest format:");
@@ -1220,7 +1221,7 @@ public class FileManager extends Manager implements IFileManager {
 
 				// Change version number
 				versions.remove("rents");
-				versions.put(AreaShop.versionFiles, AreaShop.versionFilesCurrent);
+				versions.put(Constants.versionFiles, Constants.versionFilesCurrent);
 				saveVersions();
 			}
 			if(buyFile.exists()) {
@@ -1358,7 +1359,7 @@ public class FileManager extends Manager implements IFileManager {
 				}
 			}
 			// Update versions file to 2
-			versions.put(AreaShop.versionFiles, 2);
+			versions.put(Constants.versionFiles, 2);
 			saveVersions();
 			if(buyFileFound || rentFileFound) {
 				AreaShop.info("  Updated to YAML based storage (v1 to v2)");
@@ -1371,10 +1372,10 @@ public class FileManager extends Manager implements IFileManager {
 	 * This is to be triggered after the load of the region files.
 	 */
 	private void postUpdateFiles() {
-		Integer fileStatus = versions.get(AreaShop.versionFiles);
+		Integer fileStatus = versions.get(Constants.versionFiles);
 
 		// If the the files are already the current version
-		if(fileStatus != null && fileStatus == AreaShop.versionFilesCurrent) {
+		if(fileStatus != null && fileStatus == Constants.versionFilesCurrent) {
 			return;
 		}
 
@@ -1384,7 +1385,7 @@ public class FileManager extends Manager implements IFileManager {
 				region.updateLastActiveTime();
 			}
 			// Update versions file to 3
-			versions.put(AreaShop.versionFiles, 3);
+			versions.put(Constants.versionFiles, 3);
 			saveVersions();
 			if(!getRegionsRef().isEmpty()) {
 				AreaShop.info("  Added last active time to regions (v2 to v3)");

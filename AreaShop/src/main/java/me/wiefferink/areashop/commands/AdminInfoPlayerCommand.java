@@ -19,7 +19,7 @@ import org.incendo.cloud.key.CloudKey;
 import javax.annotation.Nonnull;
 
 @Singleton
-public class InfoPlayerCommand extends AreashopCommandBean {
+public class AdminInfoPlayerCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
 
@@ -29,7 +29,7 @@ public class InfoPlayerCommand extends AreashopCommandBean {
     private final BukkitSchedulerExecutor executor;
 
     @Inject
-    public InfoPlayerCommand(
+    public AdminInfoPlayerCommand(
             @Nonnull MessageBridge messageBridge,
             @Nonnull IFileManager fileManager,
             @Nonnull OfflinePlayerHelper offlinePlayerHelper,
