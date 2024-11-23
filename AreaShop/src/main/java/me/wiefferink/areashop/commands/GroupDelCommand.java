@@ -12,6 +12,8 @@ import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RegionFactory;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.tools.Utils;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
@@ -95,7 +97,10 @@ public class GroupDelCommand extends AreashopCommandBean {
         GeneralRegion declaredRegion = context.getOrDefault("region", null);
         if (declaredRegion != null) {
             if (!group.removeMember(declaredRegion)) {
-                throw new AreaShopCommandException(NodePath.path("command", "group", "delete", "failed"), group.getName(), declaredRegion);
+                throw new AreaShopCommandException(NodePath.path("command", "group", "delete", "failed"),
+                        Placeholder.parsed("group", group.getName()),
+                        TagResolver.resolver(declaredRegion.tagResolvers())
+                );
             }
             this.messageBridge.message(sender,
                     "groupdel-success",

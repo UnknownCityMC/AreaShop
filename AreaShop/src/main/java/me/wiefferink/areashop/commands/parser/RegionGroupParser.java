@@ -3,6 +3,7 @@ package me.wiefferink.areashop.commands.parser;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionGroup;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ArgumentParseResult;
@@ -37,7 +38,8 @@ public class RegionGroupParser<C> implements ArgumentParser<C, RegionGroup>, Sug
             commandInput.readString();
             return ArgumentParseResult.success(regionGroup);
         }
-        return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path(failureMessageKey), input));
+        return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path(failureMessageKey),
+                Placeholder.parsed("input", input)));
     }
 
     @Override

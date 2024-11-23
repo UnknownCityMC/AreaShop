@@ -1,6 +1,7 @@
 package me.wiefferink.areashop.commands.parser;
 
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -24,7 +25,8 @@ public class OfflinePlayerParser<C> implements ArgumentParser<C, String>, Blocki
                                                                @NonNull CommandInput commandInput) {
         final String input = commandInput.readString();
         if (input.length() > 16) {
-            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "invalid-player"), input));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "invalid-player"),
+                    Placeholder.parsed("input", input)));
         }
         return ArgumentParseResult.success(input);
     }

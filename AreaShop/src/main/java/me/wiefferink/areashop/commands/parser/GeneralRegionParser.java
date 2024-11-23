@@ -3,6 +3,7 @@ package me.wiefferink.areashop.commands.parser;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ArgumentParseResult;
@@ -45,7 +46,7 @@ public class GeneralRegionParser<C> implements ArgumentParser<C, GeneralRegion> 
             commandInput.readString();
             return ArgumentParseResult.success(region);
         }
-        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("exception", "region", "not-registered"), input);
+        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("exception", "region", "not-registered"), Placeholder.parsed("region", input));
         return ArgumentParseResult.failure(exception);
     }
 

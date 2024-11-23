@@ -12,6 +12,7 @@ import me.wiefferink.areashop.tools.Materials;
 import me.wiefferink.areashop.tools.SignUtils;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -29,6 +30,8 @@ import org.bukkit.entity.Player;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.kyori.adventure.text.Component.text;
 
 /**
  * Sign that is connected to a region to display information and interact with the region.
@@ -217,14 +220,13 @@ public class RegionSign {
 		Sign signState = (Sign) PaperLib.getBlockState(block, false).getState();
 		for(int i = 0; i < signLines.length; i++) {
 			if(signLines[i] == null) {
-				signState.getSide(Side.FRONT).setLine(i, "");
-				signState.getSide(Side.BACK).setLine(i, "");
+				signState.getSide(Side.FRONT).line(i, text(""));
+				signState.getSide(Side.BACK).line(i, text(""));
 				continue;
 			}
 			signLines[i] = Message.fromString(signLines[i]).replacements(getRegion()).getSingle();
-			signLines[i] = Utils.applyColors(signLines[i]);
-			signState.getSide(Side.FRONT).setLine(i, signLines[i]);
-			signState.getSide(Side.BACK).setLine(i, signLines[i]);
+			signState.getSide(Side.FRONT).line(i, text(signLines[i]));
+			signState.getSide(Side.BACK).line(i, text(signLines[i]));
 		}
 		signState.update(false, false);
 		return true;

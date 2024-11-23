@@ -71,7 +71,7 @@ public class SchematicEventCommand extends AreashopCommandBean {
         GeneralRegion region = context.get(KEY_REGION);
         GeneralRegion.RegionEvent event = context.get(KEY_EVENT_TYPE);
         if (region.getRegion() == null) {
-            throw new AreaShopCommandException(NodePath.path("exception", "no-region"), region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-region"), region.tagResolvers());
         }
         region.handleSchematicEvent(event);
         region.update();

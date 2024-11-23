@@ -10,6 +10,7 @@ import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.DurationInput;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -106,7 +107,7 @@ public class SetDurationCommand extends AreashopCommandBean {
             }
         }
         if (start == 0) {
-            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), rawDuration);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), Placeholder.parsed("input", rawDuration));
         }
         String duration = rawDuration.substring(0, start);
         String durationUnit = rawDuration.substring(start);
@@ -114,17 +115,17 @@ public class SetDurationCommand extends AreashopCommandBean {
         try {
             durationInt = Integer.parseInt(duration);
         } catch (NumberFormatException ex) {
-            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"), rawDuration);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"), Placeholder.parsed("input", rawDuration));
         }
         TimeUnit timeUnit = DurationInput.getTimeUnit(durationUnit)
-                .orElseThrow(() -> new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit));
+                .orElseThrow(() -> new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), Placeholder.parsed("unit", durationUnit)));
 
         boolean invalid = !switch (timeUnit) {
             case DAYS, HOURS, MINUTES, SECONDS -> true;
             default -> false;
         };
         if (invalid) {
-            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), Placeholder.parsed("unit", durationUnit));
         }
         return new DurationInput(durationInt, timeUnit);
     }

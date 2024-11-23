@@ -3,6 +3,7 @@ package me.wiefferink.areashop.commands.parser;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ArgumentParseResult;
@@ -55,7 +56,7 @@ public class BuyRegionParser<C> implements ArgumentParser<C, BuyRegion> {
             commandInput.readString();
             return ArgumentParseResult.success(region);
         }
-        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("command", "buy", "not-buy-able"), input);
+        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("command", "buy", "not-buy-able"), Placeholder.parsed("region", input));
         return ArgumentParseResult.failure(exception);
     }
 

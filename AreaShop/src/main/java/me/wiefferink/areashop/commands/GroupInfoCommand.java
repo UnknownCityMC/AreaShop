@@ -10,6 +10,8 @@ import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.tools.Utils;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
@@ -74,7 +76,9 @@ public class GroupInfoCommand extends AreashopCommandBean {
         RegionGroup group = context.get(KEY_GROUP);
         Set<String> members = group.getMembers();
         if (members.isEmpty()) {
-            throw new AreaShopCommandException(NodePath.path("command", "group", "info", "empty"), group.getName());
+            throw new AreaShopCommandException(NodePath.path("command", "group", "info", "empty"),
+                    Placeholder.parsed("group", group.getName())
+            );
         }
         String seperatedMembers = Utils.createCommaSeparatedList(members);
         this.messageBridge.message(context.sender(), "groupinfo-members", group.getName(), seperatedMembers);

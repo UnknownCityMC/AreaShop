@@ -15,6 +15,8 @@ import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.managers.FeatureManager;
 import me.wiefferink.areashop.tools.Utils;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -26,8 +28,10 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Calendar;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static me.wiefferink.areashop.tools.Utils.millisToHumanFormat;
 
 public class BuyRegion extends GeneralRegion {
 
@@ -70,6 +74,11 @@ public class BuyRegion extends GeneralRegion {
 	@Override
 	public UUID getOwner() {
 		return getBuyer();
+	}
+
+	@Override
+	public String getOwnerName() {
+		return Utils.toName(getOwner());
 	}
 
 	@Override
@@ -254,23 +263,30 @@ public class BuyRegion extends GeneralRegion {
 		return Utils.formatCurrency(getMoneyBackAmount());
 	}
 
-	@Override
-	public Object provideReplacement(String variable) {
-        return switch (variable) {
-            case Constants.tagPrice -> getFormattedPrice();
-            case Constants.tagRawPrice -> getPrice();
-            case Constants.tagPlayerName -> getPlayerName();
-            case Constants.tagPlayerUUID -> getBuyer();
-            case Constants.tagResellPrice -> getFormattedResellPrice();
-            case Constants.tagRawResellPrice -> getResellPrice();
-            case Constants.tagMoneyBackAmount -> getFormattedMoneyBackAmount();
-            case Constants.tagRawMoneyBackAmount -> getMoneyBackAmount();
-            case Constants.tagMoneyBackPercentage ->
-                    getMoneyBackPercentage() % 1.0 == 0.0 ? (int) getMoneyBackPercentage() : getMoneyBackPercentage();
-            case Constants.tagMaxInactiveTime -> this.getFormattedInactiveTimeUntilSell();
-            default -> super.provideReplacement(variable);
-        };
+
+	public TagResolver[] tagResolvers() {
+		var normal = new ArrayList<TagResolver>(
+				List.of(
+						Placeholder.parsed(Constants.tagPrice, getFormattedPrice()),
+						Placeholder.parsed(Constants.tagRawPrice, String.valueOf(getPrice())),
+						Placeholder.parsed(Constants.tagPlayerName, getPlayerName()),
+						Placeholder.parsed(Constants.tagPlayerUUID, String.valueOf(getBuyer())),
+						Placeholder.parsed(Constants.tagResellPrice, getFormattedResellPrice()),
+						Placeholder.parsed(Constants.tagRawResellPrice, String.valueOf(getResellPrice())),
+						Placeholder.parsed(Constants.tagMoneyBackAmount, getFormattedMoneyBackAmount()),
+						Placeholder.parsed(Constants.tagRawMoneyBackAmount, String.valueOf(getMoneyBackAmount())),
+						Placeholder.parsed(Constants.tagMoneyBackPercentage, String.valueOf(getMoneyBackPercentage() % 1.0 == 0.0 ?
+								(int) getMoneyBackPercentage() : getMoneyBackPercentage())),
+						Placeholder.parsed(Constants.tagMaxInactiveTime, this.getFormattedInactiveTimeUntilSell())
+						)
+		);
+
+		normal.addAll(Arrays.stream(super.tagResolvers()).toList());
+
+		return normal.toArray(TagResolver[]::new);
 	}
+
+	
 
 	/**
 	 * Minutes until automatic unrent when player is offline.
@@ -592,7 +608,7 @@ public class BuyRegion extends GeneralRegion {
 		//AreaShop.debug("currentTime=" + Calendar.getInstance().getTimeInMillis() + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (Calendar.getInstance().getTimeInMillis()-player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
 		if(Calendar.getInstance().getTimeInMillis() > (lastPlayed + inactiveSetting)) {
 			AreaShop.info("Region " + getName() + " unrented because of inactivity for player " + getPlayerName());
-			AreaShop.debug("currentTime=" + Calendar.getInstance().getTimeInMillis() + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (Calendar.getInstance().getTimeInMillis() - player.getLastPlayed()) + ", inactiveSetting=" + inactiveSetting);
+			AreaShop.debug("currentTime=" + Calendar.getInstance().getTimeInMillis() + ", getLastPlayed()=" + lastPlayed + ", timeInactive=" + (Calendar.getInstance().getTimeInMillis() - player.getLastSeen()) + ", inactiveSetting=" + inactiveSetting);
 			return this.sell(true, null);
 		}
 		return false;

@@ -6,6 +6,7 @@ import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.WorldFlagUtil;
 import me.wiefferink.areashop.commands.util.commandsource.EntityCommandSource;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -55,7 +56,8 @@ public class WorldGuardRegionParser<C extends EntityCommandSource> implements Ar
             commandInput.readString();
             return ArgumentParseResult.success(protectedRegion);
         }
-        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("exception", "no-region"), regionName);
+        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("exception", "no-region"),
+                Placeholder.parsed("input", regionName));
         return ArgumentParseResult.failure(exception);
     }
 

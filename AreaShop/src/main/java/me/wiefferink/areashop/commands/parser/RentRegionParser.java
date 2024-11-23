@@ -3,6 +3,7 @@ package me.wiefferink.areashop.commands.parser;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RentRegion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.parser.ArgumentParseResult;
@@ -51,7 +52,8 @@ public class RentRegionParser<C> implements ArgumentParser<C, RentRegion> {
             commandInput.readString();
             return ArgumentParseResult.success(region);
         }
-        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("command", "plot", "rent", "not-rent-able"), input);
+        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("command", "plot", "rent", "not-rent-able"),
+                Placeholder.parsed("input", input));
         return ArgumentParseResult.failure(exception);
     }
 

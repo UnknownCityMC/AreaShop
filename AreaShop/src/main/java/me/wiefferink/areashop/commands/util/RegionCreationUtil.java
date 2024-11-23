@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.managers.IFileManager;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -46,7 +47,8 @@ public class RegionCreationUtil {
         World world = sender.getWorld();
         String regionName = context.get(regionKey);
         if (this.fileManager.getRegion(regionName) != null) {
-            return CompletableFuture.failedFuture(new AreaShopCommandException(NodePath.path("command", "plot", "add", "failed"), regionName));
+            return CompletableFuture.failedFuture(new AreaShopCommandException(NodePath.path("command", "plot", "add", "failed"),
+                    Placeholder.parsed("input", regionName)));
         }
         this.server.dispatchCommand(sender, String.format("rg define %s", regionName));
         CompletableFuture<ProtectedRegion> future = new CompletableFuture<>();

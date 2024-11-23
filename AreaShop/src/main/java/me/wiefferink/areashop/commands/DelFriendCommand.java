@@ -15,6 +15,8 @@ import me.wiefferink.areashop.regions.BuyRegion;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.BukkitSchedulerExecutor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -129,11 +131,11 @@ public class DelFriendCommand extends AreashopCommandBean {
         if (sender.hasPermission("areashop.delfriendall")) {
             if ((region instanceof RentRegion rentRegion && !rentRegion.isRented())
                     || (region instanceof BuyRegion buyRegion && !buyRegion.isSold())) {
-                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "no-owner"), region);
+                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "no-owner"), region.tagResolvers());
 
             }
             if (!friendsFeature.getFriends().contains(friend.getUniqueId())) {
-                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), friend.getName(), region);
+                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), Placeholder.parsed("friend", friend.getName()), TagResolver.resolver(region.tagResolvers()));
 
             }
             if (friendsFeature.deleteFriend(friend.getUniqueId(), sender)) {
@@ -143,13 +145,13 @@ public class DelFriendCommand extends AreashopCommandBean {
             return;
         }
         if (!sender.hasPermission("areashop.delfriend") || !(sender instanceof Player player)) {
-            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region.tagResolvers());
         }
         if (!region.isOwner(player)) {
-            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region.tagResolvers());
         }
         if (!friendsFeature.getFriends().contains(friend.getUniqueId())) {
-            throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), friend.getName(), region);
+            throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), Placeholder.parsed("friend", friend.getName()), TagResolver.resolver(region.tagResolvers()));
         } else if (friendsFeature.deleteFriend(friend.getUniqueId(), sender)) {
             region.update();
             this.messageBridge.message(sender, "delfriend-success", friend.getName(), region);

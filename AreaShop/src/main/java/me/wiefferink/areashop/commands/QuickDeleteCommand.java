@@ -13,6 +13,7 @@ import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -73,7 +74,9 @@ public class QuickDeleteCommand extends AreashopCommandBean {
         boolean giveMoneyBack = context.flags().isPresent(FLAG_RETURN_MONEY);
         DeletingRegionEvent event = this.fileManager.deleteRegion(region, giveMoneyBack);
         if (event.isCancelled()) {
-            throw new AreaShopCommandException(NodePath.path("command", "plot", "delete", "canceled"), event.getReason());
+            throw new AreaShopCommandException(NodePath.path("command", "plot", "delete", "canceled"),
+                    Placeholder.parsed("reason", event.getReason())
+            );
         }
         this.messageBridge.message(player, "destroy-successRent", region);
         RegionManager regionManager = this.worldGuardInterface.getRegionManager(region.getWorld());

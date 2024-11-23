@@ -2,11 +2,6 @@ prefix: "<white>[<aqua>Plots<white>] "
 exception:
   only-player: "<prefix><red>Diesen Command kann nur ein Spieler ausführen"
   no-region-at-location: "<prefix><red>Du stehst nicht auf einem Grundstück!"
+
 command:
-  info: "<gray>===========<white>[<aqua>Plot-Info<white>]<gray>===========\n
-<gray>ID: <yellow><id>\n
-<gray>Besitzer: <yellow><owner>\n
-<gray>Größe: <yellow><length> <gray>x <yellow><depth>\n
-<gray>Vertraut: <yellow><trusted>\n
-<gray>Verboten: <yellow><banned>\n
-<gray>===========<white>[<aqua>Plot-Info<white>]<gray>===========\n"
+  info: "<gray>===========<white>[<aqua>Plot-Info<white>]<gray>===========\n<gray>ID: <yellow><id>\n<gray>Besitzer: <yellow><owner>\n<gray>Größe: <yellow><length> <gray>x <yellow><depth>\n<gray>Vertraut: <yellow><trusted>\n<gray>Verboten: <yellow><banned>\n<gray>===========<white>[<aqua>Plot-Info<white>]<gray>===========\n"

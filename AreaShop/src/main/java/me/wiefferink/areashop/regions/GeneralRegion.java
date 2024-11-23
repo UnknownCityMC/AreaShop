@@ -20,6 +20,8 @@ import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.processing.Message;
 import me.wiefferink.interactivemessenger.processing.ReplacementProvider;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -50,7 +52,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class GeneralRegion implements GeneralRegionInterface, Comparable<GeneralRegion>, ReplacementProvider {
+public abstract class GeneralRegion implements GeneralRegionInterface, Comparable<GeneralRegion> {
 
 	protected final AreaShop plugin;
 	protected final FeatureManager featureManager;
@@ -450,6 +452,12 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 	 * @return The UUID of the owner of this region
 	 */
 	public abstract UUID getOwner();
+
+	/**
+	 * Get the player that is currently the owner of this region (either bought or rented it).
+	 * @return The UUID of the owner of this region
+	 */
+	public abstract String getOwnerName();
 	/**
 	 * Change the owner of the region.
 	 * @param player The player that should be the owner
@@ -622,99 +630,41 @@ public abstract class GeneralRegion implements GeneralRegionInterface, Comparabl
 		return result;
 	}
 
-	@Override
-	public Object provideReplacement(String variable) {
-		switch (variable) {
+	public TagResolver[] tagResolvers() {
+		// Basics
+		var normal = new ArrayList<>(List.of(
+                Placeholder.parsed(Constants.tagRegionName, getName()),
+                Placeholder.parsed(Constants.tagRegionType, getType().getValue().toLowerCase()),
+                Placeholder.parsed(Constants.tagWorldName, getWorldName()),
+                Placeholder.parsed(Constants.tagWidth, String.valueOf(getWidth())),
+                Placeholder.parsed(Constants.tagDepth, String.valueOf(getDepth())),
+                Placeholder.parsed(Constants.tagHeight, String.valueOf(getHeight())),
+                Placeholder.parsed(Constants.tagFriends, Utils.createCommaSeparatedList(getFriendsFeature().getFriendNames())),
+                Placeholder.parsed(Constants.tagFriendsUUID, Utils.createCommaSeparatedList(getFriendsFeature().getFriends())),
+                Placeholder.parsed(Constants.tagLandlord, getLandlordName()),
+                Placeholder.parsed(Constants.tagLandlordUUID, String.valueOf(getLandlord())),
+                Placeholder.parsed(Constants.tagVolume, String.valueOf(getVolume()))
+        ));
 
-			// Basics
-			case Constants.tagRegionName -> {
-				return getName();
-			}
-			case Constants.tagRegionType -> {
-				return getType().getValue().toLowerCase();
-			}
-			case Constants.tagWorldName -> {
-				return getWorldName();
-			}
-			case Constants.tagWidth -> {
-				return getWidth();
-			}
-			case Constants.tagDepth -> {
-				return getDepth();
-			}
-			case Constants.tagHeight -> {
-				return getHeight();
-			}
-			case Constants.tagFriends -> {
-				return Utils.createCommaSeparatedList(getFriendsFeature().getFriendNames());
-			}
-			case Constants.tagFriendsUUID -> {
-				return Utils.createCommaSeparatedList(getFriendsFeature().getFriends());
-			}
-			case Constants.tagLandlord -> {
-				return getLandlordName();
-			}
-			case Constants.tagLandlordUUID -> {
-				return getLandlord();
-			}
-			case Constants.tagVolume -> {
-				return getVolume();
-			}
+		Location tp = getTeleportFeature().getTeleportLocation();
 
-			// Date/time
-			case Constants.tagEpoch -> {
-				return Calendar.getInstance().getTimeInMillis();
-			}
-			case Constants.tagMillisecond -> {
-				return Calendar.getInstance().get(Calendar.MILLISECOND);
-			}
-			case Constants.tagSecond -> {
-				return Calendar.getInstance().get(Calendar.SECOND);
-			}
-			case Constants.tagMinute -> {
-				return Calendar.getInstance().get(Calendar.MINUTE);
-			}
-			case Constants.tagHour -> {
-				return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-			}
-			case Constants.tagDay -> {
-				return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-			}
-			case Constants.tagMonth -> {
-				return Calendar.getInstance().get(Calendar.MONTH) + 1;
-			}
-			case Constants.tagYear -> {
-				return Calendar.getInstance().get(Calendar.YEAR);
-			}
-			case Constants.tagDateTime -> {
-				return new SimpleDateFormat(plugin.getConfig().getString("timeFormatChat")).format(Calendar.getInstance().getTime());
-			}
-			case Constants.tagDateTimeShort -> {
-				return new SimpleDateFormat(plugin.getConfig().getString("timeFormatSign")).format(Calendar.getInstance().getTime());
-			}
-
-			// Teleport locations
-			default -> {
-				Location tp = getTeleportFeature().getTeleportLocation();
-				if (tp == null) {
-					return null;
-				}
-				return switch (variable) {
-					case Constants.tagTeleportBlockX -> tp.getBlockX();
-					case Constants.tagTeleportBlockY -> tp.getBlockY();
-					case Constants.tagTeleportBlockZ -> tp.getBlockZ();
-					case Constants.tagTeleportX -> tp.getX();
-					case Constants.tagTeleportY -> tp.getY();
-					case Constants.tagTeleportZ -> tp.getZ();
-					case Constants.tagTeleportPitch -> tp.getPitch();
-					case Constants.tagTeleportYaw -> tp.getYaw();
-					case Constants.tagTeleportPitchRound -> Math.round(tp.getPitch());
-					case Constants.tagTeleportYawRound -> Math.round(tp.getYaw());
-					case Constants.tagTeleportWorld -> tp.getWorld().getName();
-					default -> null;
-				};
-			}
+		if (tp != null) {
+			var locationPlaceholders = List.of(
+					Placeholder.parsed(Constants.tagTeleportBlockX, String.valueOf(tp.getBlockX())),
+					Placeholder.parsed(Constants.tagTeleportBlockY, String.valueOf(tp.getBlockY())),
+					Placeholder.parsed(Constants.tagTeleportBlockZ, String.valueOf(tp.getBlockZ())),
+					Placeholder.parsed(Constants.tagTeleportX, String.valueOf(tp.getX())),
+					Placeholder.parsed(Constants.tagTeleportY, String.valueOf(tp.getY())),
+					Placeholder.parsed(Constants.tagTeleportZ, String.valueOf(tp.getZ())),
+					Placeholder.parsed(Constants.tagTeleportPitch, String.valueOf(tp.getPitch())),
+					Placeholder.parsed(Constants.tagTeleportYaw, String.valueOf(tp.getYaw())),
+					Placeholder.parsed(Constants.tagTeleportPitchRound, String.valueOf(Math.round(tp.getPitch()))),
+					Placeholder.parsed(Constants.tagTeleportYawRound, String.valueOf(Math.round(tp.getYaw()))),
+					Placeholder.parsed(Constants.tagTeleportWorld, tp.getWorld().getName())
+					);
+			normal.addAll(locationPlaceholders);
 		}
+		return normal.toArray(TagResolver[]::new);
 	}
 
 	/**

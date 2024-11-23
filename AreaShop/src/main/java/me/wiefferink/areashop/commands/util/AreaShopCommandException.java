@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.commands.util;
 
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.NodePath;
 
@@ -7,22 +8,20 @@ import javax.annotation.Nonnull;
 
 public class AreaShopCommandException extends RuntimeException {
 
-    private static final Object[] EMPTY = new Object[0];
-
     private final NodePath path;
-    private final Object[] replacements;
+    private final TagResolver[] tagResolvers;
 
-    public AreaShopCommandException(@Nonnull NodePath path, @Nullable Object... replacements) {
+    public AreaShopCommandException(@Nonnull NodePath path, TagResolver... tagResolvers) {
         this.path = path;
-        this.replacements = replacements == null ? EMPTY : replacements;
+        this.tagResolvers = tagResolvers;
     }
 
     public NodePath messageKey() {
         return this.path;
     }
 
-    public Object[] replacements() {
-        return this.replacements;
+    public TagResolver[] tagResolvers() {
+        return tagResolvers;
     }
 
     @Override

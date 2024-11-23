@@ -10,6 +10,7 @@ import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
 import me.wiefferink.areashop.regions.RentRegion;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -87,7 +88,7 @@ public class UnrentCommand extends AreashopCommandBean {
         }
         RentRegion rent = RegionParseUtil.getOrParseRentRegion(context, sender);
         if (!rent.isRented()) {
-            throw new AreaShopCommandException(NodePath.path("command", "unrent", "not-rented"), rent);
+            throw new AreaShopCommandException(NodePath.path("command", "unrent", "not-rented"), rent.tagResolvers());
         }
         rent.unRent(true, sender);
     }

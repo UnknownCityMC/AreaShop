@@ -2,6 +2,7 @@ package me.wiefferink.areashop.commands.parser;
 
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.tools.DurationInput;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
@@ -37,7 +38,9 @@ public class DurationInputParser<C> implements ArgumentParser<C, DurationInput>,
             }
         }
         if (index == commandInput.length() - 1) {
-            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"), input));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"),
+                    Placeholder.parsed("input", input))
+            );
         }
         String duration = input.substring(0, index);
         String durationUnit = input.substring(index);
@@ -45,11 +48,13 @@ public class DurationInputParser<C> implements ArgumentParser<C, DurationInput>,
         try {
             durationInt = Integer.parseInt(duration);
         } catch (NumberFormatException ex) {
-            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-amount"), duration));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-amount"),
+                    Placeholder.parsed("input", input)));
         }
         Optional<TimeUnit> timeUnit = DurationInput.getTimeUnit(durationUnit.toLowerCase(Locale.ENGLISH));
         if (timeUnit.isEmpty()) {
-            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"),
+                    Placeholder.parsed("input", input)));
         }
         DurationInput durationInput = new DurationInput(durationInt, timeUnit.get());
         commandInput.readString();

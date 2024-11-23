@@ -15,6 +15,7 @@ import me.wiefferink.areashop.regions.RegionGroup;
 import me.wiefferink.areashop.regions.RentRegion;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.interactivemessenger.processing.Message;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -140,8 +141,9 @@ public class FindCommand extends AreashopCommandBean {
         if (results.isEmpty()) {
             double currency = maxPriceSet ? maxPrice : balance;
             NodePath key = maxPriceSet ? NodePath.path("command", "find", "no-found-money") : NodePath.path("command", "find", "no-found");
-            throw new AreaShopCommandException(key, "buy", Utils.formatCurrency(currency), onlyInGroup);
+            throw new AreaShopCommandException(key, Placeholder.parsed("money", Utils.formatCurrency(currency)));
         }
+
         // Draw a random one
         BuyRegion region = results.get(ThreadLocalRandom.current().nextInt(results.size()));
         // Teleport
@@ -180,7 +182,7 @@ public class FindCommand extends AreashopCommandBean {
         if (results.isEmpty()) {
             double currency = maxPriceSet ? maxPrice : balance;
             NodePath key = maxPriceSet ? NodePath.path("command", "find", "no-found-max") : NodePath.path("command", "find", "no-found");
-            throw new AreaShopCommandException(key, "rent", Utils.formatCurrency(currency), onlyInGroup);
+            throw new AreaShopCommandException(key, Placeholder.parsed("money", Utils.formatCurrency(currency)));
         }
         // Draw a random one
         RentRegion region = results.get(ThreadLocalRandom.current().nextInt(results.size()));

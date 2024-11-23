@@ -49,7 +49,7 @@ public class GithubUpdateCheck {
 		this.logger = plugin.getLogger();
 		this.author = author;
 		this.repository = repository;
-		this.currentVersion = plugin.getDescription().getVersion();
+		this.currentVersion = plugin.getPluginMeta().getVersion();
 		this.versionComparator = (latest, current) ->
 				!latest.equalsIgnoreCase(current);
 
