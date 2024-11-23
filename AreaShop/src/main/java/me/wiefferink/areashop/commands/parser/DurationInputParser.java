@@ -1,5 +1,6 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.parser;
 
+import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.tools.DurationInput;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.context.CommandContext;
@@ -9,6 +10,7 @@ import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.incendo.cloud.suggestion.SuggestionProvider;
+import org.spongepowered.configurate.NodePath;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +37,7 @@ public class DurationInputParser<C> implements ArgumentParser<C, DurationInput>,
             }
         }
         if (index == commandInput.length() - 1) {
-            return ArgumentParseResult.failure(new AreaShopCommandException("setduration-wrongAmount", input));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"), input));
         }
         String duration = input.substring(0, index);
         String durationUnit = input.substring(index);
@@ -43,11 +45,11 @@ public class DurationInputParser<C> implements ArgumentParser<C, DurationInput>,
         try {
             durationInt = Integer.parseInt(duration);
         } catch (NumberFormatException ex) {
-            return ArgumentParseResult.failure(new AreaShopCommandException("setduration-wrongAmount", duration));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-amount"), duration));
         }
         Optional<TimeUnit> timeUnit = DurationInput.getTimeUnit(durationUnit.toLowerCase(Locale.ENGLISH));
         if (timeUnit.isEmpty()) {
-            return ArgumentParseResult.failure(new AreaShopCommandException("setduration-wrongFormat", durationUnit));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit));
         }
         DurationInput durationInput = new DurationInput(durationInt, timeUnit.get());
         commandInput.readString();

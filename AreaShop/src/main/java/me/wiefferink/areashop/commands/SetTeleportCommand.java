@@ -22,21 +22,24 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
+
+import static me.wiefferink.areashop.commands.parser.GeneralRegionParser.generalRegionParser;
 
 @Singleton
 public class SetTeleportCommand extends AreashopCommandBean {
 
     private static final CommandFlag<Void> FLAG_RESET = CommandFlag.builder("reset").build();
-    private final CommandFlag<GeneralRegion> regionFlag;
 
     private final MessageBridge messageBridge;
+    private final IFileManager fileManager;
 
     @Inject
     public SetTeleportCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
         this.messageBridge = messageBridge;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
+        this.fileManager = fileManager;
     }
 
     /**
@@ -71,7 +74,7 @@ public class SetTeleportCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("settp")
                 .senderType(PlayerCommandSource.class)
-                .flag(this.regionFlag)
+                .optional("region", generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -86,7 +89,7 @@ public class SetTeleportCommand extends AreashopCommandBean {
             this.messageBridge.message(player, "setteleport-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, player, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, player);
 
         boolean owner;
         if (region instanceof RentRegion rentRegion) {
@@ -98,9 +101,9 @@ public class SetTeleportCommand extends AreashopCommandBean {
             return;
         }
         if (!player.hasPermission("areashop.setteleport")) {
-            throw new AreaShopCommandException("setteleport-noPermission", region);
+            throw new AreaShopCommandException(NodePath.path("exception", "nno-permission"));
         } else if (!owner && !player.hasPermission("areashop.setteleportall")) {
-            throw new AreaShopCommandException("setteleport-noPermissionOther", region);
+            throw new AreaShopCommandException(NodePath.path("exception", "nno-permission"));
         }
         boolean reset = context.flags().contains(FLAG_RESET);
         if (reset) {

@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.parser.RegionGroupParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionGroup;
@@ -17,6 +17,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Set;
@@ -54,7 +55,8 @@ public class GroupInfoCommand extends AreashopCommandBean {
                 new RegionGroupParser<>(this.fileManager, "groupinfo-noGroup"),
                 RegionGroup.class);
         return builder
-                .literal("groupinfo")
+                .literal("group")
+                .literal("info")
                 .required(KEY_GROUP, regionGroupParser)
                 .handler(this::handleCommand);
 
@@ -67,12 +69,12 @@ public class GroupInfoCommand extends AreashopCommandBean {
 
     public void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         if (!context.hasPermission("groupinfo")) {
-            throw new AreaShopCommandException("groupinfo-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         RegionGroup group = context.get(KEY_GROUP);
         Set<String> members = group.getMembers();
         if (members.isEmpty()) {
-            throw new AreaShopCommandException("groupinfo-noMembers", group.getName());
+            throw new AreaShopCommandException(NodePath.path("command", "group", "info", "empty"), group.getName());
         }
         String seperatedMembers = Utils.createCommaSeparatedList(members);
         this.messageBridge.message(context.sender(), "groupinfo-members", group.getName(), seperatedMembers);

@@ -40,7 +40,9 @@ public class AdminInfoBaseCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("admininfo").handler(this::handleCommand);
+        return builder.literal("admininfo")
+                .permission("areashop.admininfo")
+                .handler(this::handleCommand);
     }
 
     @Override
@@ -50,13 +52,8 @@ public class AdminInfoBaseCommand extends AreashopCommandBean {
 
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
-        if (!sender.hasPermission("areashop.admininfo")) {
-            messageBridge.message(sender, "info-noPermission");
-            return;
-        }
         this.messageBridge.message(sender, "info-help");
     }
-
 }
 
 

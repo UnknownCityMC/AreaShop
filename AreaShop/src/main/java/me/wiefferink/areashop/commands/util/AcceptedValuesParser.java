@@ -6,6 +6,7 @@ import org.incendo.cloud.parser.ArgumentParseResult;
 import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.incendo.cloud.suggestion.SuggestionProvider;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -70,7 +71,7 @@ public class AcceptedValuesParser<C> implements ArgumentParser<C, String>, Sugge
         if (acceptedValues.contains(toTest)) {
             return ArgumentParseResult.success(toTest);
         }
-        return ArgumentParseResult.failure(new AreaShopCommandException(this.failureMessageKey));
+        return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path(this.failureMessageKey)));
     }
 
     @Override

@@ -21,6 +21,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -211,16 +212,19 @@ public class RegionSign {
 			getRegion().setSetting("general.signs." + key + ".facing", signFacing == null ? null : signFacing.toString());
 		}
 
+		//TODO: CHeck if the sign stuff works or needs some more logic
 		// Apply replacements and color and then set it on the sign
 		Sign signState = (Sign) PaperLib.getBlockState(block, false).getState();
 		for(int i = 0; i < signLines.length; i++) {
 			if(signLines[i] == null) {
-				signState.setLine(i, "");
+				signState.getSide(Side.FRONT).setLine(i, "");
+				signState.getSide(Side.BACK).setLine(i, "");
 				continue;
 			}
 			signLines[i] = Message.fromString(signLines[i]).replacements(getRegion()).getSingle();
 			signLines[i] = Utils.applyColors(signLines[i]);
-			signState.setLine(i, signLines[i]);
+			signState.getSide(Side.FRONT).setLine(i, signLines[i]);
+			signState.getSide(Side.BACK).setLine(i, signLines[i]);
 		}
 		signState.update(false, false);
 		return true;

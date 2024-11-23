@@ -1,4 +1,4 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.help;
 
 import org.bukkit.command.CommandSender;
 

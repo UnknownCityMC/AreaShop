@@ -608,9 +608,11 @@ public class RentRegion extends GeneralRegion {
 		if(landlordName != null) {
 			if(landlordPlayer != null && landlordPlayer.getName() != null) {
 				r = economy.depositPlayer(landlordPlayer, getWorldName(), price);
-			} else {
-				r = economy.depositPlayer(landlordName, getWorldName(), price);
 			}
+			//DEPRECATED
+			/*else {
+				r = economy.depositPlayer(landlordName, getWorldName(), price);
+			}*/
 			if(r == null || !r.transactionSuccess()) {
 				AreaShop.warn("Something went wrong with paying '" + landlordName + "' " + Utils.formatCurrency(price) + " for his rent of region " + getName() + " to " + offlinePlayer.getName());
 			}

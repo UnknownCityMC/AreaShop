@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionInfoUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -53,7 +53,9 @@ public class AdminInfoPlayerCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("info").literal("player")
+        return builder.literal("admininfo")
+                .permission("areashop.admininfo")
+                .literal("player")
                 .required(KEY_PLAYER, OfflinePlayerParser.parser())
                 .handler(this::handleCommand);
     }

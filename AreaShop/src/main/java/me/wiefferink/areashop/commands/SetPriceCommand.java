@@ -23,18 +23,19 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 
+import static me.wiefferink.areashop.commands.parser.GeneralRegionParser.generalRegionParser;
+
 @Singleton
 public class SetPriceCommand extends AreashopCommandBean {
 
-
     private static final CloudKey<String> KEY_PRICE = CloudKey.of("price", String.class);
-    private final CommandFlag<GeneralRegion> regionFlag;
     private final MessageBridge messageBridge;
+    private final IFileManager fileManager;
 
     @Inject
     public SetPriceCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
         this.messageBridge = messageBridge;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -54,7 +55,7 @@ public class SetPriceCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setprice")
                 .required(KEY_PRICE, StringParser.stringParser())
-                .flag(this.regionFlag)
+                .optional("region", generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -69,7 +70,7 @@ public class SetPriceCommand extends AreashopCommandBean {
             this.messageBridge.message(sender, "setprice-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         if (!sender.hasPermission("areashop.setprice")
                 && !(sender instanceof Player player && region.isLandlord(player.getUniqueId()))) {
             this.messageBridge.message(sender, "setprice-noLandlord", region);

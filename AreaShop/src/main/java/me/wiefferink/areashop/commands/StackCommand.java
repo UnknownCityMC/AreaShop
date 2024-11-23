@@ -37,6 +37,7 @@ import org.incendo.cloud.parser.standard.EnumParser;
 import org.incendo.cloud.parser.standard.IntegerParser;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -131,7 +132,7 @@ public class StackCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         Player player = context.sender().sender();
         if (!player.hasPermission("areashop.stack")) {
-            throw new AreaShopCommandException("stack-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         int amount = context.get(KEY_AMOUNT);
         int gap = context.get(KEY_GAP);

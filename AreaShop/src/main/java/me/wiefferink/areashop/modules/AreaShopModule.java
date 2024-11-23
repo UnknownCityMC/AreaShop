@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import de.unknowncity.astralib.paper.api.message.PaperMessenger;
 import me.wiefferink.areashop.AreaShop;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.features.FeatureFactory;
@@ -20,7 +21,6 @@ import me.wiefferink.areashop.regions.ImportJobFactory;
 import me.wiefferink.areashop.regions.RegionModule;
 import me.wiefferink.areashop.services.ServiceManager;
 import me.wiefferink.areashop.tools.Utils;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.plugin.Plugin;
 
 import javax.annotation.Nonnull;
@@ -32,6 +32,7 @@ public class AreaShopModule extends AbstractModule {
     private final WorldGuardInterface worldGuardInterface;
     private final WorldEditInterface worldEditInterface;
     private final MessageBridge messageBridge;
+    private final PaperMessenger paperMessenger;
     private final SignErrorLogger signErrorLogger;
     private final AbstractModule[] extras;
 
@@ -39,6 +40,7 @@ public class AreaShopModule extends AbstractModule {
 
     public AreaShopModule(@Nonnull AreaShop instance,
                           @Nonnull MessageBridge messageBridge,
+                          @Nonnull PaperMessenger messenger,
                           @Nonnull WorldEditInterface worldEditInterface,
                           @Nonnull WorldGuardInterface worldGuardInterface,
                           @Nonnull SignErrorLogger signErrorLogger,
@@ -47,6 +49,7 @@ public class AreaShopModule extends AbstractModule {
     ) {
         this.instance = instance;
         this.messageBridge = messageBridge;
+        this.paperMessenger = messenger;
         this.signErrorLogger = signErrorLogger;
         this.worldEditInterface = worldEditInterface;
         this.worldGuardInterface = worldGuardInterface;
@@ -60,6 +63,7 @@ public class AreaShopModule extends AbstractModule {
         bind(Plugin.class).toInstance(this.instance);
         bind(AreaShop.class).toInstance(this.instance);
         bind(MessageBridge.class).toInstance(this.messageBridge);
+        bind(PaperMessenger.class).toInstance(this.paperMessenger);
         bind(WorldGuardInterface.class).toInstance(this.worldGuardInterface);
         bind(SignManager.class).asEagerSingleton();
         bind(WorldEditInterface.class).toInstance(this.worldEditInterface);
@@ -75,9 +79,5 @@ public class AreaShopModule extends AbstractModule {
         install(new FactoryModuleBuilder().build(FeatureFactory.class));
         install(new FactoryModuleBuilder().build(ImportJobFactory.class));
         requestStaticInjection(Utils.class);
-    }
-    @Provides
-    public BukkitAudiences provideBukkitAudiences(@Nonnull Plugin plugin) {
-        return BukkitAudiences.create(plugin);
     }
 }

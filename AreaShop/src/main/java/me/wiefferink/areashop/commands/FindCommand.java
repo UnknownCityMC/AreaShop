@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.parser.RegionGroupParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -27,6 +27,7 @@ import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.DoubleParser;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -93,7 +94,7 @@ public class FindCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.find")) {
-            throw new AreaShopCommandException("find-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         double balance;
         if (economy != null) {
@@ -138,7 +139,7 @@ public class FindCommand extends AreashopCommandBean {
         }
         if (results.isEmpty()) {
             double currency = maxPriceSet ? maxPrice : balance;
-            String key = maxPriceSet ? "find-noneFoundMax" : "find-noneFound";
+            NodePath key = maxPriceSet ? NodePath.path("command", "find", "no-found-money") : NodePath.path("command", "find", "no-found");
             throw new AreaShopCommandException(key, "buy", Utils.formatCurrency(currency), onlyInGroup);
         }
         // Draw a random one
@@ -178,7 +179,7 @@ public class FindCommand extends AreashopCommandBean {
         }
         if (results.isEmpty()) {
             double currency = maxPriceSet ? maxPrice : balance;
-            String key = maxPriceSet ? "find-noneFoundMax" : "find-noneFound";
+            NodePath key = maxPriceSet ? NodePath.path("command", "find", "no-found-max") : NodePath.path("command", "find", "no-found");
             throw new AreaShopCommandException(key, "rent", Utils.formatCurrency(currency), onlyInGroup);
         }
         // Draw a random one

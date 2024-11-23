@@ -1,5 +1,6 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.parser;
 
+import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.RegionGroup;
 import org.incendo.cloud.context.CommandContext;
@@ -8,6 +9,7 @@ import org.incendo.cloud.parser.ArgumentParseResult;
 import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.incendo.cloud.suggestion.SuggestionProvider;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -35,7 +37,7 @@ public class RegionGroupParser<C> implements ArgumentParser<C, RegionGroup>, Sug
             commandInput.readString();
             return ArgumentParseResult.success(regionGroup);
         }
-        return ArgumentParseResult.failure(new AreaShopCommandException(this.failureMessageKey, input));
+        return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path(failureMessageKey), input));
     }
 
     @Override

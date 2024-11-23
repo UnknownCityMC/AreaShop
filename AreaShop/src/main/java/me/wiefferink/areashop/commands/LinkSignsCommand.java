@@ -18,6 +18,7 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -70,7 +71,7 @@ public class LinkSignsCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         Player player = context.sender().sender();
         if (!player.hasPermission("linksigns")) {
-            throw new AreaShopCommandException("linksigns-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         if (signLinkerManager.isInSignLinkMode(player)) {
             signLinkerManager.exitSignLinkMode(player);

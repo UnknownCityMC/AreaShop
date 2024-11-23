@@ -6,7 +6,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.features.FriendsFeature;
@@ -26,11 +26,14 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+
+import static me.wiefferink.areashop.commands.parser.GeneralRegionParser.generalRegionParser;
 
 @Singleton
 public class DelFriendCommand extends AreashopCommandBean {
@@ -38,9 +41,9 @@ public class DelFriendCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
     private final MessageBridge messageBridge;
-    private final CommandFlag<GeneralRegion> regionFlag;
     private final OfflinePlayerHelper offlinePlayerHelper;
     private final BukkitSchedulerExecutor executor;
+    private final IFileManager fileManager;
 
     @Inject
     public DelFriendCommand(
@@ -50,9 +53,9 @@ public class DelFriendCommand extends AreashopCommandBean {
             @Nonnull BukkitSchedulerExecutor executor
     ) {
         this.messageBridge = messageBridge;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.offlinePlayerHelper = offlinePlayerHelper;
         this.executor = executor;
+        this.fileManager = fileManager;
     }
 
     /**
@@ -92,18 +95,18 @@ public class DelFriendCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("delfriend", "deletefriend")
+        return builder.literal("delfriend")
                 .required(KEY_PLAYER, OfflinePlayerParser.parser(), this::suggestFriends)
-                .flag(this.regionFlag)
+                .optional("region", generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.delfriend") && !sender.hasPermission("areashop.delfriendall")) {
-            throw new AreaShopCommandException("delfriend-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
                 .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {
@@ -126,11 +129,11 @@ public class DelFriendCommand extends AreashopCommandBean {
         if (sender.hasPermission("areashop.delfriendall")) {
             if ((region instanceof RentRegion rentRegion && !rentRegion.isRented())
                     || (region instanceof BuyRegion buyRegion && !buyRegion.isSold())) {
-                throw new AreaShopCommandException("delfriend-noOwner", region);
+                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "no-owner"), region);
 
             }
             if (!friendsFeature.getFriends().contains(friend.getUniqueId())) {
-                throw new AreaShopCommandException("delfriend-notAdded", friend.getName(), region);
+                throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), friend.getName(), region);
 
             }
             if (friendsFeature.deleteFriend(friend.getUniqueId(), sender)) {
@@ -140,13 +143,13 @@ public class DelFriendCommand extends AreashopCommandBean {
             return;
         }
         if (!sender.hasPermission("areashop.delfriend") || !(sender instanceof Player player)) {
-            throw new AreaShopCommandException("delfriend-noPermission", region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region);
         }
         if (!region.isOwner(player)) {
-            throw new AreaShopCommandException("delfriend-noPermissionOther", region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"), region);
         }
         if (!friendsFeature.getFriends().contains(friend.getUniqueId())) {
-            throw new AreaShopCommandException("delfriend-notAdded", friend.getName(), region);
+            throw new AreaShopCommandException(NodePath.path("command", "delfriend", "not-added"), friend.getName(), region);
         } else if (friendsFeature.deleteFriend(friend.getUniqueId(), sender)) {
             region.update();
             this.messageBridge.message(sender, "delfriend-success", friend.getName(), region);
@@ -164,7 +167,7 @@ public class DelFriendCommand extends AreashopCommandBean {
         }
         GeneralRegion region;
         try {
-            region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+            region = RegionParseUtil.getOrParseRegion(context, sender);
         } catch (AreaShopCommandException ignored) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }

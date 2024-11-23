@@ -22,6 +22,7 @@ import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+
+import static me.wiefferink.areashop.commands.parser.GeneralRegionParser.generalRegionParser;
 
 @Singleton
 public class GroupDelCommand extends AreashopCommandBean {
@@ -38,7 +41,6 @@ public class GroupDelCommand extends AreashopCommandBean {
     private final IFileManager fileManager;
     private final RegionFactory regionFactory;
     private final MessageBridge messageBridge;
-    private final CommandFlag<GeneralRegion> regionFlag;
 
     @Inject
     public GroupDelCommand(
@@ -50,7 +52,6 @@ public class GroupDelCommand extends AreashopCommandBean {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
         this.regionFactory = regionFactory;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
     }
 
     @Override
@@ -68,9 +69,10 @@ public class GroupDelCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("groupdel")
+        return builder.literal("group")
+                .literal("delete")
                 .required(KEY_GROUP, StringParser.stringParser(), this::suggestGroupNames)
-                .flag(this.regionFlag)
+                .optional("region", generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -82,7 +84,7 @@ public class GroupDelCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("groupdel")) {
-            throw new AreaShopCommandException("groupdel-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         String rawGroup = context.get(KEY_GROUP);
         RegionGroup group = fileManager.getGroup(rawGroup);
@@ -90,10 +92,10 @@ public class GroupDelCommand extends AreashopCommandBean {
             group = regionFactory.createRegionGroup(rawGroup);
             fileManager.addGroup(group);
         }
-        GeneralRegion declaredRegion = context.flags().get(this.regionFlag);
+        GeneralRegion declaredRegion = context.getOrDefault("region", null);
         if (declaredRegion != null) {
             if (!group.removeMember(declaredRegion)) {
-                throw new AreaShopCommandException("groupdel-failed", group.getName(), declaredRegion);
+                throw new AreaShopCommandException(NodePath.path("command", "group", "delete", "failed"), group.getName(), declaredRegion);
             }
             this.messageBridge.message(sender,
                     "groupdel-success",
@@ -103,7 +105,7 @@ public class GroupDelCommand extends AreashopCommandBean {
             return;
         }
 
-        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, sender, this.regionFlag);
+        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, sender);
         Set<GeneralRegion> regionsSuccess = new TreeSet<>();
         Set<GeneralRegion> regionsFailed = new TreeSet<>();
         for (GeneralRegion region : regions) {

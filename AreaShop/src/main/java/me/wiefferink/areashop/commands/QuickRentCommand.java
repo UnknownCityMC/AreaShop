@@ -6,9 +6,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.ArgumentParseExceptionHandler;
-import me.wiefferink.areashop.commands.util.DurationInputParser;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.DurationInputParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionCreationUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
@@ -92,7 +91,8 @@ public class QuickRentCommand extends AreashopCommandBean {
         this.regionCreationUtil.createRegion(context, player, KEY_REGION)
                 .exceptionally(throwable -> {
                     if (throwable instanceof AreaShopCommandException exception) {
-                        ArgumentParseExceptionHandler.handleException(this.messageBridge, context.sender(), exception);
+                        //TODO: Replace this with Messenger
+                        //ArgumentParseExceptionHandler.handleException(this.messageBridge, context.sender(), exception);
                     } else {
                         throw new CommandExecutionException(throwable, context);
                     }

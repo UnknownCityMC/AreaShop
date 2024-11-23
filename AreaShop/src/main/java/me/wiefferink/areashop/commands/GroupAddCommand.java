@@ -5,6 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -18,10 +19,10 @@ import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
 import org.incendo.cloud.key.CloudKey;
-import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -38,7 +39,6 @@ public class GroupAddCommand extends AreashopCommandBean {
     private final IFileManager fileManager;
     private final RegionFactory regionFactory;
     private final MessageBridge messageBridge;
-    private final CommandFlag<GeneralRegion> regionFlag;
 
     @Inject
     public GroupAddCommand(
@@ -50,7 +50,6 @@ public class GroupAddCommand extends AreashopCommandBean {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
         this.regionFactory = regionFactory;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
     }
 
     @Override
@@ -68,9 +67,10 @@ public class GroupAddCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("groupadd")
+        return builder.literal("group")
+                .literal("add")
                 .required(KEY_GROUP, StringParser.stringParser(), this::suggestGroupNames)
-                .flag(this.regionFlag)
+                .optional("region", GeneralRegionParser.generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -82,7 +82,7 @@ public class GroupAddCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.groupadd")) {
-            throw new AreaShopCommandException("groupadd-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         String rawGroup = context.get(KEY_GROUP);
         RegionGroup group = fileManager.getGroup(rawGroup);
@@ -90,10 +90,10 @@ public class GroupAddCommand extends AreashopCommandBean {
             group = regionFactory.createRegionGroup(rawGroup);
             fileManager.addGroup(group);
         }
-        GeneralRegion declaredRegion = context.flags().get(this.regionFlag);
+        GeneralRegion declaredRegion = context.getOrDefault("region", null);
         if (declaredRegion != null) {
             if (!group.addMember(declaredRegion)) {
-                throw new AreaShopCommandException("groupadd-failed", group.getName(), declaredRegion);
+                throw new AreaShopCommandException(NodePath.path("command", "group", "add", "failed"), group.getName(), declaredRegion);
             }
             declaredRegion.update();
             this.messageBridge.message(sender,
@@ -104,7 +104,7 @@ public class GroupAddCommand extends AreashopCommandBean {
             return;
         }
 
-        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, sender, this.regionFlag);
+        Collection<GeneralRegion> regions = RegionParseUtil.getOrParseRegionsInSel(context, sender);
         Set<GeneralRegion> regionsSuccess = new TreeSet<>();
         Set<GeneralRegion> regionsFailed = new TreeSet<>();
         for (GeneralRegion region : regions) {

@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -17,6 +17,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -64,13 +65,13 @@ public class SchematicEventCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.schematicevents")) {
-            throw new AreaShopCommandException("schemevent-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
 
         GeneralRegion region = context.get(KEY_REGION);
         GeneralRegion.RegionEvent event = context.get(KEY_EVENT_TYPE);
         if (region.getRegion() == null) {
-            throw new AreaShopCommandException("general-noRegion", region);
+            throw new AreaShopCommandException(NodePath.path("exception", "no-region"), region);
         }
         region.handleSchematicEvent(event);
         region.update();

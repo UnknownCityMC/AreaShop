@@ -19,6 +19,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -48,7 +49,7 @@ public class DelSignCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("delsign", "deletesign")
+        return builder.literal("deletesign")
                 .senderType(PlayerCommandSource.class)
                 .handler(this::handleCommand);
     }
@@ -64,7 +65,7 @@ public class DelSignCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.delsign")) {
-            throw new AreaShopCommandException("delsign-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         // Get the sign
         Block block = null;
@@ -76,11 +77,11 @@ public class DelSignCommand extends AreashopCommandBean {
             }
         }
         if (block == null || !Materials.isSign(block.getType())) {
-            throw new AreaShopCommandException("delsign-noSign");
+            throw new AreaShopCommandException(NodePath.path("command", "delsign", "no-sign"));
         }
         Optional<RegionSign> optionalSign = signManager.removeSign(block.getLocation());
         if (optionalSign.isEmpty()) {
-            throw new AreaShopCommandException("delsign-noRegion");
+            throw new AreaShopCommandException(NodePath.path("command", "delsign", "no-region"));
         }
         RegionSign regionSign = optionalSign.get();
         messageBridge.message(sender, "delsign-success", regionSign.getRegion());

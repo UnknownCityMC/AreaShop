@@ -6,7 +6,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
 import me.wiefferink.areashop.events.ask.DeletingRegionEvent;
@@ -22,6 +22,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.description.Description;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -72,7 +73,7 @@ public class QuickDeleteCommand extends AreashopCommandBean {
         boolean giveMoneyBack = context.flags().isPresent(FLAG_RETURN_MONEY);
         DeletingRegionEvent event = this.fileManager.deleteRegion(region, giveMoneyBack);
         if (event.isCancelled()) {
-            throw new AreaShopCommandException("general-cancelled", event.getReason());
+            throw new AreaShopCommandException(NodePath.path("command", "plot", "delete", "canceled"), event.getReason());
         }
         this.messageBridge.message(player, "destroy-successRent", region);
         RegionManager regionManager = this.worldGuardInterface.getRegionManager(region.getWorld());

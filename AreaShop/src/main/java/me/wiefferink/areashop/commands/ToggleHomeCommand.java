@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.GeneralRegionParser;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.features.homeaccess.HomeAccessFeature;
@@ -26,6 +26,7 @@ import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -86,15 +87,15 @@ public final class ToggleHomeCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.togglehome")) {
-            throw new AreaShopCommandException("togglehome-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         final HomeAccessType accessType = context.get(KEY_ACCESS_TYPE);
-        final GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        final GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         if (!(sender instanceof Player) && !sender.hasPermission("sethome.control.other")) {
             return;
         }
         if (sender instanceof Player player && !region.isOwner(player)) {
-            throw new AreaShopCommandException("togglehome-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         region.getOrCreateFeature(HomeAccessFeature.class).homeAccessType(accessType);
         this.messageBridge.message(sender, "togglehome-success", accessType.name());

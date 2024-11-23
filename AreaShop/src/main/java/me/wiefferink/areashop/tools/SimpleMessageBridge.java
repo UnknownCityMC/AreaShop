@@ -8,7 +8,6 @@ import me.wiefferink.areashop.features.mail.MailService;
 import me.wiefferink.areashop.services.ServiceManager;
 import me.wiefferink.interactivemessenger.processing.Message;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;
@@ -20,7 +19,6 @@ import java.util.Optional;
 
 @Singleton
 public class SimpleMessageBridge implements MessageBridge {
-    private static final BukkitAudiences AUDIENCE_ADAPTER = BukkitAudiences.create(AreaShop.getInstance());
     private final ServiceManager serviceManager;
 
     @Inject
@@ -42,8 +40,8 @@ public class SimpleMessageBridge implements MessageBridge {
                 .isEmpty())) {
             return;
         }
-        Audience audience = AUDIENCE_ADAPTER.sender(target);
-        audience.sendMessage(convertMessage(message));
+
+        target.sendMessage(convertMessage(message));
     }
 
     public static void send(Message message, Object target) {
@@ -100,7 +98,7 @@ public class SimpleMessageBridge implements MessageBridge {
             serializedMessages = message.get();
         } else {
             // We need to manually convert the messages into MiniMessage first
-            serializedMessages = LanguageConverter.convertRawList(message.get());
+            serializedMessages = message.get();
         }
         serializedMessages.forEach(msg -> mailService.sendMail(target, msg));
     }

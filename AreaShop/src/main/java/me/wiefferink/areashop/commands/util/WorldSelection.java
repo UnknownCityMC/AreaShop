@@ -4,6 +4,7 @@ import me.wiefferink.areashop.interfaces.WorldEditInterface;
 import me.wiefferink.areashop.interfaces.WorldEditSelection;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.spongepowered.configurate.NodePath;
 import org.yaml.snakeyaml.parser.ParserException;
 
 import javax.annotation.Nonnull;
@@ -14,7 +15,7 @@ public record WorldSelection(@Nonnull World world, @Nonnull WorldEditSelection s
                                             @Nonnull WorldEditInterface worldEditInterface) throws ParserException {
         WorldEditSelection selection = worldEditInterface.getPlayerSelection(player);
         if (selection == null) {
-            throw new AreaShopCommandException("cmd-noSelection");
+            throw new AreaShopCommandException(NodePath.path("exception", "selection", "no-selection"));
         }
         World world = selection.getWorld();
         return new WorldSelection(world, selection);

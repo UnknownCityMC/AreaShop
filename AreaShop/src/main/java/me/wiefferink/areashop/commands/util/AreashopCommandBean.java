@@ -1,5 +1,6 @@
 package me.wiefferink.areashop.commands.util;
 
+import me.wiefferink.areashop.commands.help.HelpProvider;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandBean;

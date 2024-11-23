@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -52,7 +53,7 @@ public class ReloadCommand extends AreashopCommandBean {
 
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         if (!context.hasPermission("areashop.reload")) {
-            throw new AreaShopCommandException("reload-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         this.plugin.reload(context.sender().sender());
     }

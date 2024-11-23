@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.RegionGroupParser;
+import me.wiefferink.areashop.commands.parser.RegionGroupParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.BuyRegion;
@@ -67,7 +67,8 @@ public class AdminInfoCommand extends AreashopCommandBean {
 
     @Override
     protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-        return builder.literal("info")
+        return builder.literal("admininfo")
+                .permission("areashop.admininfo")
                 .required(KEY_TYPE, EnumParser.enumParser(RegionStateFilterType.class))
                 .flag(FLAG_PAGE)
                 .flag(this.filterGroupFlag)
@@ -81,7 +82,7 @@ public class AdminInfoCommand extends AreashopCommandBean {
 
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
-        if (!sender.hasPermission("areashop.info")) {
+        if (!sender.hasPermission("areashop.admininfo")) {
             messageBridge.message(sender, "info-noPermission");
             return;
         }

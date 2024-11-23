@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
@@ -45,14 +46,14 @@ public class RegionCreationUtil {
         World world = sender.getWorld();
         String regionName = context.get(regionKey);
         if (this.fileManager.getRegion(regionName) != null) {
-            return CompletableFuture.failedFuture(new AreaShopCommandException("add-failed", regionName));
+            return CompletableFuture.failedFuture(new AreaShopCommandException(NodePath.path("command", "plot", "add", "failed"), regionName));
         }
         this.server.dispatchCommand(sender, String.format("rg define %s", regionName));
         CompletableFuture<ProtectedRegion> future = new CompletableFuture<>();
         this.server.getScheduler().runTaskLater(this.plugin, () -> {
             ProtectedRegion region = this.worldGuardInterface.getRegionManager(world).getRegion(regionName);
             if (region == null) {
-                future.completeExceptionally(new AreaShopCommandException("quickadd-failedCreateWGRegion"));
+                future.completeExceptionally(new AreaShopCommandException(NodePath.path("command", "plot", "quickadd", "failed-we-region")));
                 return;
             }
             future.complete(region);

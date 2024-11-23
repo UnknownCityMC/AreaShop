@@ -1,10 +1,11 @@
 package me.wiefferink.areashop.commands;
 
+import de.unknowncity.astralib.paper.api.message.PaperMessenger;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.BuyRegionParser;
+import me.wiefferink.areashop.commands.parser.BuyRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -28,23 +29,21 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static me.wiefferink.areashop.commands.parser.BuyRegionParser.buyRegionParser;
+
 @Singleton
 public class ResellCommand extends AreashopCommandBean {
 
     private static final CloudKey<Double> KEY_PRICE = CloudKey.of("price", Double.class);
-    private final CommandFlag<BuyRegion> regionFlag;
     private final MessageBridge messageBridge;
+    private final PaperMessenger messenger;
     private final IFileManager fileManager;
 
     @Inject
-    public ResellCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
+    public ResellCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager, PaperMessenger messenger) {
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        ParserDescriptor<CommandSource<?>, BuyRegion> regionParser = ParserDescriptor.of(
-                new BuyRegionParser<>(fileManager, this::suggestBuyRegions),
-                BuyRegion.class
-        );
-        this.regionFlag = CommandFlag.<CommandSource<?>>builder("region").withComponent(regionParser).build();
+        this.messenger = messenger;
     }
 
     @Override
@@ -57,7 +56,7 @@ public class ResellCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
         return builder.literal("resell")
                 .required(KEY_PRICE, DoubleParser.doubleParser(0))
-                .flag(this.regionFlag)
+                .optional("region-buy", buyRegionParser(fileManager, this::suggestBuyRegions))
                 .handler(this::handleCommand);
     }
 
@@ -83,7 +82,7 @@ public class ResellCommand extends AreashopCommandBean {
             return;
         }
         double price = context.get(KEY_PRICE);
-        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender, this.regionFlag);
+        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender);
         if (!buy.isSold()) {
             messageBridge.message(sender, "resell-notBought", buy);
             return;
@@ -124,7 +123,6 @@ public class ResellCommand extends AreashopCommandBean {
                 .toList();
         return CompletableFuture.completedFuture(suggestions);
     }
-
 }
 
 

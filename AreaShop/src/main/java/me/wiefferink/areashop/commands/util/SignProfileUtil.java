@@ -7,6 +7,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.StringParser;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -63,7 +64,7 @@ public final class SignProfileUtil {
         if (profiles.contains(profile.toLowerCase(Locale.ENGLISH))) {
             return profile.toLowerCase(Locale.ENGLISH);
         }
-        throw new AreaShopCommandException("addsign-wrongProfile");
+        throw new AreaShopCommandException(NodePath.path("command", "addsign", "wrong-profile"));
     }
 
 }

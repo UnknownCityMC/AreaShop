@@ -1,4 +1,4 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.help;
 
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.interactivemessenger.source.LanguageManager;

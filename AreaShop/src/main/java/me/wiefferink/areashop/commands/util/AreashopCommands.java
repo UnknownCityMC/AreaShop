@@ -4,52 +4,12 @@ import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import me.wiefferink.areashop.MessageBridge;
-import me.wiefferink.areashop.commands.AddCommand;
-import me.wiefferink.areashop.commands.AddFriendCommand;
-import me.wiefferink.areashop.commands.AddSignCommand;
-import me.wiefferink.areashop.commands.BuyCommand;
-import me.wiefferink.areashop.commands.DelCommand;
-import me.wiefferink.areashop.commands.DelFriendCommand;
-import me.wiefferink.areashop.commands.DelSignCommand;
-import me.wiefferink.areashop.commands.FindCommand;
-import me.wiefferink.areashop.commands.GroupAddCommand;
-import me.wiefferink.areashop.commands.GroupDelCommand;
-import me.wiefferink.areashop.commands.GroupInfoCommand;
-import me.wiefferink.areashop.commands.GroupListCommand;
-import me.wiefferink.areashop.commands.HelpCommand;
-import me.wiefferink.areashop.commands.AdminInfoBaseCommand;
-import me.wiefferink.areashop.commands.AdminInfoCommand;
-import me.wiefferink.areashop.commands.AdminInfoPlayerCommand;
-import me.wiefferink.areashop.commands.AdminInfoRegionCommand;
-import me.wiefferink.areashop.commands.LinkSignsCommand;
-import me.wiefferink.areashop.commands.MeCommand;
-import me.wiefferink.areashop.commands.MessageCommand;
-import me.wiefferink.areashop.commands.QuickBuyCommand;
-import me.wiefferink.areashop.commands.QuickDeleteCommand;
-import me.wiefferink.areashop.commands.QuickRentCommand;
-import me.wiefferink.areashop.commands.ReloadCommand;
-import me.wiefferink.areashop.commands.RentCommand;
-import me.wiefferink.areashop.commands.ResellCommand;
-import me.wiefferink.areashop.commands.SchematicEventCommand;
-import me.wiefferink.areashop.commands.SellCommand;
-import me.wiefferink.areashop.commands.SetDurationCommand;
-import me.wiefferink.areashop.commands.SetLandlordCommand;
-import me.wiefferink.areashop.commands.SetOwnerCommand;
-import me.wiefferink.areashop.commands.SetPriceCommand;
-import me.wiefferink.areashop.commands.SetRestoreCommand;
-import me.wiefferink.areashop.commands.SetTeleportCommand;
-import me.wiefferink.areashop.commands.SetTransferCommand;
-import me.wiefferink.areashop.commands.StackCommand;
-import me.wiefferink.areashop.commands.StopResellCommand;
-import me.wiefferink.areashop.commands.TeleportCommand;
-import me.wiefferink.areashop.commands.ToggleHomeCommand;
-import me.wiefferink.areashop.commands.TransferCommand;
-import me.wiefferink.areashop.commands.UnrentCommand;
+import me.wiefferink.areashop.AreaShop;
+import me.wiefferink.areashop.commands.*;
+import me.wiefferink.areashop.commands.help.HelpRenderer;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSourceMapper;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
 import org.incendo.cloud.exception.ArgumentParseException;
 import org.incendo.cloud.exception.CommandExecutionException;
 import org.incendo.cloud.exception.InvalidCommandSenderException;
@@ -72,6 +32,7 @@ public class AreashopCommands {
             AddCommand.class,
             AddFriendCommand.class,
             AddSignCommand.class,
+            InfoCommand.class,
             BuyCommand.class,
             DelCommand.class,
             DelFriendCommand.class,
@@ -112,7 +73,7 @@ public class AreashopCommands {
             UnrentCommand.class
     );
 
-    private final MessageBridge messageBridge;
+    private final AreaShop plugin;
 
     private final Injector injector;
     private final PaperCommandManager<CommandSource<?>> commandManager;
@@ -121,12 +82,12 @@ public class AreashopCommands {
     private HelpRenderer helpRenderer;
 
     @Inject
-    AreashopCommands(@Nonnull Injector injector, @Nonnull Plugin plugin, @Nonnull MessageBridge messageBridge) {
+    AreashopCommands(@Nonnull Injector injector, @Nonnull AreaShop plugin) {
         this.injector = injector;
         this.commandManager = PaperCommandManager.builder(new CommandSourceMapper())
                 .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
                 .buildOnEnable(plugin);
-        this.messageBridge = messageBridge;
+        this.plugin = plugin;
     }
 
     public void registerCommands() {
@@ -141,7 +102,7 @@ public class AreashopCommands {
         }
         // Show help by default
         this.commandManager.command(builder.handler(context -> showHelp(context.sender().sender())));
-        this.helpRenderer = new HelpRenderer(this.messageBridge, this.commands);
+        this.helpRenderer = new HelpRenderer(this.plugin.messenger(), this.commands);
     }
 
     private void initCommandManager() {
@@ -152,9 +113,9 @@ public class AreashopCommands {
         exceptionController.registerHandler(CommandExecutionException.class,
                 ExceptionHandler.unwrappingHandler(AreaShopCommandException.class));
         exceptionController.registerHandler(InvalidCommandSenderException.class,
-                new InvalidCommandSenderHandler(this.messageBridge));
+                new InvalidCommandSenderHandler(this.plugin.messenger()));
         exceptionController.registerHandler(AreaShopCommandException.class,
-                new ArgumentParseExceptionHandler<>(this.messageBridge));
+                new ArgumentParseExceptionHandler<>(this.plugin.messenger()));
         var confirmationConfiguration = ConfirmationConfiguration.<CommandSource<?>>builder()
                 .cache(GuavaCache.of(CacheBuilder.newBuilder().build()))
                 .noPendingCommandNotifier(x -> {
@@ -172,5 +133,4 @@ public class AreashopCommands {
         }
         this.helpRenderer.showHelp(sender);
     }
-
 }

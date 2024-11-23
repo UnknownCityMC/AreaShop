@@ -16,6 +16,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -51,7 +52,7 @@ public class MessageCommand extends AreashopCommandBean {
 	private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
 		CommandSender sender = context.sender().sender();
 		if(!sender.hasPermission("areashop.message")) {
-			throw new AreaShopCommandException("message-noPermission");
+			throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
 		}
 		Player player = context.get(KEY_PLAYER);
 		String message = context.get(KEY_MESSAGE);

@@ -12,6 +12,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -51,7 +52,7 @@ public class HelpCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.help")) {
-            throw new AreaShopCommandException("help-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
         this.commands.showHelp(sender);
     }

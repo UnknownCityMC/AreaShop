@@ -1,6 +1,7 @@
 package me.wiefferink.areashop.commands.util;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 
@@ -8,16 +9,16 @@ public class AreaShopCommandException extends RuntimeException {
 
     private static final Object[] EMPTY = new Object[0];
 
-    private final String messageKey;
+    private final NodePath path;
     private final Object[] replacements;
 
-    public AreaShopCommandException(@Nonnull String messageKey, @Nullable Object... replacements) {
-        this.messageKey = messageKey;
+    public AreaShopCommandException(@Nonnull NodePath path, @Nullable Object... replacements) {
+        this.path = path;
         this.replacements = replacements == null ? EMPTY : replacements;
     }
 
-    public String messageKey() {
-        return this.messageKey;
+    public NodePath messageKey() {
+        return this.path;
     }
 
     public Object[] replacements() {
@@ -26,6 +27,6 @@ public class AreaShopCommandException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return this.messageKey;
+        return this.path.toString();
     }
 }

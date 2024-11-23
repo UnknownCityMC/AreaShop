@@ -1,5 +1,6 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.parser;
 
+import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -9,6 +10,7 @@ import org.incendo.cloud.parser.ArgumentParseResult;
 import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.suggestion.BlockingSuggestionProvider;
+import org.spongepowered.configurate.NodePath;
 
 public class OfflinePlayerParser<C> implements ArgumentParser<C, String>, BlockingSuggestionProvider.Strings<C> {
 
@@ -22,10 +24,9 @@ public class OfflinePlayerParser<C> implements ArgumentParser<C, String>, Blocki
                                                                @NonNull CommandInput commandInput) {
         final String input = commandInput.readString();
         if (input.length() > 16) {
-            return ArgumentParseResult.failure(new AreaShopCommandException("cmd-invalidPlayer", input));
+            return ArgumentParseResult.failure(new AreaShopCommandException(NodePath.path("exception", "invalid-player"), input));
         }
         return ArgumentParseResult.success(input);
-
     }
 
     @Override

@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.BuyRegionParser;
+import me.wiefferink.areashop.commands.parser.BuyRegionParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -26,23 +26,18 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static me.wiefferink.areashop.commands.parser.BuyRegionParser.buyRegionParser;
+
 @Singleton
 public class StopResellCommand extends AreashopCommandBean {
 
     private final MessageBridge messageBridge;
     private final IFileManager fileManager;
 
-    private final CommandFlag<BuyRegion> regionFlag;
-
     @Inject
     public StopResellCommand(@Nonnull MessageBridge messageBridge, @Nonnull IFileManager fileManager) {
-        ParserDescriptor<CommandSource<?>, BuyRegion> regionParser =
-                ParserDescriptor.of(new BuyRegionParser<>(fileManager, this::suggestBuyRegions), BuyRegion.class);
         this.messageBridge = messageBridge;
         this.fileManager = fileManager;
-        this.regionFlag = CommandFlag.<CommandSource<?>>builder("region")
-                .withComponent(regionParser)
-                .build();
     }
 
     @Override
@@ -61,7 +56,7 @@ public class StopResellCommand extends AreashopCommandBean {
     @Override
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("stopresell")
-                .flag(this.regionFlag)
+                .optional("region-buy", buyRegionParser(fileManager, this::suggestBuyRegions))
                 .handler(this::handleCommand);
     }
 
@@ -77,7 +72,7 @@ public class StopResellCommand extends AreashopCommandBean {
             return;
         }
 
-        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender, this.regionFlag);
+        BuyRegion buy = RegionParseUtil.getOrParseBuyRegion(context, sender);
         if (!buy.isInResellingMode()) {
             this.messageBridge.message(sender, "stopresell-notResell", buy);
             return;

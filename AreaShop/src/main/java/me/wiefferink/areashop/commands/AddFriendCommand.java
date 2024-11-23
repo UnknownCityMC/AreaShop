@@ -5,7 +5,8 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
@@ -22,7 +23,6 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
-import org.incendo.cloud.parser.flag.CommandFlag;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -31,11 +31,11 @@ import javax.annotation.Nonnull;
 public class AddFriendCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_FRIEND = CloudKey.of("friend", String.class);
-    private final CommandFlag<GeneralRegion> regionFlag;
     private final MessageBridge messageBridge;
     private final Plugin plugin;
     private final BukkitSchedulerExecutor executor;
     private final OfflinePlayerHelper offlinePlayerHelper;
+    private final IFileManager fileManager;
 
     @Inject
     public AddFriendCommand(
@@ -47,9 +47,9 @@ public class AddFriendCommand extends AreashopCommandBean {
     ) {
         this.messageBridge = messageBridge;
         this.plugin = plugin;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.executor = executor;
         this.offlinePlayerHelper = offlinePlayerHelper;
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AddFriendCommand extends AreashopCommandBean {
         return builder.literal("addfriend")
                 .senderType(PlayerCommandSource.class)
                 .required(KEY_FRIEND, OfflinePlayerParser.parser())
-                .flag(this.regionFlag)
+                .optional("region", GeneralRegionParser.generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -80,7 +80,7 @@ public class AddFriendCommand extends AreashopCommandBean {
            this.messageBridge.message(sender, "addfriend-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_FRIEND))
                 .whenCompleteAsync((offlinePlayer, exception) -> {
                     if (exception != null) {

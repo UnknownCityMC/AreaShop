@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.bean.CommandProperties;
 import org.incendo.cloud.context.CommandContext;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -43,7 +44,8 @@ public class GroupListCommand extends AreashopCommandBean {
 
 	@Override
 	protected @Nonnull Command.Builder<? extends CommandSource<?>> configureCommand(@Nonnull Command.Builder<CommandSource<?>> builder) {
-		return builder.literal("grouplist", "groups")
+		return builder.literal("group", "groups")
+				.literal("list")
 				.handler(this::handleCommand);
 	}
 
@@ -54,7 +56,7 @@ public class GroupListCommand extends AreashopCommandBean {
 
 	private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
 		if (!context.hasPermission("areashop.grouplist")) {
-			throw new AreaShopCommandException("grouplist-noPermission");
+			throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
 		}
 		List<String> groups = this.fileManager.getGroupNames();
 		CommandSender sender = context.sender().sender();

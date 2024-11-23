@@ -20,16 +20,19 @@ import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.parser.standard.StringParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
+
+import static me.wiefferink.areashop.commands.parser.RentRegionParser.rentRegionParser;
 
 @Singleton
 public class SetDurationCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_DURATION = CloudKey.of("duration", String.class);
     private final MessageBridge messageBridge;
-    private final CommandFlag<RentRegion> regionFlag;
+    private final IFileManager fileManager;
 
     @Inject
     public SetDurationCommand(
@@ -37,7 +40,7 @@ public class SetDurationCommand extends AreashopCommandBean {
             @Nonnull IFileManager fileManager
     ) {
         this.messageBridge = messageBridge;
-        this.regionFlag = RegionParseUtil.createDefaultRent(fileManager);
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class SetDurationCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setduration")
                 .required(KEY_DURATION, StringParser.stringParser())
-                .flag(this.regionFlag)
+                .optional("region-rent", rentRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -72,7 +75,7 @@ public class SetDurationCommand extends AreashopCommandBean {
             this.messageBridge.message(sender, "setduration-noPermission");
             return;
         }
-        RentRegion rent = RegionParseUtil.getOrParseRentRegion(context, sender, this.regionFlag);
+        RentRegion rent = RegionParseUtil.getOrParseRentRegion(context, sender);
         if (!sender.hasPermission("areashop.setduration")
                 && !(sender instanceof Player player
                 && rent.isLandlord(player.getUniqueId()))
@@ -103,7 +106,7 @@ public class SetDurationCommand extends AreashopCommandBean {
             }
         }
         if (start == 0) {
-            throw new AreaShopCommandException("setduration-wrongFormat", rawDuration);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), rawDuration);
         }
         String duration = rawDuration.substring(0, start);
         String durationUnit = rawDuration.substring(start);
@@ -111,17 +114,17 @@ public class SetDurationCommand extends AreashopCommandBean {
         try {
             durationInt = Integer.parseInt(duration);
         } catch (NumberFormatException ex) {
-            throw new AreaShopCommandException("setduration-wrongAmount", duration);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-input"), rawDuration);
         }
         TimeUnit timeUnit = DurationInput.getTimeUnit(durationUnit)
-                .orElseThrow(() -> new AreaShopCommandException("setduration-wrongFormat", durationUnit));
+                .orElseThrow(() -> new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit));
 
         boolean invalid = !switch (timeUnit) {
             case DAYS, HOURS, MINUTES, SECONDS -> true;
             default -> false;
         };
         if (invalid) {
-            throw new AreaShopCommandException("setduration-wrongFormat", durationUnit);
+            throw new AreaShopCommandException(NodePath.path("exception", "duration", "wrong-format"), durationUnit);
         }
         return new DurationInput(durationInt, timeUnit);
     }

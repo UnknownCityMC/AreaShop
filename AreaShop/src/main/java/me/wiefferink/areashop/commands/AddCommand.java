@@ -8,7 +8,7 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.WorldFlagUtil;
-import me.wiefferink.areashop.commands.util.WorldGuardRegionParser;
+import me.wiefferink.areashop.commands.parser.WorldGuardRegionParser;
 import me.wiefferink.areashop.commands.util.WorldSelection;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
@@ -37,6 +37,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.standard.EnumParser;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -119,7 +120,7 @@ public class AddCommand extends AreashopCommandBean {
                     .collect(Collectors.toMap(ProtectedRegion::getId, region -> region));
         }
         if (regions.isEmpty()) {
-            throw new AreaShopCommandException("cmd-noWERegionsFound");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-region"));
         }
         AreaShop.debug("Starting add task with " + regions.size() + " regions");
         AddTaskState state = createState(player, regionType, world);

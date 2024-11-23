@@ -1,6 +1,9 @@
+import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+
 plugins {
     id("io.github.goooler.shadow") version "8.1.7"
     id("xyz.jpenilla.run-paper") version "2.3.0"
+    id("de.eldoria.plugin-yml.bukkit") version "0.6.0"
 }
 
 idea {
@@ -13,7 +16,7 @@ description = "AreaShop"
 
 dependencies {
     // Platform
-    compileOnlyApi(libs.spigot)
+    compileOnlyApi(libs.paper)
     compileOnlyApi(libs.worldeditCore)
     compileOnlyApi(libs.worldeditBukkit)
     compileOnlyApi(libs.worldguardCore)
@@ -39,9 +42,8 @@ dependencies {
     implementation("org.incendo:cloud-processors-confirmation:1.0.0-beta.3") {
         exclude("com.google.guava")
     }
-    implementation("net.kyori:adventure-text-minimessage:4.16.0")
-    implementation("net.kyori:adventure-platform-bukkit:4.3.2")
-    implementation("org.spongepowered:configurate-yaml:4.1.2")
+
+    bukkitLibrary("org.spongepowered:configurate-yaml:4.1.2")
 
     // Project submodules
     api(projects.areashopInterface)
@@ -61,6 +63,28 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
 }
 
+val mainClass = "me.wiefferink.areashop.AreaShop"
+
+bukkit {
+    name = "UC-Plots"
+    version = "${rootProject.version}"
+    description = "Selling and renting WorldGuard regions to your players, highly configurable."
+
+    authors = listOf("NLThijs48", "md5sha256", "Dartanman", "UnknownCity")
+
+    main = mainClass
+
+    foliaSupported = false
+
+    apiVersion = "1.21"
+
+    load = BukkitPluginDescription.PluginLoadOrder.POSTWORLD
+
+    depend = listOf("Vault", "WorldGuard", "WorldEdit", "AstraLib")
+    softDepend = listOf("PlaceholderAPI", "Multiverse-Core", "FastAsyncWorldEdit", "Essentials")
+
+    defaultPermission = BukkitPluginDescription.Permission.Default.OP
+}
 
 
 repositories {
@@ -68,11 +92,11 @@ repositories {
 }
 
 tasks {
-    processResources {
+    /*processResources {
         filesMatching("plugin.yml") {
             expand("version" to project.version)
         }
-    }
+    }*/
 
     assemble {
         if (!providers.environmentVariable("JITPACK").isPresent) {
@@ -122,10 +146,8 @@ tasks {
         relocate("jakarta.inject", "${base}.jakarta.inject")
         relocate("org.jetbrains.annotations", "${base}.jetbrains.annotations")
         relocate("io.leangen.geantyref", "${base}.geantyref")
-        relocate("net.kyori", "${base}.kyori")
         relocate("org.checkerframework", "${base}.checkerframework")
         relocate("org.intellij", "${base}.intellij")
-        relocate("org.spongepowered", "${base}.spongepowered")
         relocate("org.yaml.snakeyaml", "${base}.snakeyaml")
     }
     runServer {

@@ -15,6 +15,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.key.CloudKey;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -79,7 +80,7 @@ public class ImportCommand extends AreashopCommandBean {
         }
         String importSource = context.get(KEY_SOURCE);
         if (!"RegionForSale".equalsIgnoreCase(importSource)) {
-            throw new AreaShopCommandException("import-wrongSource");
+            throw new AreaShopCommandException(NodePath.path("command", "import", "wrong-source"));
         }
         importJobFactory.createImportJob(sender).execute();
     }

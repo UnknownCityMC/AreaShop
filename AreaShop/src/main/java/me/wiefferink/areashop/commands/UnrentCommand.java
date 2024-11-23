@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
-import me.wiefferink.areashop.commands.util.RentRegionParser;
+import me.wiefferink.areashop.commands.parser.RentRegionParser;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
 import me.wiefferink.areashop.regions.GeneralRegion;
@@ -21,24 +21,21 @@ import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static me.wiefferink.areashop.commands.parser.RentRegionParser.rentRegionParser;
+
 @Singleton
 public class UnrentCommand extends AreashopCommandBean {
     private final IFileManager fileManager;
-    private final CommandFlag<RentRegion> regionFlag;
 
     @Inject
     public UnrentCommand(@Nonnull IFileManager fileManager) {
-        ParserDescriptor<CommandSource<?>, RentRegion> regionParser =
-                ParserDescriptor.of(new RentRegionParser<>(fileManager, this::suggestRegions), RentRegion.class);
         this.fileManager = fileManager;
-        this.regionFlag = CommandFlag.<CommandSource<?>>builder("region")
-                .withComponent(regionParser)
-                .build();
     }
 
     /**
@@ -74,7 +71,7 @@ public class UnrentCommand extends AreashopCommandBean {
     @Override
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("unrent")
-                .flag(this.regionFlag)
+                .optional("region-rent", rentRegionParser(fileManager, this::suggestRegions))
                 .handler(this::handleCommand);
     }
 
@@ -86,11 +83,11 @@ public class UnrentCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<CommandSource<?>> context) {
         CommandSender sender = context.sender().sender();
         if (!sender.hasPermission("areashop.unrent") && !sender.hasPermission("areashop.unrentown")) {
-            throw new AreaShopCommandException("unrent-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
-        RentRegion rent = RegionParseUtil.getOrParseRentRegion(context, sender, this.regionFlag);
+        RentRegion rent = RegionParseUtil.getOrParseRentRegion(context, sender);
         if (!rent.isRented()) {
-            throw new AreaShopCommandException("unrent-notRented", rent);
+            throw new AreaShopCommandException(NodePath.path("command", "unrent", "not-rented"), rent);
         }
         rent.unRent(true, sender);
     }

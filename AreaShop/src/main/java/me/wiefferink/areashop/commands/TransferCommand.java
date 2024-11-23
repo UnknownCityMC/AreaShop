@@ -6,8 +6,8 @@ import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreaShopCommandException;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.GeneralRegionParser;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.GeneralRegionParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.commands.util.commandsource.PlayerCommandSource;
@@ -26,6 +26,7 @@ import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.Suggestion;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -88,11 +89,11 @@ public class TransferCommand extends AreashopCommandBean {
     private void handleCommand(@Nonnull CommandContext<PlayerCommandSource> context) {
         Player sender = context.sender().sender();
         if (!sender.hasPermission("areashop.transfer")) {
-            throw new AreaShopCommandException("transfer-noPermission");
+            throw new AreaShopCommandException(NodePath.path("exception", "no-permission"));
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         if (!region.isTransferEnabled()) {
-            throw new AreaShopCommandException("transfer-disabled");
+            throw new AreaShopCommandException(NodePath.path("command", "transfer", "disabled"));
         }
         this.offlinePlayerHelper.lookupOfflinePlayerAsync(context.get(KEY_PLAYER))
                 .whenComplete((offlinePlayer, exception) -> {
@@ -117,11 +118,11 @@ public class TransferCommand extends AreashopCommandBean {
     ) {
         String targetPlayerName = targetPlayer.getName();
         if (Objects.equals(sender, targetPlayer)) {
-            throw new AreaShopCommandException("transfer-transferSelf");
+            throw new AreaShopCommandException(NodePath.path("command", "transfer", "self"));
         }
         if (!targetPlayer.hasPlayedBefore() && !targetPlayer.isOnline()) {
             // Unknown player
-            throw new AreaShopCommandException("transfer-noPlayer", targetPlayerName);
+            throw new AreaShopCommandException(NodePath.path("command", "transfer", "no-player"));
         }
         if (region.isLandlord(sender.getUniqueId())) {
             // Transfer ownership if same as landlord
@@ -136,7 +137,8 @@ public class TransferCommand extends AreashopCommandBean {
         }
         if (!region.isOwner(sender.getUniqueId())) {
             // Cannot transfer tenant if we aren't the current tenant
-            throw new AreaShopCommandException("transfer-notCurrentTenant");
+            throw new AreaShopCommandException(NodePath.path("command", "transfer", "not-current-tenant"));
+
         }
         region.getFriendsFeature().deleteFriend(region.getOwner(), null);
         // Swap the owner/occupant (renter or buyer)

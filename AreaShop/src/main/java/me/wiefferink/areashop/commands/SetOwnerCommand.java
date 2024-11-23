@@ -5,7 +5,7 @@ import jakarta.inject.Singleton;
 import me.wiefferink.areashop.MessageBridge;
 import me.wiefferink.areashop.adapters.platform.OfflinePlayerHelper;
 import me.wiefferink.areashop.commands.util.AreashopCommandBean;
-import me.wiefferink.areashop.commands.util.OfflinePlayerParser;
+import me.wiefferink.areashop.commands.parser.OfflinePlayerParser;
 import me.wiefferink.areashop.commands.util.RegionParseUtil;
 import me.wiefferink.areashop.commands.util.commandsource.CommandSource;
 import me.wiefferink.areashop.managers.IFileManager;
@@ -27,15 +27,17 @@ import javax.annotation.Nonnull;
 import java.util.Calendar;
 import java.util.UUID;
 
+import static me.wiefferink.areashop.commands.parser.GeneralRegionParser.generalRegionParser;
+
 @Singleton
 public class SetOwnerCommand extends AreashopCommandBean {
 
     private static final CloudKey<String> KEY_PLAYER = CloudKey.of("player", String.class);
-    private final CommandFlag<GeneralRegion> regionFlag;
 
     private final MessageBridge messageBridge;
     private final OfflinePlayerHelper offlinePlayerHelper;
     private final BukkitSchedulerExecutor executor;
+    private final IFileManager fileManager;
 
     @Inject
     public SetOwnerCommand(
@@ -45,9 +47,9 @@ public class SetOwnerCommand extends AreashopCommandBean {
             @Nonnull BukkitSchedulerExecutor executor
             ) {
         this.messageBridge = messageBridge;
-        this.regionFlag = RegionParseUtil.createDefault(fileManager);
         this.offlinePlayerHelper = offlinePlayerHelper;
         this.executor = executor;
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class SetOwnerCommand extends AreashopCommandBean {
     protected Command.Builder<? extends CommandSource<?>> configureCommand(Command.@NotNull Builder<CommandSource<?>> builder) {
         return builder.literal("setowner")
                 .required(KEY_PLAYER, OfflinePlayerParser.parser())
-                .flag(this.regionFlag)
+                .optional("region", generalRegionParser(fileManager))
                 .handler(this::handleCommand);
     }
 
@@ -82,7 +84,7 @@ public class SetOwnerCommand extends AreashopCommandBean {
             this.messageBridge.message(sender, "setowner-noPermission");
             return;
         }
-        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender, this.regionFlag);
+        GeneralRegion region = RegionParseUtil.getOrParseRegion(context, sender);
         if (region instanceof RentRegion && !sender.hasPermission("areashop.setownerrent")) {
             this.messageBridge.message(sender, "setowner-noPermissionRent", region);
             return;

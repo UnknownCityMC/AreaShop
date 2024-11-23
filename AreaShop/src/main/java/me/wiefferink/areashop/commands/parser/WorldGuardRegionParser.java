@@ -1,7 +1,9 @@
-package me.wiefferink.areashop.commands.util;
+package me.wiefferink.areashop.commands.parser;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import me.wiefferink.areashop.commands.util.AreaShopCommandException;
+import me.wiefferink.areashop.commands.util.WorldFlagUtil;
 import me.wiefferink.areashop.commands.util.commandsource.EntityCommandSource;
 import me.wiefferink.areashop.interfaces.WorldGuardInterface;
 import org.bukkit.World;
@@ -14,6 +16,7 @@ import org.incendo.cloud.parser.ArgumentParser;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.flag.CommandFlag;
 import org.incendo.cloud.suggestion.SuggestionProvider;
+import org.spongepowered.configurate.NodePath;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -52,7 +55,7 @@ public class WorldGuardRegionParser<C extends EntityCommandSource> implements Ar
             commandInput.readString();
             return ArgumentParseResult.success(protectedRegion);
         }
-        AreaShopCommandException exception = new AreaShopCommandException("cmd-noRegion", regionName);
+        AreaShopCommandException exception = new AreaShopCommandException(NodePath.path("exception", "no-region"), regionName);
         return ArgumentParseResult.failure(exception);
     }
 
